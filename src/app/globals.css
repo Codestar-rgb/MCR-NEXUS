@@ -140,3 +140,32 @@
 .nexcube-scroll::-webkit-scrollbar-thumb:hover {
   background-color: oklch(0.6 0 0 / 50%);
 }
+
+/* NexCube 连线流动动画 —— typed-edge.tsx 使用 */
+@keyframes nexcube-edge-flow {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* NexCube 节点画布样式微调 */
+.react-flow__attribution {
+  display: none !important;
+}
+.react-flow__minimap,
+.react-flow__controls {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.react-flow__node {
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+.react-flow__handle {
+  opacity: 1;
+}
+.react-flow__edge .react-flow__edge-path {
+  pointer-events: all;
+}

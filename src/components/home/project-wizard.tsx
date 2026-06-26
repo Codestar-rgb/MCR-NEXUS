@@ -122,6 +122,12 @@ export function ProjectWizard({ open, onOpenChange, onCreated }: ProjectWizardPr
     },
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ['projects', 'recent'] })
+      // 自动为新项目种入示例节点（3 节点 + 2 连线）
+      try {
+        await fetch(`/api/projects/${data.id}/seed`, { method: 'POST' })
+      } catch {
+        // 种子失败不阻断流程，用户可手动创建节点
+      }
       toast.success('项目创建成功', { description: `${form.name} (${form.modId})` })
       setStep(2) // 进入完成步骤
       // 1.2 秒后自动触发 onCreated

@@ -1,0 +1,373 @@
+'use client'
+
+/**
+ * NexCube 完整节点画布（Task 2-C）
+ *
+ * 替换阶段 1 的 NodeCanvasPlaceholder，接入 Zustand canvas store：
+ *
+ *  - 节点 / 连线从 useCanvasStore 读取
+ *  - onNodesChange / onEdgesChange / onConnect 直接接 store action
+ *  - isValidConnection 用 isPortCompatible 校验端口数据类型兼容性
+ *  - 自定义 TypedEdge（按 dataType 着色 + 流动动画）
+ *  - 自定义 nodeTypes（实体/方块/物品/组/黑盒/函数）
+ *  - 背景：点阵（zinc-800）
+ *  - 右下角：Controls + MiniMap（按节点类型着色）
+ *  - 顶部居中：CanvasToolbar（节点/连线统计 + 缩放 + 适配视图 + 清空）
+ *  - 左上角：ProjectInfoCard（浮动，待 Task 2-D 接入工程数据）
+ *  - 右上角：TaskNotifications（浮动）
+ *  - 右键菜单：onNodeContextMenu / onPaneContextMenu → CanvasContextMenu
+ *  - 节点拖拽：onNodeDragStop → console.log（Task 2-D 接入持久化）
+ *
+ * 与 Task 2-A 的 node-system 集成：
+ *  - FlowNode / FlowEdge 是 store 中的纯接口，结构上兼容 React Flow Node/Edge
+ *  - 传给 ReactFlow 组件时通过类型断言适配（运行时无开销）
+ *  - nodeExtras（parentId / dragging 等 React Flow 附加字段）合并到渲染节点上
+ */
+
+import { useCallback, useMemo } from 'react'
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  Panel,
+  type IsValidConnection,
+  type Node as RFNode,
+  type Edge as RFEdge,
+  type EdgeTypes,
+  type OnNodesChange,
+  type OnEdgesChange,
+  type OnConnect,
+  useReactFlow,
+} from '@xyflow/react'
+import '@xyflow/react/dist/style.css'
+import { nodeTypes } from '@/components/workspace/canvas/nodes'
+import { TypedEdge } from '@/components/workspace/canvas/typed-edge'
+import { CanvasContextMenu } from '@/components/workspace/canvas/canvas-context-menu'
+import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
+import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
+import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
+import {
+  useCanvasStore,
+  getNodeColorHex,
+} from '@/stores/canvas'
+import { useWorkspaceStore } from '@/stores/workspace'
+import { useCanvasSync } from '@/hooks/use-canvas-sync'
+import {
+  isPortCompatible,
+  getNodeTypeDefinition,
+} from '@/lib/node-system'
+import {
+  getPerformanceConfig,
+  usePerformanceMonitor,
+} from '@/lib/performance/canvas-perf'
+
+/* ------------------------------------------------------------------ */
+/* 模块级常量（避免每次渲染重建导致 React Flow 警告）                    */
+/* ------------------------------------------------------------------ */
+
+const edgeTypes: EdgeTypes = {
+  typed: TypedEdge,
+}
+
+const defaultEdgeOptions = {
+  type: 'typed' as const,
+}
+
+/* ------------------------------------------------------------------ */
+/* 主组件（包裹 ReactFlowProvider，子组件才能用 useReactFlow）            */
+/* ------------------------------------------------------------------ */
+
+export function NodeCanvas() {
+  return (
+    <ReactFlowProvider>
+      <NodeCanvasInner />
+    </ReactFlowProvider>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 内部组件（在 Provider 内，可使用 useReactFlow）                        */
+/* ------------------------------------------------------------------ */
+
+function NodeCanvasInner() {
+  const nodes = useCanvasStore((s) => s.nodes)
+  const edges = useCanvasStore((s) => s.edges)
+  const nodeExtras = useCanvasStore((s) => s.nodeExtras)
+  const applyNodeChanges = useCanvasStore((s) => s.applyNodeChanges)
+  const applyEdgeChanges = useCanvasStore((s) => s.applyEdgeChanges)
+  const onConnectStore = useCanvasStore((s) => s.onConnect)
+  const setContextMenu = useCanvasStore((s) => s.setContextMenu)
+  const closeContextMenu = useCanvasStore((s) => s.closeContextMenu)
+  const selectNode = useCanvasStore((s) => s.selectNode)
+
+  const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
+  const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
+  const { screenToFlowPosition } = useReactFlow()
+
+  /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
+  useCanvasSync(currentProjectId)
+
+  /* 把 store 中的 FlowNode[] 与 nodeExtras 合并为 RFNode[] */
+  const rfNodes = useMemo<RFNode[]>(() => {
+    return nodes.map((n) => {
+      const extra = nodeExtras[n.id] ?? {}
+      return {
+        id: n.id,
+        type: n.type,
+        position: n.position,
+        data: n.data,
+        width: n.width,
+        height: n.height,
+        selected: n.selected,
+        ...extra,
+      } as RFNode
+    })
+  }, [nodes, nodeExtras])
+
+  /* 把 store 中的 FlowEdge[] 转为 RFEdge[] */
+  const rfEdges = useMemo<RFEdge[]>(() => {
+    return edges.map((e) => {
+      return {
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle ?? undefined,
+        targetHandle: e.targetHandle ?? undefined,
+        type: 'typed',
+        data: e.data,
+      } as RFEdge
+    })
+  }, [edges])
+
+  /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
+  const isValidConnection = useCallback<IsValidConnection<RFEdge>>(
+    (connection) => {
+      if (!connection.source || !connection.target) return false
+      if (connection.source === connection.target) return false
+
+      const sourceNode = nodes.find((n) => n.id === connection.source)
+      const targetNode = nodes.find((n) => n.id === connection.target)
+      if (!sourceNode || !targetNode) return false
+
+      const sourceDef = getNodeTypeDefinition(sourceNode.data.kind)
+      const targetDef = getNodeTypeDefinition(targetNode.data.kind)
+      if (!sourceDef || !targetDef) return false
+
+      // sourceHandle 为 null 时取第一个输出端口（兼容老卡片）
+      const sourcePort =
+        sourceDef.outputPorts.find((p) => p.id === connection.sourceHandle) ??
+        sourceDef.outputPorts[0]
+      const targetPort =
+        targetDef.inputPorts.find((p) => p.id === connection.targetHandle) ??
+        targetDef.inputPorts[0]
+      if (!sourcePort || !targetPort) return false
+
+      return isPortCompatible(sourcePort.dataType, targetPort.dataType)
+    },
+    [nodes],
+  )
+
+  const handleNodesChange = useCallback<OnNodesChange<RFNode>>(
+    (changes) => applyNodeChanges(changes),
+    [applyNodeChanges],
+  )
+
+  const handleEdgesChange = useCallback<OnEdgesChange<RFEdge>>(
+    (changes) => applyEdgeChanges(changes),
+    [applyEdgeChanges],
+  )
+
+  const handleConnect = useCallback<OnConnect>(
+    (connection) => onConnectStore(connection),
+    [onConnectStore],
+  )
+
+  /* 画布空白右键 → 弹出"创建节点 / 全选 / 清空"菜单 */
+  const onPaneContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      const canvasPos = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        visible: true,
+        canvasPosition: canvasPos,
+      })
+      selectNode(null)
+      setSelectedNode(null)
+    },
+    [screenToFlowPosition, setContextMenu, selectNode, setSelectedNode],
+  )
+
+  /* 节点右键 → 弹出"复制 / 删除 / 重命名 / 折叠 / 打包"菜单 */
+  const onNodeContextMenu = useCallback(
+    (e: React.MouseEvent, node: RFNode) => {
+      e.preventDefault()
+      const canvasPos = screenToFlowPosition({ x: e.clientX, y: e.clientY })
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        visible: true,
+        nodeId: node.id,
+        canvasPosition: canvasPos,
+      })
+      selectNode(node.id)
+      const type = (node.type as 'entity' | 'block' | 'item' | null) ?? null
+      const name =
+        (node.data as { title?: string } | undefined)?.title ?? null
+      setSelectedNode(node.id, type, name)
+    },
+    [screenToFlowPosition, setContextMenu, selectNode, setSelectedNode],
+  )
+
+  /* 点击画布空白 → 取消选中 + 关闭右键菜单 */
+  const onPaneClick = useCallback(() => {
+    closeContextMenu()
+    selectNode(null)
+    setSelectedNode(null)
+  }, [closeContextMenu, selectNode, setSelectedNode])
+
+  /* 点击节点 → 选中（同步到 canvas store + workspace store → 属性面板） */
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: RFNode) => {
+      closeContextMenu()
+      selectNode(node.id)
+      const type = (node.type as 'entity' | 'block' | 'item' | null) ?? null
+      const name =
+        (node.data as { title?: string } | undefined)?.title ?? null
+      setSelectedNode(node.id, type, name)
+    },
+    [closeContextMenu, selectNode, setSelectedNode],
+  )
+
+  /* 节点拖拽结束 → 触发持久化（Task 2-D 接入 API） */
+  const onNodeDragStop = useCallback(
+    (_: React.MouseEvent, node: RFNode) => {
+      // TODO(Task 2-D)：调用 PATCH /api/projects/[id]/nodes/[nodeId] 持久化 position
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[NodeCanvas] onNodeDragStop', node.id, node.position)
+      }
+    },
+    [],
+  )
+
+  /* MiniMap 节点着色：按 kind 取主题色 hex */
+  const miniMapNodeColor = useCallback((node: RFNode) => {
+    return getNodeColorHex(node.type ?? '')
+  }, [])
+
+  /* 防止 nodeTypes 在每次渲染重建（已经在 nodes/index.tsx 模块级常量） */
+  const stableNodeTypes = useMemo(() => nodeTypes, [])
+
+  /* 阶段 2-E：万级节点性能优化配置 */
+  const perfConfig = useMemo(() => getPerformanceConfig(nodes.length), [nodes.length])
+  const { fps } = usePerformanceMonitor()
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-background">
+      <ReactFlow
+        nodes={rfNodes}
+        edges={rfEdges}
+        nodeTypes={stableNodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={handleConnect}
+        isValidConnection={isValidConnection}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        onNodeContextMenu={onNodeContextMenu}
+        onPaneContextMenu={onPaneContextMenu}
+        onNodeDragStop={onNodeDragStop}
+        nodesDraggable={perfConfig.nodesDraggable}
+        onlyRenderVisibleElements={perfConfig.onlyRenderVisibleElements}
+        fitView
+        fitViewOptions={{ padding: 0.25 }}
+        minZoom={0.05}
+        maxZoom={2.5}
+        multiSelectionKeyCode={['Meta', 'Shift']}
+        deleteKeyCode={['Backspace', 'Delete']}
+        proOptions={{ hideAttribution: true }}
+        className="bg-background"
+      >
+        {/* 点阵背景：zinc-800 颜色，gap 20px，size 1px */}
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={20}
+          size={1}
+          color="#27272a"
+        />
+
+        {/* 缩放控制（右下角） */}
+        <Controls
+          className="!border !border-border !bg-card/90 !shadow-lg backdrop-blur"
+          showInteractive={false}
+        />
+
+        {/* 小地图（右下角，按节点类型着色；超大批量时关闭以提升性能） */}
+        {perfConfig.miniMapEnabled ? (
+          <MiniMap
+            pannable
+            zoomable
+            className="!border !border-border !bg-card/90 !shadow-lg"
+            nodeColor={miniMapNodeColor}
+            nodeStrokeWidth={2}
+            maskColor="rgba(0, 0, 0, 0.5)"
+          />
+        ) : null}
+
+        {/* 左上角 Panel（工程卡片区域，待 Task 2-D 接入工程数据） */}
+        <Panel position="top-left" className="!m-0 !p-0">
+          <div className="pointer-events-auto">
+            <ProjectInfoCard />
+          </div>
+        </Panel>
+
+        {/* 右上角 Panel（任务通知） */}
+        <Panel position="top-right" className="!m-0 !p-0">
+          <div className="pointer-events-auto w-80">
+            <TaskNotifications />
+          </div>
+        </Panel>
+      </ReactFlow>
+
+      {/* 顶部居中工具栏（浮动） */}
+      <CanvasToolbar />
+
+      {/* 性能指示器（左下角，FPS + 模式提示） */}
+      <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex items-center gap-2">
+        <div className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-mono backdrop-blur ${
+          fps < 30
+            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            : fps < 50
+              ? 'border-amber-500/40 bg-amber-500/10 text-amber-400'
+              : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+        }`}>
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-current" />
+          {fps} FPS · {nodes.length} 节点
+          {perfConfig.tier !== 'full' && (
+            <span className="ml-1 rounded bg-muted/50 px-1 py-px text-[9px] uppercase tracking-wider">
+              {perfConfig.tier}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 性能模式提示（顶部居中下方，仅非 full 模式显示） */}
+      {perfConfig.hint ? (
+        <div className="pointer-events-none absolute bottom-12 left-1/2 z-20 -translate-x-1/2">
+          <div className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-400 backdrop-blur">
+            {perfConfig.hint}
+          </div>
+        </div>
+      ) : null}
+
+      {/* 右键上下文菜单（浮动） */}
+      <CanvasContextMenu />
+    </div>
+  )
+}

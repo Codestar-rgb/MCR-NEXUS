@@ -1,114 +1,163 @@
 'use client'
 
 /**
- * 物品节点卡片（React Flow 自定义节点）
+ * 物品节点卡片
  *
- * - teal 边框/角标（区别于实体=rose、方块=amber）
- * - 顶部：物品图标 + 名称 + 类型标签
- * - 中间：最大堆叠 / 稀有度 / 使用冷却
- * - 底部：输入/输出端口指示器
+ * 基于 BaseNodeCard 实现，展示 MC 物品（工具/食物/材料）的关键属性。
+ * 主题色：teal（#14b8a6）
+ *
+ * 展示属性：
+ *  - 最大堆叠（数值）
+ *  - 稀有度（Badge，按稀有度颜色：common=muted, uncommon=emerald, rare=cyan, epic=violet）
+ *  - 使用冷却（数值 tick）
+ *  - 是否食物（开关）
+ *  - 如果是食物：饱食度 + 饱和度
+ *
+ * 折叠摘要：堆叠 {maxStackSize} · {rarity}
  */
 
 import { memo } from 'react'
-import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { Layers, Gem, Clock, Sparkles } from 'lucide-react'
+import { type NodeProps, type Node } from '@xyflow/react'
+import { Layers, Sparkles, Clock, Apple, Drumstick, Droplet } from 'lucide-react'
+import { BaseNodeCard } from './base-node-card'
+import type { FlowNodeData } from '@/lib/node-system'
 import { cn } from '@/lib/utils'
 
-/** 物品节点 data 字段 */
-export interface ItemNodeData {
-  name: string
-  registryId: string
-  /** 最大堆叠 */
-  maxStack: number
-  /** 稀有度：common / uncommon / rare / epic */
-  rarity: string
-  /** 使用冷却（tick） */
-  cooldown: number
-  [key: string]: unknown
+export type ItemNodeData = FlowNodeData & {
+  kind?: 'item'
 }
 
 export type ItemNodeType = Node<ItemNodeData, 'item'>
 
-function ItemNodeCardImpl({ data, selected }: NodeProps<ItemNodeType>) {
-  const { name, registryId, maxStack, rarity, cooldown } = data
+const RARITY_META: Record<
+  string,
+  { label: string; className: string }
+> = {
+  common: { label: '普通', className: 'bg-muted/50 text-muted-foreground' },
+  uncommon: { label: '优秀', className: 'bg-emerald-500/15 text-emerald-300' },
+  rare: { label: '稀有', className: 'bg-cyan-500/15 text-cyan-300' },
+  epic: { label: '史诗', className: 'bg-violet-500/15 text-violet-300' },
+}
 
+function num(v: unknown, fallback = 0): number {
+  return typeof v === 'number' && !Number.isNaN(v) ? v : fallback
+}
+
+function str(v: unknown, fallback = ''): string {
+  return typeof v === 'string' ? v : fallback
+}
+
+function bool(v: unknown, fallback = false): boolean {
+  return typeof v === 'boolean' ? v : fallback
+}
+
+function ItemNodeCardImpl(props: NodeProps<ItemNodeType>) {
   return (
-    <div
+    <BaseNodeCard
+      {...props}
+      data={{ ...props.data, kind: 'item' }}
+      renderContent={(p) => {
+        const maxStackSize = num(p.maxStackSize, 64)
+        const rarity = str(p.rarity, 'common')
+        const cooldown = num(p.cooldown)
+        const isFood = bool(p.isFood)
+        const hunger = num(p.hunger)
+        const saturation = num(p.saturation)
+        const rarityMeta = RARITY_META[rarity] ?? RARITY_META.common
+
+        return (
+          <>
+            <Row icon={<Layers className="h-3.5 w-3.5 text-teal-400" />} label="最大堆叠">
+              <span className="font-mono font-semibold text-teal-300">{maxStackSize}</span>
+            </Row>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-teal-400" />
+                稀有度
+              </span>
+              <Badge className={rarityMeta.className}>{rarityMeta.label}</Badge>
+            </div>
+            <Row icon={<Clock className="h-3.5 w-3.5 text-teal-400" />} label="使用冷却">
+              <span className="font-mono font-semibold text-teal-300">{cooldown} tick</span>
+            </Row>
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Apple className="h-3.5 w-3.5 text-teal-400" />
+                是食物
+              </span>
+              <span
+                className={cn(
+                  'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium',
+                  isFood
+                    ? 'bg-teal-500/15 text-teal-300'
+                    : 'bg-muted/40 text-muted-foreground',
+                )}
+              >
+                {isFood ? '是' : '否'}
+              </span>
+            </div>
+            {isFood && (
+              <>
+                <Row icon={<Drumstick className="h-3.5 w-3.5 text-teal-400" />} label="饱食度">
+                  <span className="font-mono font-semibold text-teal-300">{hunger}</span>
+                </Row>
+                <Row icon={<Droplet className="h-3.5 w-3.5 text-teal-400" />} label="饱和度">
+                  <span className="font-mono font-semibold text-teal-300">{saturation.toFixed(1)}</span>
+                </Row>
+              </>
+            )}
+          </>
+        )
+      }}
+      renderSummary={(p) => {
+        const rarity = str(p.rarity, 'common')
+        const rarityMeta = RARITY_META[rarity] ?? RARITY_META.common
+        return (
+          <span>
+            堆叠 {num(p.maxStackSize, 64)} · {rarityMeta.label}
+          </span>
+        )
+      }}
+    />
+  )
+}
+
+function Row({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        {label}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+function Badge({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <span
       className={cn(
-        'group relative w-60 rounded-xl border border-teal-500/40 bg-card/95 shadow-lg backdrop-blur',
-        'ring-1 ring-teal-500/20 transition-all',
-        selected ? 'border-teal-400 ring-teal-400/60 shadow-teal-500/20' : 'hover:border-teal-400/70',
+        'rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wider',
+        className,
       )}
     >
-      {/* 顶部 */}
-      <div className="flex items-center gap-2 border-b border-teal-500/20 bg-teal-500/10 px-3 py-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300">
-          <Gem className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-semibold text-foreground">{name}</span>
-            <span className="rounded bg-teal-500/20 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-teal-300">
-              Item
-            </span>
-          </div>
-          <code className="block truncate font-mono text-[10px] text-muted-foreground">{registryId}</code>
-        </div>
-      </div>
-
-      {/* 中间 */}
-      <div className="space-y-1.5 px-3 py-2.5">
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Layers className="h-3.5 w-3.5 text-teal-400" />
-            最大堆叠
-          </span>
-          <span className="font-mono font-semibold text-teal-300">{maxStack}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-teal-400" />
-            稀有度
-          </span>
-          <span className="font-mono font-semibold text-teal-300">{rarity}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Clock className="h-3.5 w-3.5 text-teal-400" />
-            使用冷却
-          </span>
-          <span className="font-mono font-semibold text-teal-300">{cooldown}t</span>
-        </div>
-      </div>
-
-      {/* 底部 */}
-      <div className="flex items-center justify-between border-t border-teal-500/20 px-3 py-1.5 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-teal-400/60" />
-          输入
-        </span>
-        <span className="flex items-center gap-1 opacity-60">
-          <Gem className="h-3 w-3" />
-          配方未绑定
-        </span>
-        <span className="flex items-center gap-1">
-          输出
-          <span className="h-1.5 w-1.5 rounded-full bg-teal-400/60" />
-        </span>
-      </div>
-
-      {/* 端口 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!h-2.5 !w-2.5 !border-2 !border-teal-400 !bg-teal-500/80"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-2.5 !w-2.5 !border-2 !border-teal-400 !bg-teal-500/80"
-      />
-    </div>
+      {children}
+    </span>
   )
 }
 

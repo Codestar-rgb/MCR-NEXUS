@@ -1,114 +1,194 @@
 'use client'
 
 /**
- * 方块节点卡片（React Flow 自定义节点）
+ * 方块节点卡片
  *
- * - amber 边框/角标（区别于实体=rose、物品=teal）
- * - 顶部：方块图标 + 名称 + 类型标签
- * - 中间：硬度 / 抗爆度 / 发光等级
- * - 底部：输入/输出端口指示器
+ * 基于 BaseNodeCard 实现，展示 MC 方块的关键属性。
+ * 主题色：amber（#f59e0b）
+ *
+ * 展示属性：
+ *  - 硬度（数值）
+ *  - 抗爆度（数值）
+ *  - 发光等级（数值/15）
+ *  - 破坏工具 + 挖掘等级（Badge）
+ *  - 透明/固体（开关图标）
+ *  - 掉落物 + 掉落数量
+ *
+ * 折叠摘要：硬度 {hardness} · {harvestTool} · 发光 {lightLevel}
  */
 
 import { memo } from 'react'
-import { Handle, Position, type NodeProps, type Node } from '@xyflow/react'
-import { Hammer, Bomb, Lightbulb, Box } from 'lucide-react'
+import { type NodeProps, type Node } from '@xyflow/react'
+import { Hammer, Bomb, Lightbulb, Eye, Box, Package } from 'lucide-react'
+import { BaseNodeCard } from './base-node-card'
+import type { FlowNodeData } from '@/lib/node-system'
 import { cn } from '@/lib/utils'
 
-/** 方块节点 data 字段 */
-export interface BlockNodeData {
-  name: string
-  registryId: string
-  /** 硬度 */
-  hardness: number
-  /** 抗爆度 */
-  resistance: number
-  /** 发光等级 0-15 */
-  lightLevel: number
-  [key: string]: unknown
+export type BlockNodeData = FlowNodeData & {
+  kind?: 'block'
 }
 
 export type BlockNodeType = Node<BlockNodeData, 'block'>
 
-function BlockNodeCardImpl({ data, selected }: NodeProps<BlockNodeType>) {
-  const { name, registryId, hardness, resistance, lightLevel } = data
+const HARVEST_TOOL_LABELS: Record<string, string> = {
+  pickaxe: '镐',
+  axe: '斧',
+  shovel: '锹',
+  hoe: '锄',
+  any: '任意',
+}
 
+const HARVEST_LEVEL_LABELS: Record<string, string> = {
+  wood: '木',
+  stone: '石',
+  iron: '铁',
+  diamond: '钻石',
+  netherite: '下界合金',
+}
+
+function num(v: unknown, fallback = 0): number {
+  return typeof v === 'number' && !Number.isNaN(v) ? v : fallback
+}
+
+function str(v: unknown, fallback = ''): string {
+  return typeof v === 'string' ? v : fallback
+}
+
+function bool(v: unknown, fallback = false): boolean {
+  return typeof v === 'boolean' ? v : fallback
+}
+
+function BlockNodeCardImpl(props: NodeProps<BlockNodeType>) {
   return (
-    <div
+    <BaseNodeCard
+      {...props}
+      data={{ ...props.data, kind: 'block' }}
+      renderContent={(p) => {
+        const hardness = num(p.hardness)
+        const resistance = num(p.resistance)
+        const lightLevel = num(p.lightLevel)
+        const harvestTool = str(p.harvestTool, 'pickaxe')
+        const harvestLevel = str(p.harvestLevel, 'iron')
+        const isTransparent = bool(p.isTransparent)
+        const isSolid = bool(p.isSolid)
+        const dropItem = str(p.dropItem)
+        const dropCount = num(p.dropCount, 1)
+
+        return (
+          <>
+            <Row icon={<Hammer className="h-3.5 w-3.5 text-amber-400" />} label="硬度">
+              <span className="font-mono font-semibold text-amber-300">{hardness}</span>
+            </Row>
+            <Row icon={<Bomb className="h-3.5 w-3.5 text-amber-400" />} label="抗爆度">
+              <span className="font-mono font-semibold text-amber-300">{resistance}</span>
+            </Row>
+            <Row icon={<Lightbulb className="h-3.5 w-3.5 text-amber-400" />} label="发光等级">
+              <span className="font-mono font-semibold text-amber-300">{lightLevel}/15</span>
+            </Row>
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Hammer className="h-3.5 w-3.5 text-amber-400" />
+                破坏工具
+              </span>
+              <div className="flex gap-1">
+                <Badge className="bg-amber-500/15 text-amber-300">
+                  {HARVEST_TOOL_LABELS[harvestTool] ?? harvestTool}
+                </Badge>
+                <Badge className="bg-amber-500/15 text-amber-300">
+                  {HARVEST_LEVEL_LABELS[harvestLevel] ?? harvestLevel}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">物理性质</span>
+              <div className="flex gap-1.5">
+                <Tag icon={<Eye className="h-3 w-3" />} active={isTransparent} activeLabel="透明" inactiveLabel="不透明" />
+                <Tag icon={<Box className="h-3 w-3" />} active={isSolid} activeLabel="固体" inactiveLabel="非固体" />
+              </div>
+            </div>
+            <Row icon={<Package className="h-3.5 w-3.5 text-amber-400" />} label="掉落物">
+              {dropItem ? (
+                <span className="font-mono text-amber-300">
+                  {dropItem} ×{dropCount}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">未绑定</span>
+              )}
+            </Row>
+          </>
+        )
+      }}
+      renderSummary={(p) => (
+        <span>
+          硬度 {num(p.hardness)} · {HARVEST_TOOL_LABELS[str(p.harvestTool, 'pickaxe')] ?? str(p.harvestTool, 'pickaxe')} · 发光 {num(p.lightLevel)}
+        </span>
+      )}
+    />
+  )
+}
+
+function Row({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        {icon}
+        {label}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+function Badge({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <span
       className={cn(
-        'group relative w-60 rounded-xl border border-amber-500/40 bg-card/95 shadow-lg backdrop-blur',
-        'ring-1 ring-amber-500/20 transition-all',
-        selected ? 'border-amber-400 ring-amber-400/60 shadow-amber-500/20' : 'hover:border-amber-400/70',
+        'rounded px-1.5 py-px text-[10px] font-bold uppercase tracking-wider',
+        className,
       )}
     >
-      {/* 顶部 */}
-      <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-amber-300">
-          <Box className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-semibold text-foreground">{name}</span>
-            <span className="rounded bg-amber-500/20 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-amber-300">
-              Block
-            </span>
-          </div>
-          <code className="block truncate font-mono text-[10px] text-muted-foreground">{registryId}</code>
-        </div>
-      </div>
+      {children}
+    </span>
+  )
+}
 
-      {/* 中间：关键属性 */}
-      <div className="space-y-1.5 px-3 py-2.5">
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Hammer className="h-3.5 w-3.5 text-amber-400" />
-            硬度
-          </span>
-          <span className="font-mono font-semibold text-amber-300">{hardness}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Bomb className="h-3.5 w-3.5 text-amber-400" />
-            抗爆度
-          </span>
-          <span className="font-mono font-semibold text-amber-300">{resistance}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Lightbulb className="h-3.5 w-3.5 text-amber-400" />
-            发光等级
-          </span>
-          <span className="font-mono font-semibold text-amber-300">{lightLevel}/15</span>
-        </div>
-      </div>
-
-      {/* 底部 */}
-      <div className="flex items-center justify-between border-t border-amber-500/20 px-3 py-1.5 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400/60" />
-          输入
-        </span>
-        <span className="flex items-center gap-1 opacity-60">
-          <Box className="h-3 w-3" />
-          掉落物已绑定
-        </span>
-        <span className="flex items-center gap-1">
-          输出
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-400/60" />
-        </span>
-      </div>
-
-      {/* 端口 */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!h-2.5 !w-2.5 !border-2 !border-amber-400 !bg-amber-500/80"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-2.5 !w-2.5 !border-2 !border-amber-400 !bg-amber-500/80"
-      />
-    </div>
+function Tag({
+  icon,
+  active,
+  activeLabel,
+  inactiveLabel,
+}: {
+  icon: React.ReactNode
+  active: boolean
+  activeLabel: string
+  inactiveLabel: string
+}) {
+  return (
+    <span
+      className={cn(
+        'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium',
+        active
+          ? 'bg-amber-500/15 text-amber-300'
+          : 'bg-muted/40 text-muted-foreground',
+      )}
+    >
+      {icon}
+      {active ? activeLabel : inactiveLabel}
+    </span>
   )
 }
 

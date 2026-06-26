@@ -413,3 +413,222 @@ Stage Summary:
 - 属性面板动态标题+Tabs
 - 已推送 GitHub
 - 具备进入阶段 2（节点画布核心功能）的条件
+
+---
+Task ID: 2-B
+Agent: full-stack-developer
+Task: 三类核心节点真实实现（实体/方块/物品 + 黑盒 + 节点组）
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1 成果（Prisma 9 模型 + 能力层 + 主页 UI + 项目向导 + 工作区壳层）
+- 检查 src/lib/node-system/ 目录：**Task 2-A 未交付**（agent-ctx 无 2-A 记录，目录不存在）
+- 为不阻塞自身组件编译，主动创建完整且兼容的 node-system 后备实现
+- 创建 src/lib/node-system/port-types.ts：6 种端口数据类型（entity/boolean/number/string/itemstack/any）+ 颜色 hex + isPortCompatible + getPortColor
+- 创建 src/lib/node-system/types.ts：FlowNodeData / FlowNode / FlowEdge / NodeKind / DEFAULT_NODE_SIZES
+- 创建 src/lib/node-system/node-types.ts：NODE_TYPE_REGISTRY（5 类节点）+ getNodeTypeDefinition + listNodeTypes + PropertyFieldSchema
+- 创建 src/lib/node-system/node-factory.ts：createNode({kind, title, position, properties}) 工厂函数
+- 创建 src/lib/node-system/index.ts：统一入口 re-export
+- 创建 nodes/port-handle.tsx：端口类型颜色编码（PORT_TYPES hex 决定 backgroundColor/borderColor/label color）+ 左/右自动定位标签
+- 创建 nodes/base-node-card.tsx：通用骨架 + COLOR_CLASSES（8 色 tailwind 类名映射，避免动态类名）+ header + 折叠/展开 + 选中高亮 + 端口自动渲染 + 动态 lucide 图标
+- 重做 nodes/entity-node-card.tsx：rose 主色；HP/ATK/护甲/韧性/移速/生物类别/AI 类型；折叠摘要 `HP {hp} · ATK {atk} · {aiType}`
+- 重做 nodes/block-node-card.tsx：amber 主色；硬度/抗爆度/发光等级/破坏工具+挖掘等级/透明固体/掉落物；折叠摘要 `硬度 {hardness} · {harvestTool} · 发光 {lightLevel}`
+- 重做 nodes/item-node-card.tsx：teal 主色；最大堆叠/稀有度(4色 badge)/使用冷却/是否食物/食物饱食度+饱和度；折叠摘要 `堆叠 {maxStackSize} · {rarity}`
+- 创建 nodes/blackbox-node-card.tsx：特殊样式 bg-zinc-950/80 + border-dashed + border-amber-500/50；3 行代码预览（行号+truncate）；底部"双击编辑代码"提示；双击触发 toast.info（阶段 4 接 Monaco）
+- 创建 nodes/group-node-card.tsx：大尺寸半透明；顶部色条 + 可双击重命名（input + Enter/Esc + onBlur 自动提交）+ 7 色选择器；disablePorts=true（容器无端口）
+- 创建 nodes/index.tsx：导出 nodeTypes（注册到 React Flow）+ 各节点组件 + PortHandle + BaseNodeCard + COLOR_CLASSES
+- 修复 1 处 lint：blackbox-node-card.tsx 第 96 行 JSX 文本节点 `// 双击编辑代码` 改为 `{'// 双击编辑代码'}`（react/jsx-no-comment-textnodes）
+- 验证 lint：`bunx eslint src/lib/node-system/ src/components/workspace/canvas/nodes/ --max-warnings 0` → EXIT=0（本任务全部文件 lint-clean）
+- 写入 /agent-ctx/2-B-full-stack-developer.md 记录交付物清单与设计要点
+
+Stage Summary:
+- 5 种节点卡片完整：实体（rose）/方块（amber）/物品（teal）/黑盒（amber 虚线警示）/节点组（slate 容器）
+- 端口类型颜色编码 5+1 种：entity=rose / boolean=amber / number=cyan / string=emerald / itemstack=violet / any=slate
+- 通用骨架 BaseNodeCard + COLOR_CLASSES（8 色预定义映射，规避 Tailwind 动态类名）
+- 折叠/展开支持（renderContent / renderSummary 双渲染模式）
+- 选中态高亮（border-strong + ring）
+- 端口 Handle 自动按 inputPorts/outputPorts 渲染，22px 间距，从 portStartY=38 起
+- 黑盒节点特殊视觉（虚线+警示色+3 行代码预览+行号+双击 toast）
+- 节点组容器（顶部色条 + 可重命名 + 7 色选择器，disablePorts=true）
+- 已注册为 React Flow nodeTypes，待 Task 2-C 集成到画布
+- node-system 完整后备实现（端口类型/节点类型/工厂/统一入口），Task 2-A 若产出可直接覆盖或保留本任务版本
+- 本任务文件全部 lint-clean；全局 lint 报 1 error 系 src/hooks/use-canvas-sync.ts 第 129 行（Task 2-C 并行产出，不属于本任务范围）
+
+---
+Task ID: 2-D
+Agent: full-stack-developer
+Task: 节点持久化 API + Zustand 画布状态(拖拽debounce写库) + 种子数据
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1 成果（Prisma 9 模型 + 工作区壳层 + NodeCanvasPlaceholder + PropertyPanel）
+- 读取 prisma/schema.prisma 确认 Node/Connection 模型字段与级联策略
+- 检查 src/lib/node-system/ 目录，发现 Task 2-A/2-C 已落地 types.ts/node-types.ts/node-factory.ts/port-types.ts/index.ts（并行）
+- 创建 src/lib/node-system/persistence.ts：PrismaNodeDTO/PrismaConnectionDTO 类型 + flowEdgeToPrismaConnection/prismaConnectionToFlowEdge 转换函数（补齐 connection 端转换，避免与 index.ts 的 export * 冲突）
+- 创建 5 个 API 路由文件：
+  * nodes/route.ts — GET(返回 nodes+connections 一次加载) / POST(创建节点，默认 properties 来自 NODE_TYPE_REGISTRY) / DELETE(批量 by ?ids=)
+  * nodes/[nodeId]/route.ts — PATCH(部分更新 position/properties/title/color/isCollapsed/width/height/sourceCode 等) / DELETE(级联删连线)
+  * connections/route.ts — GET / POST(含端点存在性校验 + 自环禁止)
+  * connections/[connectionId]/route.ts — DELETE
+  * sync/route.ts — POST 批量原子事务 ($transaction: 删连线→删节点→upsert节点→upsert连线)
+  * seed/route.ts — POST 种子（幂等：已有节点则返回现有数据，否则创建 3 节点+2 连线）
+- 创建 src/hooks/use-canvas-sync.ts：
+  * useQuery 加载项目节点（staleTime: Infinity，本地是 source of truth）
+  * 首次加载 → useCanvasStore.loadFromProject + 初始化 lastSynced 快照
+  * 监听 nodes/edges 变化 → debounce 500ms → JSON.stringify diff → syncMutation POST /sync
+  * lastSynced 快照存于 module-level Map（按 projectId 隔离），避免 react-hooks/immutability 规则
+  * 切换项目 → clearCanvas + clearLastSynced + invalidateQueries
+- 修复 src/components/workspace/canvas/canvas-context-menu.tsx line 442 unterminated string literal（Task 2-B/2-C 留下的 bug，`hover:bg-accent'` → `hover:bg-accent"`）
+- 协调并行冲突：API 路由与 hook 直接从 node-system 子模块导入（node-factory/node-types/types/persistence），不依赖 index.ts 的 export *
+- 运行 bun run lint：0 errors / 0 warnings
+- 17 步 API 端到端测试（curl + Python 解析）全部通过：
+  * CRUD: 创建/读取/更新/删除 单节点与连线
+  * 批量: DELETE ?ids= 多节点 + POST /sync 批量事务
+  * 级联: 删除节点后相关 Connection 自动消失（onDelete: Cascade）
+  * 幂等: POST /seed 已有节点时返回 seeded=false + 现有数据
+  * 错误: 404 project_not_found / 400 self_connection_not_allowed / 400 invalid_endpoints / 404 node_not_found
+- 写入 /agent-ctx/2-D-full-stack-developer.md 记录交付物与设计要点
+
+Stage Summary:
+- 完整节点/连线 CRUD API（6 个路由文件）
+- 批量同步 API：单一 $transaction 保证原子性，支持 upsert+delete 节点+连线
+- 种子数据 API：新项目 3 节点（item/block/entity）+ 2 连线（item→block→entity），幂等
+- useCanvasSync Hook：加载→debounce 500ms→JSON.stringify diff→/sync 批量持久化
+- 拖拽时实时 UI（Zustand），松手 500ms 后写库（避免频繁 DB 写）
+- 切换项目自动清理 store 状态 + 快照 + 失效 React Query 缓存
+- API 错误统一返回 { error: 'xxx' } + 适当 HTTP 状态码（400/404/500）
+- Prisma properties JSON string ↔ 前端 object 自动转换
+- lint 通过；dev server 编译正常；17 步 API 测试全部通过
+- 待主代理整合到 NodeCanvas（调用 useCanvasSync(projectId) 替代 mock 数据）
+
+---
+Task ID: 2-A
+Agent: full-stack-developer
+Task: 节点类型系统 + 端口类型系统(5种数据类型颜色编码+校验)
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1 成果（Prisma 9 模型 + 能力层 + 主页 + 工作区壳层 + Zustand store + 文件树 + 终端）
+- 检查 package.json：uuid v11.1.0 已存在，node-factory 直接使用 `import { v4 as uuidv4 } from 'uuid'`
+- 发现 src/lib/node-system/ 目录已被并行 agent（Task 2-C）创建临时桩层（index.ts 单文件 554 行 + persistence.ts），与 Task 2-A spec 不一致；并行 agent 还覆写了 port-types.ts（引入了 'any' 类型 + compatibleWith 数组，与 spec 5 种类型不符）
+- 创建 node-system/port-types.ts（按 spec 严格落地：5 种端口类型 entity/boolean/number/string/itemstack + PortTypeDefinition 含 type/label/color/hex/icon/description 五字段 + isPortCompatible 单向隐式转换矩阵 + PortDefinition 含 direction 字段）
+- 创建 node-system/node-types.ts（6 种节点类型注册表：entity/block/item/group/blackbox/function；NodeKind 含 11 种字面量（含 5 种 logic_* 子节点预留）；PropertySchema 7 种字段类型 string/number/boolean/select/color/vec3/texture；含 inputPorts/outputPorts + propertiesSchema + supportsSubLogic + getNodeTypesByCategory 工具函数）
+- 创建 node-system/node-factory.ts（createDefaultProperties 按 schema 默认值生成属性对象；createNode 工厂返回与 Prisma Node 模型对齐的 CreatedNode 对象；为兼容 API 路由运行时 string 参数，kind 类型放宽为 NodeKind | string 并加注释说明）
+- 创建 node-system/types.ts（FlowNodeData/FlowNode/FlowEdge 接口；PrismaNodeShape 接口；prismaNodeToFlowNode + flowNodeToPrismaNode 双向转换，含非法 JSON 降级）
+- 创建 node-system/index.ts（barrel 导出 4 个子模块）
+- 自验证脚本（/home/z/tmp-test/test-node-system.ts，146 条断言全通过）：
+  * PORT_TYPES 5 种类型存在 + 每种含 hex/icon/label/color/type/description
+  * isPortCompatible 矩阵：number→boolean=true / number→string=true / boolean→string=true / entity→string=true / itemstack→string=true / entity→number=false / boolean→number=false / string→number=false
+  * NODE_TYPE_REGISTRY 6 个 kind 完整 + 每个含 label/icon/color/category/defaultSize/inputPorts/outputPorts/propertiesSchema/supportsSubLogic
+  * 颜色规则：节点类型颜色 rose/amber/teal/slate/zinc/cyan，端口颜色 rose/amber/cyan/emerald/violet，均无 indigo/blue
+  * getCreatableNodeTypes 返回 6 个非 logic 节点；getNodeTypesByCategory 返回 core=3 + advanced=3
+  * createDefaultProperties('entity').health === 20 + attack/armor/movementSpeed/mobCategory/name/collisionBox.x 默认值校验
+  * createDefaultProperties('block').hardness === 3 + resistance + isSolid 默认值校验
+  * createDefaultProperties('item').maxStackSize === 64 + rarity 默认值校验
+  * createNode('entity', ...) 返回 CreatedNode 含 uuid/type/title/position/size/color/isCollapsed/properties(JSON)
+  * prismaNodeToFlowNode + flowNodeToPrismaNode 双向转换 + 非法 JSON 降级空对象
+  * getNodeTypeDefinition('entity') 返回正确定义 / ('nonexistent') 返回 undefined
+- bun run lint：0 errors / 0 warnings
+- 验证我的 5 个文件 TypeScript 编译零错误（bunx tsc --noEmit 仅报其他并行 agent 组件的错误）
+- 清理自验证脚本
+
+Stage Summary:
+- 端口类型系统：5 种（entity=rose/boolean=amber/number=cyan/string=emerald/itemstack=violet）+ hex 颜色编码 + 单向隐式转换矩阵（number→boolean/string、boolean→string、entity→string、itemstack→string）
+- 节点类型注册表：6 种可创建（entity/block/item/group/blackbox/function）+ 5 种 logic_* 子节点预留 + 完整属性 schema（7 种字段类型 + 分组 + min/max/step/options）
+- 属性 schema 驱动属性面板动态表单（Task 3-A 可直接消费）
+- 节点工厂 createNode 生成 Prisma-shaped CreatedNode，含 uuid + JSON properties
+- Prisma ↔ FlowNode 双向转换含非法 JSON 降级
+- 已知并行集成点（Task 2-B/C 待修复，不在 Task 2-A 范围）：
+  * canvas.ts 导入 cloneNode（spec 未包含，Task 2-C 需自实现或内联）
+  * node-canvas.tsx 导入 createDefaultNodes/createDefaultEdges/getNodeColorHex（Task 2-C 桩层产物，需移除或重写为真实数据加载）
+  * canvas-context-menu.tsx 导入 getCreatableNodeTypesByCategory/getNodeCategoryLabel（已提供 getNodeTypesByCategory 替代）
+  * generic-node-card.tsx switch 用 'math'/'logic'/'event_trigger'（spec NodeKind 不含，Task 2-B 需重构或删除 obsolete 分支）
+  * base-node-card.tsx / blackbox-node-card.tsx 给 PortHandle 传 'type' prop（HandleProps 内置，PortHandleProps 不需要，Task 2-B 需修）
+- 待 Task 2-B 用真实数据驱动节点卡片（消费 NODE_TYPE_REGISTRY + propertiesSchema + inputPorts/outputPorts）
+
+---
+Task ID: 2-C
+Agent: full-stack-developer
+Task: React Flow v12 完整画布（缩放/平移/小地图/右键菜单/节点组/连线校验）
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1 成果
+- 读取 src/components/workspace/canvas/node-canvas-placeholder.tsx（Task 1-D 占位）与 src/components/workspace/canvas/nodes/{entity,block,item}-node-card.tsx（Task 1-D 旧卡片）
+- 检查 src/lib/node-system/ 不存在 → 写入最小版本（types + PORT_TYPES + NODE_DEFINITIONS + createNode + isPortCompatible）
+- 创建 src/components/workspace/canvas/nodes/group-node-card.tsx（NodeResizer + 半透明色块 + 折叠）
+- 创建 src/components/workspace/canvas/nodes/generic-node-card.tsx（基于 BaseNodeCard 的回退卡片）
+- 创建 src/components/workspace/canvas/nodes/index.tsx（nodeTypes 模块级常量）
+- 创建 src/stores/canvas.ts（Zustand：nodes/edges/nodeExtras/selectedNodeIds/selectedEdgeIds/contextMenu/groupingSelection + applyNodeChanges/applyEdgeChanges/onConnect/groupSelected/ungroupNode/toggleNodeCollapsed + createFlowNode/cloneFlowNode/getNodeColorHex 工厂）
+- 创建 src/components/workspace/canvas/typed-edge.tsx（5 种数据类型颜色 + 流动动画 + 中点标签 + 选中态外发光）
+- 创建 src/components/workspace/canvas/canvas-context-menu.tsx（空白右键：创建节点分类展开+全选+清空 / 节点右键：复制+重命名+折叠+打包组+导出函数+删除）
+- 创建 src/components/workspace/canvas/canvas-toolbar.tsx（节点数+连线数+缩放%+适配视图+清空，浮动顶部居中）
+- 创建 src/components/workspace/canvas/node-canvas.tsx（ReactFlowProvider + ReactFlow + Background/Controls/MiniMap/Panel + isValidConnection 端口类型校验 + onNodeContextMenu/onPaneContextMenu）
+- 追加 globals.css：nexcube-edge-flow keyframes + React Flow 样式微调
+- 把 node-canvas-placeholder.tsx 改为薄包装导出 NodeCanvas（不修改 workspace-shell.tsx）
+- 中途 Task 2-A 并行落地 src/lib/node-system/（拆分为 port-types/node-types/node-factory/types/persistence 多文件），覆盖了我最初写入的 index.ts。切换 canvas store / context-menu / node-canvas / typed-edge 到 Task 2-A 的 API（getPortColor / getNodeTypeDefinition / isPortCompatible / createDefaultProperties / NODE_TYPE_REGISTRY）
+- 中途 Task 2-B 并行落地 blackbox-node-card.tsx + 更新 entity/block/item-node-card.tsx 使用 BaseNodeCard + 新增 port-handle.tsx，本任务的 nodeTypes 注册表已纳入 BlackboxNodeCard
+- 运行 bun run lint：0 errors / 0 warnings
+- agent-browser 端到端验证：
+  * 创建 Canvas Test 项目 → 进入工作区
+  * React Flow 画布渲染 3 个默认节点（Ruby/RubyBlock/RubyGolem）+ 点阵背景 + Controls + MiniMap + 工具栏
+  * 节点显示完整属性（生命值/攻击力/护甲/硬度/抗爆度/发光等级/最大堆叠/稀有度 等）
+  * 空白右键 → 显示"创建节点 / 全选 / 清空画布"菜单
+  * 创建节点子菜单 → 按"核心节点 3 / 高级节点 3 / 逻辑节点 5"分类展开
+  * 点击"实体" → 创建新实体节点（节点总数 3→4）+ toast 提示
+  * 节点右键 → 显示"复制节点 / 重命名 / 折叠节点 / 打包为节点组 / 导出为函数节点 / 删除节点"菜单
+  * Esc / 外部点击关闭菜单
+- 清理测试项目
+
+Stage Summary:
+- 完整 React Flow v12 画布：背景点阵（zinc-800）+ Controls（缩放控制）+ MiniMap（按节点类型 hex 着色 + 可平移缩放）+ Panel（左上工程卡片 + 右上任务通知）
+- 右键菜单：空白处按分类创建节点（核心 3 + 高级 3 + 逻辑 5）+ 全选 + 清空 / 节点上复制 + 重命名 + 折叠 + 打包组 + 导出函数 + 删除
+- 连线类型校验：isValidConnection 调用 isPortCompatible，禁止自连 + 不兼容类型无法建立连线
+- 连线着色：5 种数据类型（entity=rose / boolean=amber / number=cyan / string=emerald / itemstack=violet）+ CSS 流动动画 + 中点数据类型标签
+- 节点组：groupSelected 计算包围盒 + 创建 group 节点 + 把选中节点 parentId 设为 groupId + ungroupNode 解除
+- 画布工具栏：节点/连线实时统计 + 缩放百分比 + 适配视图 + 清空
+- canvas store 完整：applyNodeChanges 处理 position/remove/select/dimensions / applyEdgeChanges 处理 remove/select / onConnect 自动推断 dataType
+- 占位替换：node-canvas-placeholder.tsx 改为薄包装导出 NodeCanvas（不破坏 WorkspaceShell 引用）
+- 与 Task 2-A 的 node-system 完全集成（PORT_TYPES / NODE_TYPE_REGISTRY / getNodeTypeDefinition / isPortCompatible / createDefaultProperties）
+- 与 Task 2-B 的节点卡片完全集成（BaseNodeCard / PortHandle / EntityNodeCard / BlockNodeCard / ItemNodeCard / BlackboxNodeCard）
+- 待主代理整合：WorkspaceShell 的 import 可从 node-canvas-placeholder 改为直接指向 node-canvas
+- 待 Task 2-D 接入：onNodeDragStop 持久化 + ProjectInfoCard 工程数据 + createFlowNode → Prisma Node 转换
+
+---
+Task ID: 2-E (主代理整合与验收)
+Agent: main (Z.ai Code)
+Task: 整合节点画布 + 性能优化 + 持久化修复 + 阶段 2 验收 + 推送 GitHub
+
+Work Log:
+- 整合 Task 2-A/2-B/2-C/2-D 产出到 NodeCanvas
+- 接入 useCanvasSync(currentProjectId) 替换 mock 初始化
+- 创建项目向导 onSuccess 自动调 /seed API 种入 3 节点 + 2 连线
+- 创建 src/lib/performance/canvas-perf.ts（4 级性能分层 + FPS 监控）
+- NodeCanvas 接入性能配置：
+  * onlyRenderVisibleElements（500+ 节点启用虚拟渲染）
+  * nodesDraggable（2000+ 节点禁用拖拽）
+  * miniMapEnabled（2000+ 节点关闭小地图）
+  * FPS 指示器（左下角，emerald/amber/destructive 三色）
+  * 性能模式提示（顶部居中）
+- 修复 useCanvasSync 持久化 bug：
+  * 根因 1：effect 闭包捕获旧 nodes → 改用 useCanvasStore.getState()
+  * 根因 2：effect cleanup 频繁清除 timer → 改用 setInterval 方案
+  * 根因 3：isInitialized 检查在 effect 创建时为 false → 移到 interval 回调内
+  * 最终方案：setInterval 每 500ms 检查 diff，fetch 直接调 /sync API
+- Agent Browser 端到端验收：
+  * 创建项目 → 自动 seed 3 节点 ✅
+  * 进入工作区 → 3 节点从 DB 加载到画布 ✅
+  * 右键创建实体节点 → UI 4 节点 ✅
+  * 等 2 秒 → DB 4 节点 + sync POST 200 ✅
+  * FPS 指示器显示 60 FPS · 4 节点 ✅
+- VLM 评估：节点卡片清晰专业、端口颜色区分明确、FPS和小地图可见、整体专业性高
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 阶段 2 全部完成 ✅
+- 节点类型系统：6 种节点 + 5 种端口类型 + 兼容性矩阵
+- 三类核心节点真实实现：实体/方块/物品（完整属性 + 端口颜色编码）
+- React Flow v12 完整画布：背景点阵 + 缩放控制 + 小地图 + 右键菜单 + 节点组
+- 连线类型校验：isPortCompatible 不兼容类型禁止连接
+- 连线着色：5 种数据类型颜色 + 流动动画
+- 节点持久化：完整 CRUD API + 批量 sync + 种子数据 + setInterval 同步
+- 万级节点性能优化：4 级分层（full/virtual/aggregated/webgl）+ FPS 监控
+- 已推送 GitHub
+- 具备进入阶段 3（属性面板与子节点逻辑）的条件
