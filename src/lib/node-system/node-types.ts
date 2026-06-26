@@ -33,6 +33,14 @@ export type NodeKind =
   | 'logic_variable' // 变量（子节点）
   | 'debug_log' // 打印日志（调试）
   | 'debug_breakpoint' // 断点（调试）
+  // 阶段 8 新增：
+  | 'equipment' // 装备
+  | 'weapon' // 武器
+  | 'food' // 食物
+  | 'biome' // 群系
+  | 'structure' // 结构
+  | 'dimension' // 维度
+  | 'potion' // 药水效果
 
 /** 节点类型分类 */
 export type NodeCategory = 'core' | 'logic' | 'advanced'
@@ -563,6 +571,313 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
         group: '断点',
         placeholder: '留空表示总是断',
       },
+    ],
+  },
+
+  // ============ 阶段 8：装备节点 ============
+  equipment: {
+    kind: 'equipment',
+    label: '装备',
+    category: 'core',
+    icon: 'Shield',
+    color: 'cyan',
+    description: '自定义防具装备（头盔/胸甲/护腿/靴子）',
+    defaultSize: { width: 240, height: 220 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'equipment_out', label: '装备', dataType: 'itemstack', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Armor', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_armor', group: '基础' },
+      { key: 'equipmentSlot', label: '装备槽', type: 'select', defaultValue: 'chest', group: '基础', options: [
+        { label: '头盔 (Head)', value: 'head' },
+        { label: '胸甲 (Chest)', value: 'chest' },
+        { label: '护腿 (Legs)', value: 'legs' },
+        { label: '靴子 (Feet)', value: 'feet' },
+      ]},
+      { key: 'armorValue', label: '护甲值', type: 'number', defaultValue: 5, min: 0, max: 30, step: 1, group: '属性' },
+      { key: 'armorToughness', label: '护甲韧性', type: 'number', defaultValue: 0, min: 0, max: 20, step: 0.5, group: '属性' },
+      { key: 'knockbackResistance', label: '击退抗性', type: 'number', defaultValue: 0, min: 0, max: 1, step: 0.05, group: '属性' },
+      { key: 'durability', label: '耐久度', type: 'number', defaultValue: 200, min: 1, max: 5000, step: 10, group: '属性' },
+      { key: 'enchantability', label: '附魔等级', type: 'number', defaultValue: 15, min: 0, max: 50, step: 1, group: '属性' },
+      { key: 'repairMaterial', label: '修复材料', type: 'string', defaultValue: 'minecraft:diamond', group: '属性' },
+      { key: 'texture', label: '贴图', type: 'texture', defaultValue: null, group: '基础' },
+    ],
+  },
+
+  // ============ 武器节点 ============
+  weapon: {
+    kind: 'weapon',
+    label: '武器',
+    category: 'core',
+    icon: 'Swords',
+    color: 'rose',
+    description: '自定义武器（剑/斧/弓/弩/三叉戟）',
+    defaultSize: { width: 240, height: 220 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'weapon_out', label: '武器', dataType: 'itemstack', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Weapon', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_weapon', group: '基础' },
+      { key: 'weaponType', label: '武器类型', type: 'select', defaultValue: 'sword', group: '基础', options: [
+        { label: '剑 (Sword)', value: 'sword' },
+        { label: '斧 (Axe)', value: 'axe' },
+        { label: '弓 (Bow)', value: 'bow' },
+        { label: '弩 (Crossbow)', value: 'crossbow' },
+        { label: '三叉戟 (Trident)', value: 'trident' },
+      ]},
+      { key: 'attackDamage', label: '攻击伤害', type: 'number', defaultValue: 6, min: 0, max: 100, step: 0.5, group: '战斗' },
+      { key: 'attackSpeed', label: '攻击速度', type: 'number', defaultValue: -2.4, min: -4, max: 4, step: 0.1, group: '战斗' },
+      { key: 'reachDistance', label: '攻击距离', type: 'number', defaultValue: 3, min: 1, max: 10, step: 0.5, group: '战斗' },
+      { key: 'durability', label: '耐久度', type: 'number', defaultValue: 500, min: 1, max: 10000, step: 10, group: '战斗' },
+      { key: 'enchantability', label: '附魔等级', type: 'number', defaultValue: 14, min: 0, max: 50, step: 1, group: '战斗' },
+      { key: 'repairMaterial', label: '修复材料', type: 'string', defaultValue: 'minecraft:diamond', group: '战斗' },
+      { key: 'texture', label: '贴图', type: 'texture', defaultValue: null, group: '基础' },
+    ],
+  },
+
+  // ============ 食物节点 ============
+  food: {
+    kind: 'food',
+    label: '食物',
+    category: 'core',
+    icon: 'Apple',
+    color: 'amber',
+    description: '自定义食物（带饱食度/饱和度/药水效果）',
+    defaultSize: { width: 240, height: 200 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'food_out', label: '食物', dataType: 'itemstack', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Food', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_food', group: '基础' },
+      { key: 'maxStackSize', label: '最大堆叠', type: 'number', defaultValue: 64, min: 1, max: 64, step: 1, group: '基础' },
+      { key: 'nutrition', label: '饱食度', type: 'number', defaultValue: 6, min: 0, max: 20, step: 1, group: '食物属性' },
+      { key: 'saturation', label: '饱和度', type: 'number', defaultValue: 0.6, min: 0, max: 20, step: 0.1, group: '食物属性' },
+      { key: 'canAlwaysEat', label: '总是可吃', type: 'boolean', defaultValue: false, group: '食物属性' },
+      { key: 'fastFood', label: '快速食用', type: 'boolean', defaultValue: false, group: '食物属性' },
+      { key: 'isMeat', label: '是肉类', type: 'boolean', defaultValue: false, group: '食物属性' },
+      { key: 'rarity', label: '稀有度', type: 'select', defaultValue: 'common', group: '基础', options: [
+        { label: '普通 (Common)', value: 'common' },
+        { label: '罕见 (Uncommon)', value: 'uncommon' },
+        { label: '稀有 (Rare)', value: 'rare' },
+        { label: '史诗 (Epic)', value: 'epic' },
+      ]},
+      { key: 'texture', label: '贴图', type: 'texture', defaultValue: null, group: '基础' },
+    ],
+  },
+
+  // ============ 群系节点 ============
+  biome: {
+    kind: 'biome',
+    label: '群系',
+    category: 'core',
+    icon: 'Trees',
+    color: 'emerald',
+    description: '自定义生物群系',
+    defaultSize: { width: 260, height: 240 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'biome_out', label: '群系', dataType: 'entity', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Biome', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_biome', group: '基础' },
+      { key: 'temperature', label: '温度', type: 'number', defaultValue: 0.5, min: -2, max: 2, step: 0.1, group: '气候' },
+      { key: 'downfall', label: '降水量', type: 'number', defaultValue: 0.5, min: 0, max: 1, step: 0.1, group: '气候' },
+      { key: 'precipitation', label: '降水类型', type: 'select', defaultValue: 'rain', group: '气候', options: [
+        { label: '无', value: 'none' },
+        { label: '雨', value: 'rain' },
+        { label: '雪', value: 'snow' },
+      ]},
+      { key: 'category', label: '群系类别', type: 'select', defaultValue: 'plains', group: '基础', options: [
+        { label: '沙漠 (Desert)', value: 'desert' },
+        { label: '森林 (Forest)', value: 'forest' },
+        { label: '平原 (Plains)', value: 'plains' },
+        { label: '山地 (Mountain)', value: 'mountain' },
+        { label: '沼泽 (Swamp)', value: 'swamp' },
+        { label: '丛林 (Jungle)', value: 'jungle' },
+        { label: '热带草原 (Savanna)', value: 'savanna' },
+        { label: '针叶林 (Taiga)', value: 'taiga' },
+        { label: '海洋 (Ocean)', value: 'ocean' },
+        { label: '海滩 (Beach)', value: 'beach' },
+        { label: '河流 (River)', value: 'river' },
+        { label: '地下 (Underground)', value: 'underground' },
+        { label: '下界 (Nether)', value: 'nether' },
+        { label: '末地 (End)', value: 'end' },
+      ]},
+      { key: 'depth', label: '深度', type: 'number', defaultValue: 0.125, min: -2, max: 2, step: 0.025, group: '地形' },
+      { key: 'scale', label: '缩放', type: 'number', defaultValue: 0.05, min: 0, max: 2, step: 0.025, group: '地形' },
+      { key: 'waterColor', label: '水颜色', type: 'color', defaultValue: '3F76E4', group: '外观' },
+      { key: 'waterFogColor', label: '水雾颜色', type: 'color', defaultValue: '050533', group: '外观' },
+      { key: 'foliageColor', label: '树叶颜色', type: 'color', defaultValue: '48B518', group: '外观' },
+      { key: 'grassColor', label: '草颜色', type: 'color', defaultValue: '5A7D31', group: '外观' },
+    ],
+  },
+
+  // ============ 结构节点 ============
+  structure: {
+    kind: 'structure',
+    label: '结构',
+    category: 'core',
+    icon: 'Castle',
+    color: 'violet',
+    description: '自定义生成结构（村庄/神庙/要塞等）',
+    defaultSize: { width: 260, height: 220 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'structure_out', label: '结构', dataType: 'entity', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Structure', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_structure', group: '基础' },
+      { key: 'structureType', label: '结构类型', type: 'select', defaultValue: 'village', group: '基础', options: [
+        { label: '村庄 (Village)', value: 'village' },
+        { label: '神庙 (Temple)', value: 'temple' },
+        { label: '要塞 (Stronghold)', value: 'stronghold' },
+        { label: '沉船 (Shipwreck)', value: 'shipwreck' },
+        { label: '海底废墟 (Ocean Ruin)', value: 'ocean_ruin' },
+        { label: '埋藏宝藏 (Buried Treasure)', value: 'buried_treasure' },
+        { label: '掠夺者前哨 (Pillager Outpost)', value: 'pillager_outpost' },
+        { label: '林地府邸 (Woodland Mansion)', value: 'woodland_mansion' },
+        { label: '废弃矿井 (Mineshaft)', value: 'mineshaft' },
+        { label: '沙漠神殿 (Desert Pyramid)', value: 'desert_pyramid' },
+        { label: '丛林神庙 (Jungle Temple)', value: 'jungle_temple' },
+        { label: '雪屋 (Igloo)', value: 'igloo' },
+        { label: '废弃传送门 (Ruined Portal)', value: 'ruined_portal' },
+        { label: '堡垒遗迹 (Bastion)', value: 'bastion' },
+        { label: '末地城 (End City)', value: 'end_city' },
+      ]},
+      { key: 'biomeList', label: '允许群系', type: 'string', defaultValue: 'minecraft:plains', group: '生成', placeholder: '逗号分隔' },
+      { key: 'spawnChance', label: '生成概率', type: 'number', defaultValue: 0.01, min: 0, max: 1, step: 0.005, group: '生成' },
+      { key: 'minDistance', label: '最小间距', type: 'number', defaultValue: 32, min: 1, max: 1024, step: 1, group: '生成' },
+      { key: 'maxDistance', label: '最大间距', type: 'number', defaultValue: 128, min: 1, max: 4096, step: 1, group: '生成' },
+    ],
+  },
+
+  // ============ 维度节点 ============
+  dimension: {
+    kind: 'dimension',
+    label: '维度',
+    category: 'core',
+    icon: 'Globe',
+    color: 'teal',
+    description: '自定义维度（主世界/下界/末地/自定义）',
+    defaultSize: { width: 260, height: 260 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'dimension_out', label: '维度', dataType: 'entity', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Dimension', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_dimension', group: '基础' },
+      { key: 'dimensionType', label: '维度类型', type: 'select', defaultValue: 'overworld', group: '基础', options: [
+        { label: '主世界 (Overworld)', value: 'overworld' },
+        { label: '下界 (Nether)', value: 'nether' },
+        { label: '末地 (End)', value: 'end' },
+        { label: '自定义 (Custom)', value: 'custom' },
+      ]},
+      { key: 'hasSkyLight', label: '有天顶光', type: 'boolean', defaultValue: true, group: '环境' },
+      { key: 'hasCeiling', label: '有顶', type: 'boolean', defaultValue: false, group: '环境' },
+      { key: 'ultrawarm', label: '超热', type: 'boolean', defaultValue: false, group: '环境' },
+      { key: 'natural', label: '自然', type: 'boolean', defaultValue: true, group: '环境' },
+      { key: 'coordinateScale', label: '坐标缩放', type: 'number', defaultValue: 1, min: 0.1, max: 10, step: 0.1, group: '环境' },
+      { key: 'height', label: '高度', type: 'number', defaultValue: 384, min: 16, max: 4064, step: 16, group: '环境' },
+      { key: 'minY', label: '最低 Y', type: 'number', defaultValue: -64, min: -2032, max: 0, step: 16, group: '环境' },
+      { key: 'bedWorks', label: '床可用', type: 'boolean', defaultValue: true, group: '机制' },
+      { key: 'piglinSafe', label: '猪灵安全', type: 'boolean', defaultValue: false, group: '机制' },
+      { key: 'respawnAnchorWorks', label: '重生锚可用', type: 'boolean', defaultValue: false, group: '机制' },
+      { key: 'hasRaids', label: '有袭击', type: 'boolean', defaultValue: true, group: '机制' },
+      { key: 'gravity', label: '重力', type: 'number', defaultValue: 0.08, min: 0, max: 1, step: 0.01, group: '物理' },
+      { key: 'environment', label: '环境类型', type: 'select', defaultValue: 'normal', group: '环境', options: [
+        { label: '普通', value: 'normal' },
+        { label: '下界', value: 'nether' },
+        { label: '末地', value: 'end' },
+      ]},
+    ],
+  },
+
+  // ============ 药水效果节点 ============
+  potion: {
+    kind: 'potion',
+    label: '药水效果',
+    category: 'core',
+    icon: 'FlaskConical',
+    color: 'pink',
+    description: '自定义药水效果（速度/力量/再生等）',
+    defaultSize: { width: 240, height: 220 },
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'potion_out', label: '药水', dataType: 'entity', direction: 'output' },
+    ],
+    supportsSubLogic: true,
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Effect', group: '基础' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_effect', group: '基础' },
+      { key: 'effectType', label: '效果类型', type: 'select', defaultValue: 'speed', group: '效果', options: [
+        { label: '速度 (Speed)', value: 'speed' },
+        { label: '缓慢 (Slowness)', value: 'slowness' },
+        { label: '急迫 (Haste)', value: 'haste' },
+        { label: '挖掘疲劳 (Mining Fatigue)', value: 'mining_fatigue' },
+        { label: '力量 (Strength)', value: 'strength' },
+        { label: '瞬间治疗 (Instant Health)', value: 'instant_health' },
+        { label: '瞬间伤害 (Instant Damage)', value: 'instant_damage' },
+        { label: '跳跃提升 (Jump Boost)', value: 'jump_boost' },
+        { label: '反胃 (Nausea)', value: 'nausea' },
+        { label: '生命恢复 (Regeneration)', value: 'regeneration' },
+        { label: '抗性提升 (Resistance)', value: 'resistance' },
+        { label: '防火 (Fire Resistance)', value: 'fire_resistance' },
+        { label: '水下呼吸 (Water Breathing)', value: 'water_breathing' },
+        { label: '隐身 (Invisibility)', value: 'invisibility' },
+        { label: '失明 (Blindness)', value: 'blindness' },
+        { label: '夜视 (Night Vision)', value: 'night_vision' },
+        { label: '饥饿 (Hunger)', value: 'hunger' },
+        { label: '虚弱 (Weakness)', value: 'weakness' },
+        { label: '中毒 (Poison)', value: 'poison' },
+        { label: '凋零 (Wither)', value: 'wither' },
+        { label: '生命提升 (Health Boost)', value: 'health_boost' },
+        { label: '吸收 (Absorption)', value: 'absorption' },
+        { label: '饱和 (Saturation)', value: 'saturation' },
+        { label: '发光 (Glowing)', value: 'glowing' },
+        { label: '飘浮 (Levitation)', value: 'levitation' },
+        { label: '幸运 (Luck)', value: 'luck' },
+        { label: '霉运 (Bad Luck)', value: 'unluck' },
+        { label: '缓降 (Slow Falling)', value: 'slow_falling' },
+        { label: '潮涌能量 (Conduit Power)', value: 'conduit_power' },
+        { label: '海豚恩惠 (Dolphins Grace)', value: 'dolphins_grace' },
+        { label: '不祥之兆 (Bad Omen)', value: 'bad_omen' },
+        { label: '英雄村庄 (Hero of Village)', value: 'hero_of_the_village' },
+      ]},
+      { key: 'duration', label: '持续时间 (tick)', type: 'number', defaultValue: 3600, min: 1, max: 72000, step: 20, group: '效果' },
+      { key: 'amplifier', label: '效果等级', type: 'number', defaultValue: 0, min: 0, max: 127, step: 1, group: '效果' },
+      { key: 'isAmbient', label: '环境效果', type: 'boolean', defaultValue: false, group: '效果' },
+      { key: 'isBeneficial', label: '增益效果', type: 'boolean', defaultValue: true, group: '效果' },
+      { key: 'color', label: '药水颜色', type: 'color', defaultValue: '820AC', group: '外观' },
+      { key: 'hasIcon', label: '显示图标', type: 'boolean', defaultValue: true, group: '外观' },
     ],
   },
 }

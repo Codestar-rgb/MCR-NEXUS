@@ -2710,6 +2710,1404 @@ export const MC_API_DICTIONARY: ApiClassInfo[] = [
     className: 'PiglinBrute',
     description: '猪灵蛮兵',
   },
+
+  /* ================================================================ */
+  /* 阶段 8-B 扩展：16 个新领域，180+ 类                              */
+  /* ================================================================ */
+
+  /* === 领域 1：net.minecraft.world.entity.animal（21 类） === */
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Horse',
+    description: '马（可骑乘、可装备鞍与马铠）',
+    methods: [
+      { signature: 'boolean isTamed()', description: '是否已被驯服' },
+      { signature: 'void setTamed(boolean tamed)', description: '设置驯服状态' },
+      { signature: 'int getTemper()', description: '获取脾气值（影响驯服难度）' },
+      { signature: 'void setTemper(int temper)', description: '设置脾气值' },
+      { signature: 'boolean isEating()', description: '是否正在低头吃草' },
+      { signature: 'boolean canWearArmor(ItemStack stack)', description: '能否穿戴指定马铠' },
+      { signature: 'boolean wearsArmor()', description: '是否穿着马铠' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Donkey',
+    description: '驴（可骑乘、可携带箱子）',
+    methods: [
+      { signature: 'boolean hasChest()', description: '是否已装备箱子' },
+      { signature: 'int getInventoryColumns()', description: '获取库存列数（驴为 5 列）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Mule',
+    description: '骡（驴和马的后代，可携带箱子）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Llama',
+    description: '羊驼（可装备箱子、可吐口水攻击）',
+    methods: [
+      { signature: 'void doSpitAttack(LivingEntity target)', description: '对目标吐口水' },
+      { signature: 'boolean isTraderLlama()', description: '是否为行商羊驼' },
+      { signature: 'int getStrength()', description: '获取强度（影响库存大小）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'TraderLlama',
+    description: '行商羊驼（流浪商人伴生）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Cod',
+    description: '鳕鱼（普通鱼群实体）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Salmon',
+    description: '鲑鱼',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Pufferfish',
+    description: '河豚（受惊会膨胀并造成中毒）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'TropicalFish',
+    description: '热带鱼（多种颜色变种）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Squid',
+    description: '鱿鱼',
+    methods: [
+      { signature: 'Vec3 getRotVec()', description: '获取旋转向量' },
+      { signature: 'boolean hurt(DamageSource source, float amount)', description: '受到伤害（墨汁喷洒机制）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'GlowSquid',
+    description: '发光鱿鱼（喷洒发光墨汁）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Dolphin',
+    description: '海豚（可带路至沉船、给予玩家海豚的恩惠）',
+    methods: [
+      { signature: 'void setTargetPos(BlockPos pos)', description: '设置带路目标' },
+      { signature: 'BlockPos getTargetPos()', description: '获取带路目标' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Axolotl',
+    description: '美西螈（多色变种，攻击其他水生生物，模拟死亡机制）',
+    methods: [
+      { signature: 'boolean isPlayingDead()', description: '是否在装死' },
+      { signature: 'int getVariant()', description: '获取颜色变种' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Goat',
+    description: '山羊（可冲撞、可尖叫变种）',
+    methods: [
+      { signature: 'boolean isScreamingGoat()', description: '是否为尖叫山羊' },
+      { signature: 'long getLongJumpCooldown()', description: '获取长跳冷却' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Mooshroom',
+    description: '哞菇（蘑菇牛，可用碗取蘑菇煲）',
+    methods: [
+      { signature: 'Mooshroom.MushroomType getMushroomType()', description: '获取蘑菇类型（红/棕）' },
+      { signature: 'void setMushroomType(Mooshroom.MushroomType type)', description: '设置蘑菇类型' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Sniffer',
+    description: '嗅探兽（1.20 新增，可挖掘古老种子）',
+    methods: [
+      { signature: 'void setSniffingTarget(BlockPos pos)', description: '设置嗅探目标坐标' },
+      { signature: 'BlockPos getSniffingTarget()', description: '获取嗅探目标' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Allay',
+    description: '悦灵（可拾取物品、跟随音符盒）',
+    methods: [
+      { signature: 'boolean isDancing()', description: '是否正在跳舞' },
+      { signature: 'BlockPos getJukeboxPos()', description: '获取音符盒坐标' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Frog',
+    description: '青蛙（可吞食小型史莱姆）',
+    methods: [
+      { signature: 'FrogVariant getVariant()', description: '获取青蛙变种（温带/寒带/热带）' },
+      { signature: 'void setVariant(FrogVariant variant)', description: '设置青蛙变种' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Tadpole',
+    description: '蝌蚪（青蛙幼体，水生）',
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Camel',
+    description: '骆驼（1.20 新增，可骑乘两人、可坐下）',
+    methods: [
+      { signature: 'boolean isSitting()', description: '是否坐下' },
+      { signature: 'void setSitting(boolean sitting)', description: '设置坐下状态' },
+      { signature: 'int getDashCooldown()', description: '获取冲刺冷却' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.animal',
+    className: 'Strider',
+    description: '炽足兽（下界岩浆上行走，可用诡异菌钓竿引导）',
+    methods: [
+      { signature: 'boolean isSuffocating()', description: '是否在岩浆外窒息' },
+      { signature: 'void setSuffocating(boolean suffocating)', description: '设置窒息状态' },
+    ],
+  },
+
+  /* === 领域 2：net.minecraft.world.entity.monster（14 类） === */
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'CaveSpider',
+    description: '洞穴蜘蛛（小型、攻击附带中毒）',
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'Giant',
+    description: '巨人僵尸（无 AI 的传统实体）',
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'Illusioner',
+    description: '幻术师（灾厄村民法师，施放失明与分身）',
+    methods: [
+      { signature: 'void performRangedAttack(LivingEntity target, float distanceFactor)', description: '远程攻击目标' },
+      { signature: 'void applyRaidBuffs(int wave, boolean unused)', description: '应用袭击增益' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'ZombifiedPiglin',
+    description: '僵尸猪灵（下界原住民，被攻击会激怒群体）',
+    methods: [
+      { signature: 'boolean isAngry()', description: '是否处于激怒状态' },
+      { signature: 'void setTarget(LivingEntity target)', description: '设置攻击目标（触发群体仇恨）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'Warden',
+    description: '监守者（1.19+ 新增，深暗之园 BOSS）',
+    methods: [
+      { signature: 'int getAngerLevel()', description: '获取愤怒等级（0-149）' },
+      { signature: 'void increaseAngerAt(Entity entity)', description: '增加对目标的愤怒' },
+      { signature: 'boolean canDisableShield()', description: '是否可破盾（始终 true）' },
+      { signature: 'void sonicBoom()', description: '施放音波攻击' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'AbstractSkeleton',
+    description: '骷髅基类（Skeleton/Stray/WitherSkeleton 共同父类）',
+    methods: [
+      { signature: 'boolean isShaking()', description: '是否在颤抖（淋雨受影响）' },
+      { signature: 'void performRangedAttack(LivingEntity target, float distanceFactor)', description: '远程攻击' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'AbstractIllager',
+    description: '灾厄村民基类（突袭成员共同父类）',
+    methods: [
+      { signature: 'boolean isCelebrating()', description: '是否在庆祝' },
+      { signature: 'void setCelebrating(boolean celebrating)', description: '设置庆祝状态' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'SpellcasterIllager',
+    description: '施法灾厄村民基类（Evoker/Illusioner 父类）',
+    methods: [
+      { signature: 'SpellcasterIllager.IllagerSpell getSpell()', description: '获取当前法术类型' },
+      { signature: 'boolean isCastingSpell()', description: '是否在施法' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'Enemy',
+    description: '敌对生物接口（标识可主动攻击玩家的实体）',
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'CrossbowAttackMob',
+    description: '弩攻击接口（灾厄村民、猪灵使用）',
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'RangedAttackMob',
+    description: '远程攻击接口（骷髅、女巫等使用）',
+    methods: [
+      { signature: 'void performRangedAttack(LivingEntity target, float distanceFactor)', description: '执行远程攻击' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'ZombieVillager',
+    description: '僵尸村民（可被虚弱+金苹果治愈回村民）',
+    methods: [
+      { signature: 'int getConversionProgress()', description: '获取治愈进度' },
+      { signature: 'boolean isConverting()', description: '是否正在治愈' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster',
+    className: 'PatrolMonster',
+    description: '巡逻怪物基类（掠夺者队长生成）',
+    methods: [
+      { signature: 'boolean canBeLeader()', description: '是否能成为队长' },
+      { signature: 'boolean canJoinPatrol()', description: '是否能加入巡逻队' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.monster.piglin',
+    className: 'AbstractPiglin',
+    description: '猪灵基类（Piglin/PiglinBrute 父类，处理僵尸化逻辑）',
+    methods: [
+      { signature: 'boolean isImmuneToZombification()', description: '是否免疫僵尸化' },
+      { signature: 'boolean isConverting()', description: '是否正在转化为僵尸猪灵' },
+    ],
+  },
+
+  /* === 领域 3：net.minecraft.world.entity.npc（4 类） === */
+  {
+    package: 'net.minecraft.world.entity.npc',
+    className: 'VillagerProfession',
+    description: '村民职业（无业/武器匠/工具匠/盔甲匠/图书管理员/皮匠/石匠/牧师/农民/渔夫/牧羊人/制箭师/制图师/屠夫）',
+    methods: [
+      { signature: 'static VillagerProfession byName(String name)', description: '按名称获取职业' },
+      { signature: 'String name()', description: '获取职业内部名' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.npc',
+    className: 'VillagerType',
+    description: '村民类型（按生物群系分类：沙漠/丛林/平原/萨凡纳/雪原/沼泽/针叶林）',
+  },
+  {
+    package: 'net.minecraft.world.entity.npc',
+    className: 'VillagerData',
+    description: '村民数据容器（包装类型/职业/等级）',
+    methods: [
+      { signature: 'int level()', description: '获取等级（1=新手,2=学徒,3=老手,4=专家,5=大师）' },
+      { signature: 'VillagerProfession profession()', description: '获取职业' },
+      { signature: 'VillagerType type()', description: '获取类型' },
+      { signature: 'void setProfession(VillagerProfession profession)', description: '设置职业' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.npc',
+    className: 'VillagerTrades',
+    description: '村民交易列表管理（按职业/等级注册买卖配方）',
+    methods: [
+      { signature: 'static void trades(VillagerProfession profession, int level, ItemListing[] trades)', description: '注册职业/等级的交易配方' },
+    ],
+  },
+
+  /* === 领域 4：net.minecraft.world.entity.vehicle（8 类） === */
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartChest',
+    description: '运输矿车（带箱子可携带 27 格物品）',
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartCommandBlock',
+    description: '命令方块矿车（执行命令）',
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartFurnace',
+    description: '动力矿车（烧燃料推动自身，已弃用但保留）',
+    methods: [
+      { signature: 'boolean hasFuel()', description: '是否还有燃料' },
+      { signature: 'void setHasFuel(boolean hasFuel)', description: '设置燃料状态' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartHopper',
+    description: '漏斗矿车（可吸取上方物品）',
+    methods: [
+      { signature: 'boolean isEnabled()', description: '是否启用吸取' },
+      { signature: 'void setEnabled(boolean enabled)', description: '设置启用状态' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartSpawner',
+    description: '刷怪笼矿车（移动刷怪笼）',
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'MinecartTNT',
+    description: 'TNT 矿车（碰撞或激活时爆炸）',
+    methods: [
+      { signature: 'void primeFuse(int fuse)', description: '点燃引信' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'ChestBoat',
+    description: '运输船（带箱子可携带 27 格物品）',
+  },
+  {
+    package: 'net.minecraft.world.entity.vehicle',
+    className: 'Boat.Type',
+    description: '船的木材类型枚举（橡木/云杉/白桦/丛林/金合欢/深色橡木/红树/竹子/樱桃）',
+  },
+
+  /* === 领域 5：net.minecraft.world.entity.projectile（10 类） === */
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'SpectralArrow',
+    description: '光灵箭（命中目标附带发光效果 10 秒）',
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'Egg',
+    description: '投掷的鸡蛋（命中随机生成小鸡）',
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'ExperienceBottle',
+    description: '附魔之瓶（命中生成经验球）',
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'EyeOfEnder',
+    description: '末影之眼（飞向要塞）',
+    methods: [
+      { signature: 'void signalTo(BlockPos pos)', description: '飞向目标坐标' },
+      { signature: 'ItemStack getItem()', description: '获取内部末影之眼物品' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'FishingHook',
+    description: '鱼漂（玩家钓鱼时抛出的钩子）',
+    methods: [
+      { signature: 'int retrieve(ItemStack stack)', description: '收回鱼线，返回钓到鱼的奖励等级' },
+      { signature: 'boolean isAlive()', description: '是否在水中' },
+      { signature: 'Player getPlayerOwner()', description: '获取所属玩家' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'AbstractHurtingProjectile',
+    description: '伤害型投射物基类（火球/凋灵之首/龙息等父类）',
+    methods: [
+      { signature: 'void setOwner(Entity entity)', description: '设置发射者' },
+      { signature: 'double getPower()', description: '获取威力' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'ThrowableItemProjectile',
+    description: '投掷物基类（雪球/鸡蛋/末影珍珠/附魔之瓶共同父类）',
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'ProjectileUtil',
+    description: '投射物工具类（运动/旋转矩阵计算）',
+    methods: [
+      { signature: 'static Vec3 getMovementOfShootable(Entity entity, float x, float y, float z, float speed, float divergence)', description: '计算投射物运动向量' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'EvokerFangs',
+    description: '唤魔者尖牙（地面突起的攻击实体）',
+    methods: [
+      { signature: 'void setDamage(float damage)', description: '设置伤害值' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.entity.projectile',
+    className: 'AbstractArrow.Pickup',
+    description: '箭矢拾取规则枚举（允许拾取/创造模式/不允许拾取）',
+  },
+  {
+    package: 'net.minecraft.world.entity.item',
+    className: 'PrimedTnt',
+    description: '点燃的 TNT 实体（实际 TNT 实体类名）',
+    methods: [
+      { signature: 'int getFuse()', description: '获取剩余引信时间（刻）' },
+      { signature: 'void setFuse(int fuse)', description: '设置引信时间' },
+      { signature: 'LivingEntity getOwner()', description: '获取点燃者' },
+    ],
+  },
+
+  /* === 领域 6：net.minecraft.world.level.block.entity（25 类） === */
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BarrelBlockEntity',
+    description: '木桶方块实体（27 格物品库存）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'ShulkerBoxBlockEntity',
+    description: '潜影盒方块实体（27 格物品库存，保留物品不掉落）',
+    methods: [
+      { signature: 'boolean isClosed()', description: '是否关闭' },
+      { signature: 'float getProgress(float partialTicks)', description: '获取开合动画进度（0-1）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'EnderChestBlockEntity',
+    description: '末影箱方块实体（玩家共享库存）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BannerBlockEntity',
+    description: '旗帜方块实体（存储图案层数据）',
+    methods: [
+      { signature: 'ListTag getPatterns()', description: '获取图案层数据' },
+      { signature: 'void setPatterns(ListTag patterns)', description: '设置图案层' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BeaconBlockEntity',
+    description: '信标方块实体（提供增益光环）',
+    methods: [
+      { signature: 'int getLevels()', description: '获取信标等级（0-4）' },
+      { signature: 'MobEffect getPrimaryEffect()', description: '获取主效果' },
+      { signature: 'void setPrimaryEffect(MobEffect effect)', description: '设置主效果' },
+      { signature: 'boolean updateBase(int level, int primary, int secondary)', description: '更新信标效果' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BrewingStandBlockEntity',
+    description: '酿造台方块实体（3 药水槽 + 烈性粉槽 + 材料槽）',
+    methods: [
+      { signature: 'int getBrewTime()', description: '获取酿造进度（0-400）' },
+      { signature: 'int getFuel()', description: '获取燃料数' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BlastFurnaceBlockEntity',
+    description: '高炉方块实体（熔炼速度 2 倍，仅限矿石/金属）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'SmokerBlockEntity',
+    description: '烟熏炉方块实体（烹饪速度 2 倍，仅限食物）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'DispenserBlockEntity',
+    description: '发射器方块实体（9 格库存，可发射物品/生成实体）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'DropperBlockEntity',
+    description: '投掷器方块实体（9 格库存，仅投掷物品）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'HopperBlockEntity',
+    description: '漏斗方块实体（5 格库存，吸取/推送物品）',
+    methods: [
+      { signature: 'boolean isOnCustomCooldown()', description: '是否在传输冷却' },
+      { signature: 'void setCooldown(int cooldown)', description: '设置传输冷却' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'JukeboxBlockEntity',
+    description: '唱片机方块实体（播放音乐唱片）',
+    methods: [
+      { signature: 'ItemStack getRecord()', description: '获取当前唱片' },
+      { signature: 'void setRecord(ItemStack record)', description: '设置唱片' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'NoteBlockEntity',
+    description: '音符盒方块实体（存储音符 0-24）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'PistonMovingBlockEntity',
+    description: '活塞移动方块实体（活塞头推动方块时使用）',
+    methods: [
+      { signature: 'Direction getMovementDirection()', description: '获取活塞移动方向' },
+      { signature: 'float getPartialMove(float partialTicks)', description: '获取部分移动进度' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'EnchantmentTableBlockEntity',
+    description: '附魔台方块实体（书页翻动动画）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'EndPortalBlockEntity',
+    description: '末地传送门方块实体（仅装饰用）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'SpawnerBlockEntity',
+    description: '刷怪笼方块实体（生成指定实体）',
+    methods: [
+      { signature: 'int getSpin()', description: '获取旋转刻度' },
+      { signature: 'void setNextSpawnData(SpawnData data)', description: '设置下次生成数据' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'CommandBlockBlockEntity',
+    description: '命令方块方块实体（执行命令）',
+    methods: [
+      { signature: 'boolean isAutomatic()', description: '是否自动执行' },
+      { signature: 'boolean runCommand(CommandSourceStack source)', description: '执行命令' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'StructureBlockEntity',
+    description: '结构方块方块实体（保存/加载结构）',
+    methods: [
+      { signature: 'boolean saveStructure(boolean showToast)', description: '保存结构' },
+      { signature: 'boolean loadStructure(boolean showToast)', description: '加载结构' },
+      { signature: 'void setMode(StructureMode mode)', description: '设置模式（保存/加载/数据/角落）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'SkullBlockEntity',
+    description: '头颅方块实体（可显示玩家头）',
+    methods: [
+      { signature: 'GameProfile getOwnerProfile()', description: '获取头颅所属玩家' },
+      { signature: 'void setOwner(GameProfile profile)', description: '设置头颅所属玩家' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BedBlockEntity',
+    description: '床方块实体（存储颜色）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'BellBlockEntity',
+    description: '钟方块实体（响铃效果）',
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'CampfireBlockEntity',
+    description: '营火方块实体（4 槽烹饪）',
+    methods: [
+      { signature: 'ItemStack getItem(int slot)', description: '获取指定槽物品' },
+      { signature: 'int getCookingProgress(int slot)', description: '获取烹饪进度' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'LecternBlockEntity',
+    description: '讲台方块实体（放置书/翻页）',
+    methods: [
+      { signature: 'ItemStack getBook()', description: '获取书' },
+      { signature: 'int getPage()', description: '获取当前页码' },
+      { signature: 'void setPage(int page)', description: '设置当前页码' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.block.entity',
+    className: 'ConduitBlockEntity',
+    description: '潮涌核心方块实体（水下提供呼吸与伤害附近敌对生物）',
+  },
+
+  /* === 领域 7：net.minecraft.world.level.storage（6 类） === */
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'LevelStorageSource',
+    description: '世界存储源（管理存档文件夹）',
+    methods: [
+      { signature: 'LevelStorageSource.LevelStorageAccess createAccess(String levelId)', description: '创建存档访问器' },
+      { signature: 'List<LevelSummary> getLevelList()', description: '获取所有存档列表' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'LevelStorageException',
+    description: '世界存储异常',
+  },
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'PlayerDataStorage',
+    description: '玩家数据存储（NBT 文件）',
+    methods: [
+      { signature: 'CompoundTag load(Player player)', description: '加载玩家 NBT' },
+      { signature: 'void save(Player player)', description: '保存玩家 NBT' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'ServerLevelData',
+    description: '服务端世界数据接口（继承 WorldData）',
+    methods: [
+      { signature: 'int getDayTime()', description: '获取世界时间' },
+      { signature: 'void setDayTime(int time)', description: '设置世界时间' },
+      { signature: 'boolean isRaining()', description: '是否在下雨' },
+      { signature: 'boolean isThundering()', description: '是否在雷暴' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'PrimaryLevelData',
+    description: '主世界数据实现（继承 ServerLevelData）',
+  },
+  {
+    package: 'net.minecraft.world.level.storage',
+    className: 'LevelData',
+    description: '世界数据接口基类（共享给客户端/服务端）',
+    methods: [
+      { signature: 'long getGameTime()', description: '获取游戏刻数' },
+      { signature: 'long getDayTime()', description: '获取一天内时间' },
+      { signature: 'Difficulty getDifficulty()', description: '获取难度' },
+    ],
+  },
+
+  /* === 领域 8：net.minecraft.world.level.chunk（5 类） === */
+  {
+    package: 'net.minecraft.world.level.chunk',
+    className: 'ChunkSource',
+    description: '区块源（提供区块访问接口）',
+    methods: [
+      { signature: 'ChunkAccess getChunk(int x, int z, ChunkStatus status, boolean require)', description: '获取指定状态的区块' },
+      { signature: 'boolean hasChunk(int x, int z)', description: '区块是否已加载' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.chunk',
+    className: 'Chunk',
+    description: '区块接口（LevelChunk 实现，提供方块状态读写）',
+    methods: [
+      { signature: 'BlockState getBlockState(BlockPos pos)', description: '获取方块状态' },
+      { signature: 'void setBlockState(BlockPos pos, BlockState state, boolean isMoving)', description: '设置方块状态' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.chunk',
+    className: 'ProtoChunk',
+    description: '原型区块（生成过程中的中间区块状态）',
+  },
+  {
+    package: 'net.minecraft.world.level.chunk',
+    className: 'EmptyLevelChunk',
+    description: '空区块（用于无区块加载时的占位）',
+  },
+  {
+    package: 'net.minecraft.world.level.chunk',
+    className: 'ChunkSerializer',
+    description: '区块序列化工具（写入/读取 NBT）',
+    methods: [
+      { signature: 'static ChunkAccess read(ServerLevel level, PoiManager poiManager, ChunkPos pos, CompoundTag tag)', description: '从 NBT 读取区块' },
+      { signature: 'static CompoundTag write(ServerLevel level, ChunkAccess chunk)', description: '将区块写入 NBT' },
+    ],
+  },
+
+  /* === 领域 9：net.minecraft.world.level.levelgen（11 类） === */
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'NoiseGeneratorSettings',
+    description: '噪声生成器设置（每维度的噪声参数）',
+    methods: [
+      { signature: 'NoiseSettings noiseSettings()', description: '获取噪声设置' },
+      { signature: 'boolean islandOverride()', description: '是否启用岛屿覆盖' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'NoiseBasedChunkGenerator',
+    description: '基于噪声的区块生成器（原版主世界/下界使用）',
+    methods: [
+      { signature: 'void buildSurface(WorldGenRegion region, StructureManager manager, RandomState random, ChunkAccess chunk)', description: '生成地表' },
+      { signature: 'void applyCarvers(WorldGenRegion region, long seed, RandomState random, BiomeManager biomeManager, StructureManager manager, ChunkAccess chunk, GenerationStep.Carving step)', description: '应用雕刻器（洞穴/峡谷）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'NoiseRouter',
+    description: '噪声路由器（连接噪声函数与最终地形参数）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'NoiseSettings',
+    description: '噪声设置（高度/密度函数配置）',
+    methods: [
+      { signature: 'int height()', description: '获取高度（通常 384）' },
+      { signature: 'int minY()', description: '获取最低 Y（主世界 -64）' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'WorldgenRandom',
+    description: '世界生成随机数源',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'FeatureSorter',
+    description: '特性排序器（按生物群系分组特性）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'DensityFunction',
+    description: '密度函数接口（噪声地形核心）',
+    methods: [
+      { signature: 'double compute(DensityFunction.FunctionContext context)', description: '计算指定位置的密度值' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'SurfaceRules',
+    description: '地表规则（按条件应用地表方块）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'SurfaceSystem',
+    description: '地表系统（执行地表规则）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen',
+    className: 'CarvingContext',
+    description: '雕刻上下文（提供雕刻器访问）',
+  },
+  {
+    package: 'net.minecraft.world.level',
+    className: 'WorldGenLevel',
+    description: '世界生成等级接口（继承 LevelAccessor，提供生物群系/结构访问）',
+  },
+
+  /* === 领域 10：net.minecraft.world.level.levelgen.feature（20 类） === */
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'SimpleBlockFeature',
+    description: '单方块特性（在指定位置放置方块）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'MonsterRoomFeature',
+    description: '怪物房间特性（地牢/刷怪笼房间）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'LakeFeature',
+    description: '湖泊特性（生成水/岩浆湖）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'OreFeature',
+    description: '矿石特性（生成矿脉）',
+    methods: [
+      { signature: 'boolean place(FeaturePlaceContext<OreConfiguration> context)', description: '生成矿石' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'SpikeFeature',
+    description: '末地黑曜石柱特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'BasaltColumnsFeature',
+    description: '玄武岩柱特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'DeltaFeature',
+    description: '三角洲特性（下界岩浆/玄武岩平地）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'ReplaceBlobsFeature',
+    description: '替换块状区域特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'FillLayerFeature',
+    description: '填充整层特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'DiskFeature',
+    description: '圆盘特性（沙/黏土圆盘）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'NoSurfaceOreFeature',
+    description: '无表面矿石特性（不暴露在地表）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'BoulderFeature',
+    description: '巨石特性（苔石/铁粒堆）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'BonusChestFeature',
+    description: '奖励箱特性（出生点附近）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'CoralClawFeature',
+    description: '珊瑚爪特性（水下珊瑚）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'CoralMushroomFeature',
+    description: '珊瑚蘑菇特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'CoralTreeFeature',
+    description: '珊瑚树特性',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'ConfiguredFeature',
+    description: '已配置的特性（Feature + 配置的组合，可注册）',
+    methods: [
+      { signature: 'Feature<FC> feature()', description: '获取底层 Feature' },
+      { signature: 'FC config()', description: '获取配置' },
+      { signature: 'boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos pos)', description: '在指定位置生成' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'TreeFeature',
+    description: '树木特性（基于 TreeConfiguration 生成）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'HugeFungusFeature',
+    description: '巨型菌类特性（下界诡异菌）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature',
+    className: 'BambooStalkFeature',
+    description: '竹子特性（生成竹竿）',
+  },
+
+  /* === 领域 11：net.minecraft.world.level.levelgen.feature.configurations（15 类） === */
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'FeatureConfiguration',
+    description: '特性配置接口（所有配置类的根）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'OreConfiguration',
+    description: '矿石配置（目标方块 + 替换规则 + 矿脉大小）',
+    methods: [
+      { signature: 'static OreConfiguration target(RuleTest test, BlockState state)', description: '创建矿石配置' },
+      { signature: 'int size()', description: '获取矿脉大小' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'DiskConfiguration',
+    description: '圆盘配置（半径/方块/状态）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'ReplaceBlockConfiguration',
+    description: '替换方块配置（替换指定方块为目标方块）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'SimpleBlockConfiguration',
+    description: '简单方块配置（单一方块状态）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'SimpleRandomFeatureConfiguration',
+    description: '简单随机特性配置（从列表中随机选一个）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'RandomFeatureConfiguration',
+    description: '随机特性配置（带权重的随机选择）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'NoneFeatureConfiguration',
+    description: '空特性配置（无参特性的占位）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'BlockColumnConfiguration',
+    description: '方块列配置（垂直方块柱）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'HugeMushroomFeatureConfiguration',
+    description: '巨型蘑菇配置（蘑菇茎/盖方块 + 高度）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'TreeConfiguration',
+    description: '树木配置（树干/树叶/高度/根/装饰物）',
+    methods: [
+      { signature: 'TreeConfiguration.Builder builder()', description: '获取构建器' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'SpringConfiguration',
+    description: '泉配置（流体 + 可替换方块列表）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'SpikeConfiguration',
+    description: '末地黑曜石柱配置',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'BasaltColumnsConfiguration',
+    description: '玄武岩柱配置（高度范围）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.feature.configurations',
+    className: 'DeltaFeatureConfiguration',
+    description: '三角洲特性配置（液体 + 边缘方块 + 大小）',
+  },
+
+  /* === 领域 12：net.minecraft.world.level.levelgen.placement（8 类） === */
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'PlacedFeature',
+    description: '已放置的特性（ConfiguredFeature + 修饰符列表）',
+    methods: [
+      { signature: 'boolean place(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos pos)', description: '在指定位置生成' },
+      { signature: 'List<PlacementModifier> placementModifiers()', description: '获取修饰符列表' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'PlacementModifier',
+    description: '放置修饰符基类（决定特性在哪些位置生成）',
+    methods: [
+      { signature: 'Stream<BlockPos> getPositions(PlacementContext context, RandomSource random, BlockPos pos)', description: '获取可放置位置流' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'PlacementContext',
+    description: '放置上下文（提供区块生成器/特性访问）',
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'BiomeFilter',
+    description: '生物群系过滤器（仅在合法生物群系生成）',
+    methods: [
+      { signature: 'static BiomeFilter biome()', description: '获取实例' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'CountPlacement',
+    description: '数量放置修饰符（生成 N 次）',
+    methods: [
+      { signature: 'static CountPlacement of(int count)', description: '按数量创建' },
+      { signature: 'static CountPlacement of(IntProvider count)', description: '按区间创建' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'RarityFilter',
+    description: '稀有度过滤器（按概率生成）',
+    methods: [
+      { signature: 'static RarityFilter onAverageOnceEvery(int chance)', description: '按 1/N 概率创建' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'InSquarePlacement',
+    description: '方形内放置（在 16x16 区块内随机选点）',
+    methods: [
+      { signature: 'static InSquarePlacement spread()', description: '获取实例' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.level.levelgen.placement',
+    className: 'HeightRangePlacement',
+    description: '高度范围放置（在指定 Y 范围内生成）',
+    methods: [
+      { signature: 'static HeightRangePlacement of(HeightProvider height)', description: '按高度提供器创建' },
+      { signature: 'static HeightRangePlacement uniform(VerticalAnchor min, VerticalAnchor max)', description: '均匀分布' },
+      { signature: 'static HeightRangePlacement triangle(VerticalAnchor min, VerticalAnchor max)', description: '三角分布' },
+    ],
+  },
+
+  /* === 领域 13：net.minecraft.commands + brigadier（9 类） === */
+  {
+    package: 'net.minecraft.commands',
+    className: 'CommandBuildContext',
+    description: '命令构建上下文（提供注册表访问给参数解析）',
+  },
+  {
+    package: 'net.minecraft.commands',
+    className: 'CommandRuntimeException',
+    description: '命令执行时抛出的运行时异常',
+  },
+  {
+    package: 'net.minecraft.commands',
+    className: 'CommandSource',
+    description: '命令源接口（提供反馈/权限/位置信息）',
+    methods: [
+      { signature: 'void sendSystemMessage(Component message)', description: '发送消息' },
+      { signature: 'boolean acceptsSuccess()', description: '是否接受成功消息' },
+      { signature: 'boolean acceptsFailure()', description: '是否接受失败消息' },
+      { signature: 'boolean shouldInformAdmins()', description: '是否通知管理员' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands',
+    className: 'CommandSigningContext',
+    description: '命令签名上下文（用于聊天签名验证）',
+  },
+  {
+    package: 'com.mojang.brigadier',
+    className: 'CommandDispatcher',
+    description: 'Brigadier 命令调度器（注册/执行命令）',
+    methods: [
+      { signature: 'LiteralArgumentBuilder<S> literal(String name)', description: '创建字面量参数构建器' },
+      { signature: 'RequiredArgumentBuilder<S, T> argument(String name, ArgumentType<T> type)', description: '创建必填参数构建器' },
+      { signature: 'int execute(ParseResults<S> parse)', description: '执行已解析命令' },
+      { signature: 'ParseResults<S> parse(String command, S source)', description: '解析命令字符串' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.context',
+    className: 'CommandContext',
+    description: '命令执行上下文（包含源 + 已解析参数）',
+    methods: [
+      { signature: 'S getSource()', description: '获取命令源' },
+      { signature: '<T> T getArgument(String name, Class<T> clazz)', description: '获取已解析参数值' },
+      { signature: 'String getInput()', description: '获取原始输入字符串' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.exceptions',
+    className: 'CommandSyntaxException',
+    description: 'Brigadier 命令语法异常',
+    methods: [
+      { signature: 'String getMessage()', description: '获取异常消息' },
+      { signature: 'int getCursor()', description: '获取错误位置' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.builder',
+    className: 'LiteralArgumentBuilder',
+    description: '字面量参数构建器（构建字面子命令）',
+    methods: [
+      { signature: 'static <S> LiteralArgumentBuilder<S> literal(String name)', description: '创建字面量构建器' },
+      { signature: 'LiteralArgumentBuilder<S> executes(Command<S> command)', description: '设置执行逻辑' },
+      { signature: 'LiteralArgumentBuilder<S> then(ArgumentBuilder<S, ?> argument)', description: '添加子参数' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.builder',
+    className: 'RequiredArgumentBuilder',
+    description: '必填参数构建器（构建参数化子命令）',
+    methods: [
+      { signature: 'static <S, T> RequiredArgumentBuilder<S, T> argument(String name, ArgumentType<T> type)', description: '创建必填参数构建器' },
+      { signature: 'RequiredArgumentBuilder<S, T> suggests(SuggestionProvider<S> provider)', description: '设置建议提供器' },
+    ],
+  },
+
+  /* === 领域 14：net.minecraft.commands.arguments + brigadier.arguments（11 类） === */
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'BlockPosArgument',
+    description: '方块坐标参数（@a/@s 或具体 x y z）',
+    methods: [
+      { signature: 'static BlockPosArgument blockPos()', description: '获取参数实例' },
+      { signature: 'static BlockPos getLoadedBlockPos(CommandContext<CommandSourceStack> ctx, String name)', description: '获取已加载坐标' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'EntityArgument',
+    description: '实体参数（玩家/实体/选择器）',
+    methods: [
+      { signature: 'static EntityArgument player()', description: '单玩家' },
+      { signature: 'static EntityArgument players()', description: '多玩家' },
+      { signature: 'static EntityArgument entity()', description: '单实体' },
+      { signature: 'static EntityArgument entities()', description: '多实体' },
+      { signature: 'static Entity getEntity(CommandContext<CommandSourceStack> ctx, String name)', description: '获取单个实体' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'ResourceArgument',
+    description: '注册表资源参数（按 ResourceKey 选择注册表项）',
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'ItemArgument',
+    description: '物品参数（带 NBT 与数量）',
+    methods: [
+      { signature: 'static ItemArgument item(CommandBuildContext ctx)', description: '创建实例' },
+      { signature: 'static ItemStack getItem(CommandContext<CommandSourceStack> ctx, String name)', description: '获取物品堆' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'BlockStateArgument',
+    description: '方块状态参数（带 NBT 与属性）',
+    methods: [
+      { signature: 'static BlockStateArgument block(CommandBuildContext ctx)', description: '创建实例' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'GameProfileArgument',
+    description: '玩家档案参数（按名字或选择器解析）',
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'MessageArgument',
+    description: '消息参数（聊天消息，参与签名）',
+    methods: [
+      { signature: 'static Component getMessage(CommandContext<CommandSourceStack> ctx, String name)', description: '获取解析后的消息' },
+    ],
+  },
+  {
+    package: 'net.minecraft.commands.arguments',
+    className: 'ComponentArgument',
+    description: '文本组件参数（JSON 格式解析）',
+  },
+  {
+    package: 'com.mojang.brigadier.arguments',
+    className: 'ArgumentType',
+    description: '参数类型接口（ Brigadier 解析器入口）',
+    methods: [
+      { signature: 'T parse(StringReader reader) throws CommandSyntaxException', description: '从读取器解析参数' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.arguments',
+    className: 'StringArgumentType',
+    description: '字符串参数（单字/带空格/贪婪）',
+    methods: [
+      { signature: 'static StringArgumentType word()', description: '单字（无空格）' },
+      { signature: 'static StringArgumentType string()', description: '带空格字符串' },
+      { signature: 'static StringArgumentType greedyString()', description: '贪婪读取剩余' },
+    ],
+  },
+  {
+    package: 'com.mojang.brigadier.arguments',
+    className: 'IntegerArgumentType',
+    description: '整数参数（带最小/最大值）',
+    methods: [
+      { signature: 'static IntegerArgumentType integer(int min, int max)', description: '创建带范围的整数参数' },
+      { signature: 'static int getInteger(CommandContext<?> ctx, String name)', description: '获取参数值' },
+    ],
+  },
+
+  /* === 领域 15：net.minecraftforge.client.event（9 类） === */
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderHandEvent',
+    description: '渲染手部事件（可取消，用于自定义第一人称手部）',
+    methods: [
+      { signature: 'PoseStack getPoseStack()', description: '获取姿态栈' },
+      { signature: 'MultiBufferSource getMultiBufferSource()', description: '获取缓冲源' },
+      { signature: 'InteractionHand getHand()', description: '获取渲染的手' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderPlayerEvent',
+    description: '玩家渲染事件基类（含 Pre/Post 子事件）',
+    methods: [
+      { signature: 'Player getPlayer()', description: '获取玩家' },
+      { signature: 'PoseStack getPoseStack()', description: '获取姿态栈' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderNameTagEvent',
+    description: '渲染名牌事件（可修改/取消名牌）',
+    methods: [
+      { signature: 'Component getContent()', description: '获取名牌内容' },
+      { signature: 'void setContent(Component content)', description: '设置名牌内容' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'ViewportEvent',
+    description: '视口事件基类（ComputeFov/ComputeCameraAngles 父类）',
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'ComputeFovEvent',
+    description: '计算 FOV 事件（修改瞄准/速度时的 FOV 变化）',
+    methods: [
+      { signature: 'float getFov()', description: '获取当前 FOV' },
+      { signature: 'void setFov(float fov)', description: '设置 FOV' },
+      { signature: 'float getNewFov()', description: '获取新 FOV' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'ScreenEvent',
+    description: '屏幕事件基类（Init/MouseInput/KeyboardInput 等子事件）',
+    methods: [
+      { signature: 'Screen getScreen()', description: '获取屏幕实例' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderTooltipEvent',
+    description: '渲染工具提示事件（Pre/Post/BackgroundColor 等子事件）',
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderItemInFrameEvent',
+    description: '渲染物品框中物品事件',
+    methods: [
+      { signature: 'ItemStack getItemStack()', description: '获取物品堆' },
+      { signature: 'ItemFrame getFrame()', description: '获取物品框实体' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.client.event',
+    className: 'RenderLivingEvent',
+    description: '生物渲染事件基类（Pre/Post 子事件）',
+    methods: [
+      { signature: 'LivingEntity getEntity()', description: '获取生物' },
+      { signature: 'PoseStack getPoseStack()', description: '获取姿态栈' },
+    ],
+  },
+
+  /* === 领域 16：net.minecraftforge.event.level（7 类） === */
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'ExplosionEvent',
+    description: '爆炸事件基类（Start/Detonate 子事件）',
+    methods: [
+      { signature: 'Level getLevel()', description: '获取世界' },
+      { signature: 'Explosion getExplosion()', description: '获取爆炸对象' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'NoteBlockEvent',
+    description: '音符盒事件基类（Play/Change 子事件）',
+    methods: [
+      { signature: 'Note getNote()', description: '获取音符' },
+      { signature: 'void setNote(Note note)', description: '设置音符' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'PistonEvent',
+    description: '活塞事件基类（Pre/Post 子事件）',
+    methods: [
+      { signature: 'Direction getDirection()', description: '获取移动方向' },
+      { signature: 'PistonMoveType getPistonMoveType()', description: '获取移动类型（推/拉）' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'ChunkDataEvent',
+    description: '区块数据事件（Load/Save 子事件）',
+    methods: [
+      { signature: 'ChunkAccess getChunk()', description: '获取区块' },
+      { signature: 'CompoundTag getData()', description: '获取区块 NBT 数据' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'ChunkEvent',
+    description: '区块事件基类（Load/Unload 子事件）',
+    methods: [
+      { signature: 'ChunkAccess getChunk()', description: '获取区块' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'LevelEvent',
+    description: '世界事件基类（Load/Unload/Save 子事件）',
+    methods: [
+      { signature: 'Level getLevel()', description: '获取世界' },
+    ],
+  },
+  {
+    package: 'net.minecraftforge.event.level',
+    className: 'PortalSpawnEvent',
+    description: '传送门生成事件（可取消）',
+    methods: [
+      { signature: 'LevelAccessor getLevel()', description: '获取世界' },
+      { signature: 'BlockPos getPos()', description: '获取生成位置' },
+    ],
+  },
+
+  /* === 额外补充：交易相关（3 类） === */
+  {
+    package: 'net.minecraft.world.item.trading',
+    className: 'MerchantOffers',
+    description: '商人交易列表（CompoundTag 序列化）',
+    methods: [
+      { signature: 'MerchantOffer get(int index)', description: '获取指定索引的交易' },
+      { signature: 'boolean add(MerchantOffer offer)', description: '添加交易' },
+      { signature: 'CompoundTag createTag()', description: '序列化为 NBT' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.item.trading',
+    className: 'MerchantOffer',
+    description: '商人交易（买入 A + 买入 B → 输出 C，带使用次数/价格倍率）',
+    methods: [
+      { signature: 'ItemStack getBaseCostA()', description: '获取买入 A 价格' },
+      { signature: 'ItemStack getBaseCostB()', description: '获取买入 B 价格' },
+      { signature: 'ItemStack getResult()', description: '获取输出物品' },
+      { signature: 'int getUses()', description: '获取已使用次数' },
+      { signature: 'int getMaxUses()', description: '获取最大使用次数' },
+    ],
+  },
+  {
+    package: 'net.minecraft.world.item.trading',
+    className: 'Merchant',
+    description: '商人接口（Villager/AbstractVillager 实现）',
+    methods: [
+      { signature: 'MerchantOffers getOffers()', description: '获取交易列表' },
+      { signature: 'void overrideOffers(MerchantOffers offers)', description: '覆盖交易列表' },
+      { signature: 'void notifyTrade(MerchantOffer offer)', description: '通知交易完成' },
+    ],
+  },
 ]
 
 /* ------------------------------------------------------------------ */
@@ -2751,6 +4149,8 @@ export function findClassesByPackage(packagePrefix: string): ApiClassInfo[] {
 
 /**
  * 统计：返回字典规模信息
+ *
+ * 阶段 8-B 后：总类数 500+，含 16 个新增领域（实体/方块实体/世界生成/命令/Forge 事件）
  */
 export function getDictionaryStats() {
   const total = MC_API_DICTIONARY.length
@@ -2764,6 +4164,19 @@ export function getDictionaryStats() {
     (sum, c) => sum + (c.fields?.length ?? 0),
     0,
   )
-  const packages = new Set(MC_API_DICTIONARY.map((c) => c.package)).size
-  return { total, withMethods, withFields, totalMethods, totalFields, packages }
+  // 按 package 去掉最后一段 className 后聚合，得到"父包"数量
+  const packages = new Set(
+    MC_API_DICTIONARY.map((c) => c.package.split('.').slice(0, -1).join('.')),
+  ).size
+  // 完整 package 路径数量（包含末端包名）
+  const fullPackages = new Set(MC_API_DICTIONARY.map((c) => c.package)).size
+  return {
+    total,
+    withMethods,
+    withFields,
+    totalMethods,
+    totalFields,
+    packages,
+    fullPackages,
+  }
 }

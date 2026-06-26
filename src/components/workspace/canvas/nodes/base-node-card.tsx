@@ -119,6 +119,26 @@ export const COLOR_CLASSES: Record<
     iconBg: 'bg-zinc-500/20',
     iconText: 'text-zinc-300',
   },
+  pink: {
+    border: 'border-pink-500/40',
+    borderStrong: 'border-pink-400',
+    bg: 'bg-pink-500/10',
+    bgHeader: 'bg-pink-500/10',
+    text: 'text-pink-300',
+    ring: 'ring-pink-400/40',
+    iconBg: 'bg-pink-500/20',
+    iconText: 'text-pink-300',
+  },
+  fuchsia: {
+    border: 'border-fuchsia-500/40',
+    borderStrong: 'border-fuchsia-400',
+    bg: 'bg-fuchsia-500/10',
+    bgHeader: 'bg-fuchsia-500/10',
+    text: 'text-fuchsia-300',
+    ring: 'ring-fuchsia-400/40',
+    iconBg: 'bg-fuchsia-500/20',
+    iconText: 'text-fuchsia-300',
+  },
 }
 
 /** 取色映射，未注册的色名降级到 zinc */

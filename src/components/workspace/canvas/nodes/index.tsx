@@ -29,6 +29,14 @@ export const nodeTypes = {
   entity: EntityNodeCard,
   block: BlockNodeCard,
   item: ItemNodeCard,
+  // 阶段 8 新增核心节点（用 GenericNodeCard，基于 BaseNodeCard）
+  equipment: GenericNodeCard,
+  weapon: GenericNodeCard,
+  food: GenericNodeCard,
+  biome: GenericNodeCard,
+  structure: GenericNodeCard,
+  dimension: GenericNodeCard,
+  potion: GenericNodeCard,
   // 高级节点
   group: GroupNodeCard,
   blackbox: BlackboxNodeCard,
