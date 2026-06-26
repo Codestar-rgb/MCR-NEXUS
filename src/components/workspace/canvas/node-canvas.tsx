@@ -334,12 +334,12 @@ function NodeCanvasInner() {
         proOptions={{ hideAttribution: true }}
         className="bg-background"
       >
-        {/* 点阵背景：zinc-800 颜色，gap 20px，size 1px */}
+        {/* 点阵背景：精致低对比度，与深蓝黑背景协调 */}
         <Background
           variant={BackgroundVariant.Dots}
-          gap={20}
+          gap={24}
           size={1}
-          color="#27272a"
+          color="oklch(0.3 0.015 250 / 40%)"
         />
 
         {/* 缩放控制（右下角） */}
@@ -360,34 +360,34 @@ function NodeCanvasInner() {
           />
         ) : null}
 
-        {/* 左上角 Panel（工程卡片区域，待 Task 2-D 接入工程数据） */}
-        <Panel position="top-left" className="!m-0 !p-0">
+        {/* 左上角 Panel（工程卡片，紧凑徽章风格，不遮挡画布） */}
+        <Panel position="top-left" className="!m-2 !p-0">
           <div className="pointer-events-auto">
             <ProjectInfoCard />
           </div>
         </Panel>
 
-        {/* 右上角 Panel（任务通知） */}
-        <Panel position="top-right" className="!m-0 !p-0">
-          <div className="pointer-events-auto w-80">
+        {/* 右上角 Panel（任务通知，紧凑徽章风格） */}
+        <Panel position="top-right" className="!m-2 !p-0">
+          <div className="pointer-events-auto w-72">
             <TaskNotifications />
           </div>
         </Panel>
       </ReactFlow>
 
-      {/* 顶部居中工具栏（浮动） */}
+      {/* 顶部居中工具栏（浮动，玻璃拟态） */}
       <CanvasToolbar />
 
-      {/* 性能指示器（左下角，FPS + 模式提示） */}
-      <div className="pointer-events-none absolute bottom-3 left-3 z-20 flex items-center gap-2">
-        <div className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-mono backdrop-blur ${
+      {/* 性能指示器（右下角，FPS + 模式提示，精致玻璃拟态） */}
+      <div className="pointer-events-none absolute bottom-3 right-3 z-20 flex items-center gap-2">
+        <div className={`glass flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-mono ${
           fps < 30
-            ? 'border-destructive/40 bg-destructive/10 text-destructive'
+            ? 'border-destructive/40 text-destructive'
             : fps < 50
-              ? 'border-amber-500/40 bg-amber-500/10 text-amber-400'
-              : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+              ? 'border-amber-500/40 text-amber-400'
+              : 'border-primary/30 text-primary'
         }`}>
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-current" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-current nexcube-pulse" />
           {fps} FPS · {nodes.length} 节点
           {perfConfig.tier !== 'full' && (
             <span className="ml-1 rounded bg-muted/50 px-1 py-px text-[9px] uppercase tracking-wider">
@@ -397,8 +397,8 @@ function NodeCanvasInner() {
         </div>
       </div>
 
-      {/* 性能压测面板（左下角，FPS 指示器上方；仅开发模式显示） */}
-      <div className="absolute bottom-12 left-3 z-20">
+      {/* 性能压测面板（右下角，FPS 指示器上方；仅开发模式显示） */}
+      <div className="absolute bottom-12 right-3 z-20">
         <DevOnlyPerformanceTestPanel
           fps={fps}
           tier={perfConfig.tier}

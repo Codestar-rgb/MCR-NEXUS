@@ -25,7 +25,7 @@
  * 设计要点：
  *  - 图标按钮 40x40 (h-10 w-10)，rounded-lg
  *  - hover 时 bg-accent + emerald 文字
- *  - 当前模式按钮高亮（emerald 边框 + bg-emerald-500/10 + text-emerald-400）
+ *  - 当前模式按钮高亮（emerald 边框 + bg-primary/10 + text-primary）
  *  - Tooltip side="left"，delay 300ms
  *  - 用 Separator 分组
  *  - 任务铃铛若有 taskNotifications 未读则显示数字徽章
@@ -85,8 +85,8 @@ export function EdgeToolbar() {
     <TooltipProvider delayDuration={300}>
       <aside
         className={cn(
-          'flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border',
-          'bg-sidebar/40 py-3',
+          'flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border/50',
+          'glass py-3',
           'md:w-12', // 桌面端保持 48px
         )}
         role="toolbar"
@@ -120,8 +120,8 @@ export function EdgeToolbar() {
               className={cn(
                 'relative h-9 w-9 rounded-lg transition-colors md:hidden',
                 leftSidebarOpen
-                  ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
-                  : 'border border-transparent text-muted-foreground hover:bg-accent hover:text-emerald-300',
+                  ? 'border border-primary/40 bg-primary/10 text-primary'
+                  : 'border border-transparent text-muted-foreground hover:bg-accent hover:text-primary/80',
               )}
             >
               <PanelLeft className="h-[16px] w-[16px]" strokeWidth={1.75} />
@@ -237,8 +237,8 @@ function ToolButton({ label, Icon, onClick, active, badge }: ToolButtonProps) {
           className={cn(
             'relative h-10 w-10 rounded-lg transition-colors',
             active
-              ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 hover:text-emerald-300'
-              : 'border border-transparent text-muted-foreground hover:bg-accent hover:text-emerald-300',
+              ? 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary/80'
+              : 'border border-transparent text-muted-foreground hover:bg-accent hover:text-primary/80',
           )}
         >
           <Icon className="h-[18px] w-[18px]" strokeWidth={1.75} />

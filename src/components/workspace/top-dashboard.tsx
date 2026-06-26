@@ -254,12 +254,8 @@ export function TopDashboard() {
           <ModeSwitcher value={mode} onChange={setMode} />
         </div>
 
-        {/* ---------- 右侧：构建动作 + 工具按钮 ---------- */}
+        {/* ---------- 右侧：工具按钮（构建操作在底部终端区，避免冗余） ---------- */}
         <div className="flex items-center gap-1.5">
-          <BuildButtonGroup />
-
-          <Separator orientation="vertical" className="mx-1 h-7" />
-
           {/* 工程卡片切换 */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -268,7 +264,7 @@ export function TopDashboard() {
                 size="icon"
                 aria-label="工程信息卡片"
                 onClick={toggleRightPanel}
-                className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="h-9 w-9 rounded-lg text-muted-foreground transition-all hover:bg-accent hover:text-primary"
               >
                 <Info className="h-[18px] w-[18px]" />
               </Button>
