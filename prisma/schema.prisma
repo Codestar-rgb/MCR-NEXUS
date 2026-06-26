@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// NexCube — Minecraft 模组双轨制 IDE
+// Prisma schema for SQLite
+// Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +11,178 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ============================================================
+// 1. Project — 项目
+// ============================================================
+model Project {
+  id           String       @id @default(cuid())
+  modId        String // 小写+下划线，如 "example_mod"
+  name         String // 显示名称
+  author       String
+  version      String // 如 "1.0.0"
+  mcVersion    String // "1.20.1"
+  forgeVersion String // "47.3.7"
+  loader       String // "forge" | "fabric" | "neoforge"
+  iconPath     String? // 图标相对路径
+  storagePath  String // 项目存储路径
+  description  String?
+  lastOpenedAt DateTime     @default(now())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  nodes        Node[]
+  connections  Connection[]
+  codeFiles    CodeFile[]
+  buildLogs    BuildLog[]
+  subGraphs    SubGraph[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
+// ============================================================
+// 2. Node — 节点
+// ============================================================
+model Node {
+  id          String   @id @default(cuid())
+  projectId   String
+  type        String // "entity" | "block" | "item" | "group" | "blackbox" | "function" | "logic_event" | "logic_condition" | "logic_loop" | "logic_action" | "logic_variable"
+  title       String
+  positionX   Float
+  positionY   Float
+  width       Float? // 节点宽度
+  height      Float? // 节点高度
+  color       String? // 自定义颜色（节点组用）
+  isCollapsed Boolean  @default(false)
+  parentId    String? // 父节点组 ID（用于嵌套）
+  subGraphId  String? // 所属子图（子节点逻辑）
+  properties  String // JSON string，存储节点属性（生命值、攻击力等）
+  sourceCode  String? // 黑盒节点的内联 Java 代码
+  linkedFile  String? // 关联的代码文件路径（双向同步映射）
+  linkedLine  Int? // 关联代码行号
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent       Node?        @relation("NodeHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Node[]       @relation("NodeHierarchy")
+  subGraph     SubGraph?    @relation(fields: [subGraphId], references: [id], onDelete: SetNull)
+  connectionsAsSource Connection[] @relation("SourceNode")
+  connectionsAsTarget Connection[] @relation("TargetNode")
+
+  @@index([projectId])
+  @@index([parentId])
+  @@index([subGraphId])
+}
+
+// ============================================================
+// 3. Connection — 连线
+// ============================================================
+model Connection {
+  id           String @id @default(cuid())
+  projectId    String
+  sourceNodeId String
+  targetNodeId String
+  sourcePort   String // 输出端口 ID
+  targetPort   String // 输入端口 ID
+  dataType     String // "entity" | "boolean" | "number" | "string" | "itemstack" | "void"
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  source  Node    @relation("SourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  target  Node    @relation("TargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+}
+
+// ============================================================
+// 4. CodeFile — 代码文件
+// ============================================================
+model CodeFile {
+  id           String   @id @default(cuid())
+  projectId    String
+  filePath     String // 相对路径，如 "src/main/java/com/example/mod/Mod.java"
+  content      String
+  isBlackbox   Boolean  @default(false) // 是否为黑盒代码
+  linkedNodeId String? // 关联的节点 ID
+  updatedAt    DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@unique([projectId, filePath])
+}
+
+// ============================================================
+// 5. BuildLog — 构建日志
+// ============================================================
+model BuildLog {
+  id          String   @id @default(cuid())
+  projectId   String
+  status      String // "pending" | "running" | "success" | "failed"
+  task        String // "build" | "runClient" | "runServer" | "clean"
+  output      String // 原始 Gradle 日志
+  parsedCards String // JSON string，解析后的中文卡片数组
+  duration    Int? // 毫秒
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ============================================================
+// 6. MirrorConfig — 镜像源配置
+// ============================================================
+model MirrorConfig {
+  id          String   @id @default(cuid())
+  name        String   @unique // "aliyun" | "tuna" | "official"
+  displayName String // "阿里云" | "清华源" | "官方源"
+  mavenUrl    String // Maven 仓库 URL
+  gradleUrl   String // Gradle 发行版 URL
+  jdks        String // JSON string，JDK 下载源配置
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================================
+// 7. Adapter — 版本适配器
+// ============================================================
+model Adapter {
+  id            String   @id @default(cuid())
+  name          String   @unique // "forge-1.20.1" | "fabric-1.20.1" | "neoforge-1.20.1"
+  loader        String // "forge" | "fabric" | "neoforge"
+  mcVersion     String
+  loaderVersion String // Forge/Fabric/NeoForge 版本
+  gradlePlugin  String // "net.minecraftforge.gradle" | "fabric-loom" | "neoforge-gradle"
+  isInstalled   Boolean  @default(false)
+  isOfficial    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+// ============================================================
+// 8. SubGraph — 子图（用于子节点逻辑编辑器）
+// ============================================================
+model SubGraph {
+  id           String   @id @default(cuid())
+  projectId    String
+  parentNodeId String // 所属的父节点 ID
+  name         String // 子图名称，如 "Entity Behavior"
+  type         String // "behavior" | "function" | "event"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  nodes   Node[]
+
+  @@index([projectId])
+  @@index([parentNodeId])
+}
+
+// ============================================================
+// 9. AppSetting — 全局应用设置
+// ============================================================
+model AppSetting {
+  id       String   @id @default(cuid())
+  key      String   @unique // "theme" | "activeMirror" | "shortcuts" 等
+  value    String // JSON string
   updatedAt DateTime @updatedAt
 }
