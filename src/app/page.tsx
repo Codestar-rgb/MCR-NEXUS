@@ -7,12 +7,14 @@ import { CreateCard } from '@/components/home/create-card'
 import { OpenCard } from '@/components/home/open-card'
 import { ImportCard } from '@/components/home/import-card'
 import { ProjectWizard } from '@/components/home/project-wizard'
+import { ImportDialog } from '@/components/home/import-dialog'
 import { WorkspaceShell } from '@/components/workspace/workspace-shell'
 import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 export default function Home() {
   const [wizardOpen, setWizardOpen] = React.useState(false)
+  const [importOpen, setImportOpen] = React.useState(false)
 
   // 视图切换：home 显示主页，workspace 显示工作区
   const currentView = useWorkspaceStore((s) => s.currentView)
@@ -31,7 +33,7 @@ export default function Home() {
   }, [])
 
   const handleImport = React.useCallback(() => {
-    console.log('[NexCube] onImport — 导入向导待接入')
+    setImportOpen(true)
   }, [])
 
   const handleOpen = React.useCallback(
@@ -108,6 +110,13 @@ export default function Home() {
         open={wizardOpen}
         onOpenChange={setWizardOpen}
         onCreated={handleCreated}
+      />
+
+      {/* 项目导入对话框 */}
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={handleCreated}
       />
 
       {/* 全局设置对话框（主页 + 工作区共用） */}

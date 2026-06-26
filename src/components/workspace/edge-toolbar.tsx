@@ -40,6 +40,7 @@ import {
   Info,
   Maximize,
   Plus,
+  PanelLeft,
   Search,
   Settings,
   ZoomIn,
@@ -77,6 +78,8 @@ export function EdgeToolbar() {
   const setMode = useWorkspaceStore((s) => s.setMode)
   const unreadCount = useWorkspaceStore(selectUnreadNotificationCount)
   const openSettings = useWorkspaceStore((s) => s.openSettings)
+  const toggleLeftSidebar = useWorkspaceStore((s) => s.toggleLeftSidebar)
+  const leftSidebarOpen = useWorkspaceStore((s) => s.leftSidebarOpen)
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -84,6 +87,7 @@ export function EdgeToolbar() {
         className={cn(
           'flex w-12 shrink-0 flex-col items-center gap-1 border-l border-border',
           'bg-sidebar/40 py-3',
+          'md:w-12', // 桌面端保持 48px
         )}
         role="toolbar"
         aria-label="边缘工具栏"
@@ -103,6 +107,30 @@ export function EdgeToolbar() {
         />
 
         <HSpacer />
+
+        {/* ---------- 移动端专用：文件树抽屉切换（md:hidden） ---------- */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleLeftSidebar}
+              aria-label="文件树抽屉"
+              aria-pressed={leftSidebarOpen}
+              className={cn(
+                'relative h-9 w-9 rounded-lg transition-colors md:hidden',
+                leftSidebarOpen
+                  ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                  : 'border border-transparent text-muted-foreground hover:bg-accent hover:text-emerald-300',
+              )}
+            >
+              <PanelLeft className="h-[16px] w-[16px]" strokeWidth={1.75} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={6}>
+            文件树（移动端）
+          </TooltipContent>
+        </Tooltip>
 
         {/* ---------- 工具组 ---------- */}
         <ToolButton

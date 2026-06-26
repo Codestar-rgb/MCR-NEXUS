@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * 画布性能优化配置（Task 2-E）
+ * 画布性能优化配置（Task 2-E + Task 6-C WebGL 预留）
  *
  * 针对 NexCube 万级节点画布的性能策略：
  *
@@ -10,6 +10,24 @@
  *    - 500-2000 节点：启用虚拟渲染，仅渲染视口内节点
  *    - 2000-10000 节点：聚合显示模式（同类型节点合并为色块）
  *    - > 10000 节点：强制 WebGL 模式（预留接口，v12 实验性）
+ *
+ * 2. WebGL 渲染模式（React Flow v12 实验性）：
+ *    - 启用条件：nodeCount > WEBGL_THRESHOLD (10000) 或开发者手动开启
+ *    - 当前未真实启用，仅显示提示和返回 tier='webgl' 配置
+ *    - 未来 React Flow v12 正式支持后，在 NodeCanvas 传入 renderer="webgl" 即可
+ *    - 启用后预期：万级节点 60 FPS，但端口渲染/连线交互降级
+ *
+ * 3. WebGL renderer 配置示例（待 React Flow 支持）：
+ *    ```tsx
+ *    <ReactFlow
+ *      nodes={nodes}
+ *      edges={edges}
+ *      renderer="webgl"           // 实验性 API
+ *      nodeOrigin={[0.5, 0.5]}
+ *      onlyRenderVisibleElements
+ *      // ... 其他配置
+ *    />
+ *    ```
  */
 
 import { useState, useEffect } from 'react'
@@ -33,6 +51,9 @@ const TIERS: { threshold: number; tier: PerformanceTier }[] = [
   { threshold: 10000, tier: 'aggregated' },
   { threshold: Infinity, tier: 'webgl' },
 ]
+
+/** WebGL 模式启用阈值（节点数 > 此值时提示启用 WebGL） */
+export const WEBGL_THRESHOLD = 10000
 
 export function getPerformanceConfig(nodeCount: number): PerformanceConfig {
   const tier = TIERS.find((t) => nodeCount < t.threshold)?.tier ?? 'webgl'
@@ -61,6 +82,35 @@ export function getPerformanceConfig(nodeCount: number): PerformanceConfig {
         hint: '已切换 WebGL 渲染模式（实验性）',
       }
   }
+}
+
+/**
+ * 判断是否应启用 WebGL 渲染模式（Task 6-C 预留接口）
+ *
+ * 启用条件：
+ *   1. 节点数超过 WEBGL_THRESHOLD（10000）
+ *   2. 或开发者通过开关强制启用（forceEnable=true）
+ *
+ * 当前返回值仅用于 UI 提示，不影响实际渲染。
+ * 等 React Flow v12 正式支持 WebGL renderer 后，
+ * NodeCanvas 会根据本函数返回值传入 renderer="webgl"。
+ */
+export function enableWebGL(nodeCount: number, forceEnable = false): boolean {
+  if (forceEnable) return true
+  return nodeCount > WEBGL_THRESHOLD
+}
+
+/**
+ * 获取 WebGL 启用原因（用于 UI 提示）
+ */
+export function getWebGLEnableReason(nodeCount: number, forceEnable = false): string | null {
+  if (forceEnable) {
+    return 'WebGL 模式已由开发者强制启用（实验性，渲染管线尚未真实接入）'
+  }
+  if (nodeCount > WEBGL_THRESHOLD) {
+    return `节点数 ${nodeCount} 超过 ${WEBGL_THRESHOLD}，建议启用 WebGL 模式以保持流畅`
+  }
+  return null
 }
 
 export function usePerformanceMonitor() {
@@ -96,7 +146,17 @@ export function usePerformanceMonitor() {
 export function generateTestNodes(count: number) {
   const types = ['entity', 'block', 'item']
   const names = ['Ruby', 'Sapphire', 'Emerald', 'Topaz', 'Amethyst', 'Diamond']
-  const nodes = []
+  const nodes: Array<{
+    id: string
+    type: string
+    position: { x: number; y: number }
+    data: {
+      kind: string
+      title: string
+      properties: Record<string, unknown>
+      isCollapsed: boolean
+    }
+  }> = []
   const cols = Math.ceil(Math.sqrt(count))
   for (let i = 0; i < count; i++) {
     const col = i % cols

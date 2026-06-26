@@ -20,11 +20,11 @@
  *   - 移动端：导航折叠为顶部横向 Tab；桌面端：左侧纵向
  *   - 通过 props.open 受控打开/关闭
  *   - 5 个 Tab：镜像源 / 主题 / 快捷键 / 插件 / 环境
- *     - 镜像源 → MirrorPanel（已实现）
+ *     - 镜像源 → MirrorPanel
  *     - 主题 → next-themes 切换深色/浅色
  *     - 快捷键 → 只读列表
- *     - 插件 → 占位（Task 6 实现）
- *     - 环境 → 占位（Task 6 实现）
+ *     - 插件 → AdaptersPanel（版本适配器，Forge / Fabric / NeoForge）
+ *     - 环境 → EnvironmentPanel（Java / Git / Gradle / 网络 + 系统信息）
  */
 
 import * as React from 'react'
@@ -43,6 +43,9 @@ import {
 } from 'lucide-react'
 
 import { MirrorPanel } from '@/components/settings/mirror-panel'
+import { EnvironmentPanel } from '@/components/settings/environment-panel'
+import { AdaptersPanel } from '@/components/settings/adapters-panel'
+import { ShortcutsPanel as ShortcutsPanelEditable } from '@/components/settings/shortcuts-panel'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -80,8 +83,8 @@ const NAV_ITEMS: Array<{
   { id: 'mirror', label: '镜像源', Icon: Box, description: 'Maven / Gradle 加速' },
   { id: 'theme', label: '主题', Icon: Palette, description: '深色 / 浅色切换' },
   { id: 'shortcuts', label: '快捷键', Icon: Keyboard, description: '键位映射' },
-  { id: 'plugins', label: '插件', Icon: Package, description: '版本适配器', soon: true },
-  { id: 'env', label: '环境', Icon: Cpu, description: '环境探针', soon: true },
+  { id: 'plugins', label: '插件', Icon: Package, description: '版本适配器' },
+  { id: 'env', label: '环境', Icon: Cpu, description: '环境探针' },
 ]
 
 export function SettingsDialog({ open, onOpenChange, defaultTab = 'mirror' }: SettingsDialogProps) {
@@ -151,9 +154,9 @@ export function SettingsDialog({ open, onOpenChange, defaultTab = 'mirror' }: Se
           <div className="min-h-0 flex-1 overflow-y-auto p-6">
             {tab === 'mirror' && <MirrorPanel />}
             {tab === 'theme' && <ThemePanel />}
-            {tab === 'shortcuts' && <ShortcutsPanel />}
-            {tab === 'plugins' && <PluginsPlaceholder />}
-            {tab === 'env' && <EnvPlaceholder />}
+            {tab === 'shortcuts' && <ShortcutsPanelEditable />}
+            {tab === 'plugins' && <AdaptersPanel />}
+            {tab === 'env' && <EnvironmentPanel />}
           </div>
         </div>
       </DialogContent>
@@ -258,170 +261,6 @@ function ThemeCard({
       <div className="text-sm font-medium text-foreground">{label}</div>
       <div className="text-[11px] text-muted-foreground">{description}</div>
     </button>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 快捷键面板（只读）                                                  */
-/* ------------------------------------------------------------------ */
-
-const SHORTCUTS: Array<{ group: string; items: Array<{ keys: string; desc: string }> }> = [
-  {
-    group: '全局',
-    items: [
-      { keys: 'Ctrl/Cmd + K', desc: '打开命令面板' },
-      { keys: 'Ctrl/Cmd + ,', desc: '打开设置' },
-      { keys: 'Ctrl/Cmd + P', desc: '快速打开文件' },
-      { keys: 'Ctrl/Cmd + Shift + P', desc: '显示所有命令' },
-    ],
-  },
-  {
-    group: '工作区',
-    items: [
-      { keys: 'Ctrl/Cmd + 1', desc: '切换到节点视图' },
-      { keys: 'Ctrl/Cmd + 2', desc: '切换到代码视图' },
-      { keys: 'Ctrl/Cmd + B', desc: '切换左侧文件树' },
-      { keys: 'Ctrl/Cmd + J', desc: '切换底部终端' },
-    ],
-  },
-  {
-    group: '编辑器',
-    items: [
-      { keys: 'Ctrl/Cmd + S', desc: '保存当前文件' },
-      { keys: 'Ctrl/Cmd + Shift + F', desc: '全局搜索' },
-      { keys: 'Alt + F12', desc: '快速查看定义' },
-      { keys: 'F2', desc: '重命名符号' },
-    ],
-  },
-  {
-    group: '节点画布',
-    items: [
-      { keys: 'Space + 拖拽', desc: '平移画布' },
-      { keys: 'Ctrl/Cmd + 滚轮', desc: '缩放画布' },
-      { keys: 'Ctrl/Cmd + D', desc: '复制选中节点' },
-      { keys: 'Delete', desc: '删除选中节点' },
-    ],
-  },
-]
-
-function ShortcutsPanel() {
-  return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h3 className="text-base font-semibold tracking-tight">快捷键</h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          键位映射（只读）。自定义快捷键将在 Task 6 中实现。
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {SHORTCUTS.map((group) => (
-          <div
-            key={group.group}
-            className="rounded-lg border border-border bg-card/40 p-3"
-          >
-            <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-emerald-400">
-              {group.group}
-            </h4>
-            <ul className="flex flex-col gap-1.5">
-              {group.items.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between gap-3 text-xs"
-                >
-                  <span className="text-muted-foreground">{item.desc}</span>
-                  <kbd
-                    className={cn(
-                      'inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5',
-                      'font-mono text-[10px] text-foreground',
-                    )}
-                  >
-                    {item.keys}
-                  </kbd>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 占位面板：插件 / 环境                                              */
-/* ------------------------------------------------------------------ */
-
-function PluginsPlaceholder() {
-  return (
-    <PlaceholderPanel
-      title="版本适配器"
-      description="管理 Forge / Fabric / NeoForge 等不同加载器的版本适配器。"
-      bullets={[
-        '自动检测已安装的 ForgeGradle / NeoGradle / Fabric Loom',
-        '一键安装缺失的适配器',
-        '切换默认加载器',
-        '导出对应版本的项目骨架',
-      ]}
-      tag="Task 6 实现"
-    />
-  )
-}
-
-function EnvPlaceholder() {
-  return (
-    <PlaceholderPanel
-      title="环境探针"
-      description="检测 Java / Gradle / Git 等开发环境，并提供修复建议。"
-      bullets={[
-        'Java 17 / 21 版本检测',
-        'Gradle Wrapper 完整性校验',
-        'Git 凭据缓存检查',
-        '系统 PATH 与 JAVA_HOME 验证',
-      ]}
-      tag="Task 6 实现"
-    />
-  )
-}
-
-function PlaceholderPanel({
-  title,
-  description,
-  bullets,
-  tag,
-}: {
-  title: string
-  description: string
-  bullets: string[]
-  tag: string
-}) {
-  return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold tracking-tight">{title}</h3>
-          <Badge variant="outline" className="border-amber-500/40 bg-amber-500/10 text-[10px] text-amber-400">
-            {tag}
-          </Badge>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-      </div>
-
-      <div className="rounded-lg border border-dashed border-border bg-card/20 p-6">
-        <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-          {bullets.map((b, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
-              {b}
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 flex items-center gap-2 text-xs text-amber-400">
-          <Package className="h-3 w-3" />
-          即将上线，敬请期待
-        </div>
-      </div>
-    </div>
   )
 }
 

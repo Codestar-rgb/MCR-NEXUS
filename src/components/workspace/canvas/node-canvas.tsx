@@ -24,7 +24,7 @@
  *  - nodeExtras（parentId / dragging 等 React Flow 附加字段）合并到渲染节点上
  */
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -52,6 +52,7 @@ import { TaskNotifications } from '@/components/workspace/canvas/task-notificati
 import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
 import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
 import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
+import { DevOnlyPerformanceTestPanel } from '@/components/workspace/canvas/performance-test-panel'
 import {
   useCanvasStore,
   getNodeColorHex,
@@ -65,6 +66,8 @@ import {
 import {
   getPerformanceConfig,
   usePerformanceMonitor,
+  enableWebGL,
+  getWebGLEnableReason,
 } from '@/lib/performance/canvas-perf'
 
 /* ------------------------------------------------------------------ */
@@ -295,9 +298,12 @@ function NodeCanvasInner() {
   /* 防止 nodeTypes 在每次渲染重建（已经在 nodes/index.tsx 模块级常量） */
   const stableNodeTypes = useMemo(() => nodeTypes, [])
 
-  /* 阶段 2-E：万级节点性能优化配置 */
+  /* 阶段 2-E：万级节点性能优化配置 + Task 6-C WebGL 开发者开关 */
   const perfConfig = useMemo(() => getPerformanceConfig(nodes.length), [nodes.length])
   const { fps } = usePerformanceMonitor()
+  const [webglForced, setWebglForced] = useState(false)
+  const webglEnabled = enableWebGL(nodes.length, webglForced)
+  const webglReason = getWebGLEnableReason(nodes.length, webglForced)
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
@@ -391,9 +397,28 @@ function NodeCanvasInner() {
         </div>
       </div>
 
+      {/* 性能压测面板（左下角，FPS 指示器上方；仅开发模式显示） */}
+      <div className="absolute bottom-12 left-3 z-20">
+        <DevOnlyPerformanceTestPanel
+          fps={fps}
+          tier={perfConfig.tier}
+          webglEnabled={webglEnabled}
+          onToggleWebGL={() => setWebglForced((v) => !v)}
+        />
+      </div>
+
+      {/* WebGL 模式提示（顶部居中，仅 WebGL 启用时显示） */}
+      {webglEnabled && webglReason ? (
+        <div className="pointer-events-none absolute top-3 left-1/2 z-20 -translate-x-1/2">
+          <div className="rounded-full border border-violet-500/40 bg-violet-500/10 px-3 py-1 text-[11px] text-violet-300 backdrop-blur">
+            🎛 WebGL 模式（实验性）· {webglReason}
+          </div>
+        </div>
+      ) : null}
+
       {/* 性能模式提示（顶部居中下方，仅非 full 模式显示） */}
       {perfConfig.hint ? (
-        <div className="pointer-events-none absolute bottom-12 left-1/2 z-20 -translate-x-1/2">
+        <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2">
           <div className="rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-400 backdrop-blur">
             {perfConfig.hint}
           </div>

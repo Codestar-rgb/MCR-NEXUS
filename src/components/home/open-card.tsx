@@ -1,12 +1,18 @@
 'use client'
 
 import * as React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { FolderOpen, Clock } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  listContainerVariants,
+  listItemVariants,
+  listItemTransition,
+} from '@/components/providers/framer-provider'
 import { cn } from '@/lib/utils'
 import type { ModLoader, RecentProject } from '@/types'
 
@@ -81,11 +87,19 @@ export function OpenCard({ onOpen, onCreate }: OpenCardProps) {
         ) : isError || projects.length === 0 ? (
           <EmptyState onCreate={onCreate} />
         ) : (
-          <ul className="flex flex-col gap-1.5">
-            {projects.map((p) => (
-              <RecentItem key={p.id} project={p} onOpen={onOpen} />
-            ))}
-          </ul>
+          <motion.ul
+            className="flex flex-col gap-1.5"
+            variants={listContainerVariants}
+            initial="initial"
+            animate="animate"
+            style={{ willChange: 'transform, opacity' }}
+          >
+            <AnimatePresence initial={false}>
+              {projects.map((p) => (
+                <RecentItem key={p.id} project={p} onOpen={onOpen} />
+              ))}
+            </AnimatePresence>
+          </motion.ul>
         )}
       </div>
     </Card>
@@ -111,7 +125,11 @@ function RecentItem({
   }, [project.lastOpenedAt])
 
   return (
-    <li>
+    <motion.li
+      variants={listItemVariants}
+      transition={listItemTransition}
+      style={{ willChange: 'transform, opacity' }}
+    >
       <button
         type="button"
         onClick={() => onOpen?.(project.id)}
@@ -151,7 +169,7 @@ function RecentItem({
           {LOADER_LABEL[project.loader]} {project.loaderVersion}
         </Badge>
       </button>
-    </li>
+    </motion.li>
   )
 }
 

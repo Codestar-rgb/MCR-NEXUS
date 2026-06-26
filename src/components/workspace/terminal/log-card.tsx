@@ -33,6 +33,7 @@ import {
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { listItemTransition } from '@/components/providers/framer-provider'
 import { cn } from '@/lib/utils'
 import type { ParsedLogCard } from '@/lib/capabilities'
 
@@ -111,14 +112,15 @@ export function LogCard({ card, onFix, onClose }: LogCardProps) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      initial={{ opacity: 0, y: 12, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: -12, scale: 0.95 }}
-      transition={{ duration: 0.18, ease: 'easeOut' }}
+      exit={{ opacity: 0, x: -16, scale: 0.94 }}
+      transition={listItemTransition}
       className={cn(
         'relative overflow-hidden rounded-md border border-zinc-800/80',
         'bg-zinc-900/60 shadow-sm backdrop-blur-sm',
       )}
+      style={{ willChange: 'transform, opacity' }}
       role="article"
       aria-label={`日志卡片：${card.title}`}
     >

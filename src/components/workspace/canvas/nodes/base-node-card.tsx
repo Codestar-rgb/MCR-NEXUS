@@ -7,7 +7,7 @@
  *  - 顶部 header：图标 + 类型标签 + 标题 + 折叠按钮
  *  - 中间内容区（由子类通过 renderContent 填充）
  *  - 端口渲染（根据 NODE_TYPE_REGISTRY 的 inputPorts/outputPorts）
- *  - 选中状态高亮
+ *  - 选中状态高亮（含 Task 6-C 选中 ring 脉冲动画）
  *  - 折叠状态（只显示 header + summary）
  *
  * Tailwind 不支持动态类名（border-${color}-500），因此使用预定义的
@@ -15,6 +15,7 @@
  */
 
 import { memo, type ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { Position, type NodeProps } from '@xyflow/react'
 import { ChevronDown, ChevronRight, Box } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
@@ -183,6 +184,21 @@ function BaseNodeCardImpl({
       )}
       style={{ minWidth: def.defaultSize.width }}
     >
+      {/* Task 6-C：选中时 ring 脉冲动画（绝对定位，避免影响布局） */}
+      {selected && (
+        <motion.span
+          aria-hidden
+          className={cn('pointer-events-none absolute inset-0 rounded-xl ring-2', c.ring)}
+          initial={{ opacity: 0.6, scale: 1 }}
+          animate={{ opacity: [0.6, 0.2, 0.6], scale: [1, 1.015, 1] }}
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          style={{ willChange: 'transform, opacity' }}
+        />
+      )}
       {/* 顶部 header */}
       <div
         className={cn(
