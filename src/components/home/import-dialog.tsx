@@ -155,11 +155,11 @@ export function ImportDialog({ open, onOpenChange, onImported }: ImportDialogPro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-[520px] border-border bg-card p-0">
-        <div className="h-1 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+      <DialogContent className="max-w-[520px] border-border/60 bg-card/95 p-0 backdrop-blur-xl">
+        <div className="h-1 w-full bg-gradient-brand" />
         <DialogHeader className="px-6 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2">
-            <UploadCloud className="h-5 w-5 text-emerald-400" />
+            <UploadCloud className="h-5 w-5 text-primary" />
             导入项目
           </DialogTitle>
           <DialogDescription className="text-xs">

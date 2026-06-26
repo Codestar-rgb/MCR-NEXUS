@@ -1701,3 +1701,54 @@ Stage Summary:
 - VLM 综合 8/10
 - 已推送 GitHub
 - 待第 3 轮：组件打磨 + 微交互
+
+---
+Task ID: R3 (UI 重设计第 3 轮 — 主页彻底重塑)
+Agent: main (Z.ai Code)
+Task: 主页全面改革 + 设置功能 + 对话框美化 + 微交互
+
+Work Log:
+- 主页彻底重塑（全新布局结构）：
+  * 英雄区（HeroSection）：大型LOGO+辉光 + 品牌色渐变标题 + 主操作按钮
+  * 快速操作区（QuickActions）：三列网格（创建/打开/导入），每个卡片有渐变图标+hover辉光
+  * 最近项目区（RecentProjects）：独立大区块，网格布局，空状态引导
+  * 特性亮点区（FeatureHighlights）：4个核心特性卡片
+  * 底部信息栏：左右对齐，分隔线
+- 添加设置功能入口：
+  * 英雄区顶部工具栏：主题切换 + GitHub + 设置按钮
+  * 设置按钮打开 SettingsDialog（5 Tab：镜像源/主题/快捷键/插件/环境）
+- 对话框/模态窗美化：
+  * DialogOverlay 添加 backdrop-blur-sm 背景模糊
+  * DialogContent 用 glass-strong 玻璃拟态 + 精致边框 + shadow-floating
+  * 项目向导 + 导入对话框：bg-card/95 + backdrop-blur-xl + 品牌色渐变条
+- 创建 4 个新组件：
+  * hero-section.tsx（英雄区）
+  * quick-actions.tsx（三列快速操作）
+  * recent-projects.tsx（最近项目网格）
+  * feature-highlights.tsx（特性亮点）
+- 全局微交互打磨：
+  * 英雄区 LOGO scale 入场
+  * 卡片 stagger 入场动画
+  * 按钮 whileHover y:-3 + whileTap scale:0.98
+  * 背景品牌色辉光（blur-[100px]）
+- Agent Browser + VLM 验收：
+  * 布局结构 8/10（英雄区/快速操作/最近项目/特性）
+  * 视觉冲击力 7/10（品牌色辉光+渐变）
+  * 信息层级 9/10（清晰优先级）
+  * 专业度 8/10（一致性+细节）
+  * 与 Cursor/Linear 差距 6/10（已接近）
+  * 综合 7.6/10
+  * 设置功能正常（5 Tab）
+  * 创建向导正常打开
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 第 3 轮 UI 重设计完成 ✅
+- 主页从"垂直堆叠三卡片"彻底重塑为"英雄区+网格+独立区块"现代布局
+- 设置功能完整接入（顶部工具栏入口）
+- 对话框玻璃拟态 + 背景模糊
+- 4 个新组件 + 全局微交互
+- VLM 综合 7.6/10（从"丑陋"到"接近 Cursor/Linear"）
+- 已推送 GitHub
+- UI 重设计 3 轮全部完成

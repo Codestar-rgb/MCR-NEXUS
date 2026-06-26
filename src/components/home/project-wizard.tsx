@@ -285,13 +285,13 @@ export function ProjectWizard({ open, onOpenChange, onCreated }: ProjectWizardPr
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-card p-0 sm:max-w-[560px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto border-border/60 bg-card/95 p-0 backdrop-blur-xl sm:max-w-[560px]">
         {/* 顶部渐变条 */}
-        <div className="h-1 w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+        <div className="h-1 w-full bg-gradient-brand" />
 
         <DialogHeader className="px-6 pt-5 pb-3">
           <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-            <Sparkles className="h-5 w-5 text-emerald-400" />
+            <Sparkles className="h-5 w-5 text-primary" />
             创建新项目
           </DialogTitle>
           <DialogDescription className="text-xs">
