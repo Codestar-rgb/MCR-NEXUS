@@ -632,3 +632,40 @@ Stage Summary:
 - 万级节点性能优化：4 级分层（full/virtual/aggregated/webgl）+ FPS 监控
 - 已推送 GitHub
 - 具备进入阶段 3（属性面板与子节点逻辑）的条件
+
+---
+Task ID: 3-D (主代理整合与验收)
+Agent: main (Z.ai Code)
+Task: 整合属性面板 + 修复 lint + 阶段 3 验收 + 推送 GitHub
+
+Work Log:
+- 修复 3 个 lint 错误：
+  * function-encapsulator.tsx: effect 内 setState → 用 queueMicrotask + useRef 去重
+  * logic-node-card.tsx: useDebugStore 条件 hook → 移到 early return 之前
+- 重写 property-panel.tsx：
+  * 基础属性 Tab 用 PropertyForm 替换 disabled 占位字段
+  * 接入 handlePropertyChange：立即更新 canvas store + debounce 持久化
+  * name 字段变更同步更新节点 title + workspace store
+- Agent Browser 端到端验收：
+  * 创建项目 → 进入工作区 → 点击实体节点 ✅
+  * 基础属性 Tab 显示真实表单（名称/注册ID/生命值/攻击力/碰撞箱/生物类别/AI类型）✅
+  * 字段可编辑（非 disabled）✅
+  * 修改生命值 80→150 → UI 即时更新 ✅
+  * 等 2 秒 → DB health=150 + sync POST 200 ✅
+  * 行为逻辑 Tab → 子图编辑器 + 添加节点按钮 ✅
+- VLM 评估：子图编辑器有添加节点按钮，整体专业性较高
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 阶段 3 全部完成 ✅
+- 动态属性面板：7 种字段类型（string/number/boolean/select/color/vec3/texture）
+- PropertySchema 驱动表单，按 group 分组（基础/战斗/AI/贴图）
+- 属性变更实时同步到 canvas store + API（debounce via interval）
+- 行为逻辑 Tab：子节点逻辑编辑器（嵌套 React Flow）
+- 5 种逻辑子节点：事件监听/条件判断/循环/执行动作/变量
+- 2 种调试节点：打印日志/断点
+- 函数节点封装：框选→命名→端口推断→subGraphId 迁移
+- 调试面板：开始/暂停/单步/停止 + 日志输出 + 断点列表
+- 已推送 GitHub
+- 具备进入阶段 4（代码模式与双向同步）的条件

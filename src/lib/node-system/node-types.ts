@@ -31,6 +31,8 @@ export type NodeKind =
   | 'logic_loop' // 循环（子节点）
   | 'logic_action' // 执行动作（子节点）
   | 'logic_variable' // 变量（子节点）
+  | 'debug_log' // 打印日志（调试）
+  | 'debug_breakpoint' // 断点（调试）
 
 /** 节点类型分类 */
 export type NodeCategory = 'core' | 'logic' | 'advanced'
@@ -301,6 +303,266 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
     supportsSubLogic: true,
     propertiesSchema: [
       { key: 'name', label: '函数名', type: 'string', defaultValue: 'myFunction', group: '基础' },
+      { key: 'color', label: '颜色', type: 'color', defaultValue: 'cyan', group: '基础' },
+      // functionName / inputPorts / outputPorts / encapsulatedNodeIds
+      // 由"封装为函数"操作写入（不在属性面板表单显示）
+    ],
+  },
+
+  // ============ 逻辑子节点：事件监听 ============
+  logic_event: {
+    kind: 'logic_event',
+    label: '事件监听',
+    category: 'logic',
+    icon: 'Radio',
+    color: 'amber',
+    description: '监听游戏事件触发逻辑',
+    defaultSize: { width: 200, height: 100 },
+    inputPorts: [],
+    outputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean', direction: 'output' },
+    ],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'eventName',
+        label: '事件类型',
+        type: 'select',
+        defaultValue: 'onTick',
+        group: '事件',
+        options: [
+          { label: '每刻触发 (onTick)', value: 'onTick' },
+          { label: '被攻击时 (onHurt)', value: 'onHurt' },
+          { label: '死亡时 (onDeath)', value: 'onDeath' },
+          { label: '被交互时 (onInteract)', value: 'onInteract' },
+          { label: '生成时 (onSpawn)', value: 'onSpawn' },
+          { label: '右键点击 (onRightClick)', value: 'onRightClick' },
+        ],
+      },
+    ],
+  },
+
+  // ============ 逻辑子节点：条件判断 ============
+  logic_condition: {
+    kind: 'logic_condition',
+    label: '条件判断',
+    category: 'logic',
+    icon: 'GitBranch',
+    color: 'cyan',
+    description: 'if/else 条件分支',
+    defaultSize: { width: 200, height: 120 },
+    inputPorts: [
+      { id: 'in', label: '输入', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'true', label: '真', dataType: 'boolean', direction: 'output' },
+      { id: 'false', label: '假', dataType: 'boolean', direction: 'output' },
+    ],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'condition',
+        label: '条件表达式',
+        type: 'string',
+        defaultValue: 'health < 10',
+        group: '条件',
+        placeholder: '如 health < 10',
+      },
+    ],
+  },
+
+  // ============ 逻辑子节点：循环 ============
+  logic_loop: {
+    kind: 'logic_loop',
+    label: '循环',
+    category: 'logic',
+    icon: 'Repeat',
+    color: 'teal',
+    description: 'for/while 循环',
+    defaultSize: { width: 200, height: 100 },
+    inputPorts: [
+      { id: 'in', label: '输入', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'body', label: '循环体', dataType: 'boolean', direction: 'output' },
+      { id: 'done', label: '完成', dataType: 'boolean', direction: 'output' },
+    ],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'loopType',
+        label: '循环类型',
+        type: 'select',
+        defaultValue: 'for',
+        group: '循环',
+        options: [
+          { label: 'for (固定次数)', value: 'for' },
+          { label: 'while (条件)', value: 'while' },
+          { label: 'forEach (遍历)', value: 'forEach' },
+        ],
+      },
+      {
+        key: 'count',
+        label: '次数',
+        type: 'number',
+        defaultValue: 10,
+        min: 1,
+        max: 1000,
+        group: '循环',
+      },
+    ],
+  },
+
+  // ============ 逻辑子节点：执行动作 ============
+  logic_action: {
+    kind: 'logic_action',
+    label: '执行动作',
+    category: 'logic',
+    icon: 'Zap',
+    color: 'violet',
+    description: '执行游戏动作',
+    defaultSize: { width: 200, height: 100 },
+    inputPorts: [
+      { id: 'in', label: '输入', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'actionType',
+        label: '动作类型',
+        type: 'select',
+        defaultValue: 'spawn',
+        group: '动作',
+        options: [
+          { label: '生成实体 (spawn)', value: 'spawn' },
+          { label: '造成伤害 (damage)', value: 'damage' },
+          { label: '传送 (teleport)', value: 'teleport' },
+          { label: '给予物品 (give)', value: 'give' },
+          { label: '播放音效 (playSound)', value: 'playSound' },
+          { label: '生成粒子 (spawnParticle)', value: 'spawnParticle' },
+        ],
+      },
+      {
+        key: 'target',
+        label: '目标',
+        type: 'string',
+        defaultValue: '@self',
+        group: '动作',
+        placeholder: '@self / @attacker / @nearby',
+      },
+    ],
+  },
+
+  // ============ 逻辑子节点：变量 ============
+  logic_variable: {
+    kind: 'logic_variable',
+    label: '变量',
+    category: 'logic',
+    icon: 'Variable',
+    color: 'emerald',
+    description: '存储临时变量',
+    defaultSize: { width: 180, height: 80 },
+    inputPorts: [
+      { id: 'set', label: '设置', dataType: 'string', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'get', label: '获取', dataType: 'string', direction: 'output' },
+    ],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'varName',
+        label: '变量名',
+        type: 'string',
+        defaultValue: 'tempVar',
+        group: '变量',
+        placeholder: '小写驼峰',
+      },
+      {
+        key: 'varType',
+        label: '类型',
+        type: 'select',
+        defaultValue: 'number',
+        group: '变量',
+        options: [
+          { label: '数值 (number)', value: 'number' },
+          { label: '字符串 (string)', value: 'string' },
+          { label: '布尔 (boolean)', value: 'boolean' },
+        ],
+      },
+      {
+        key: 'initialValue',
+        label: '初始值',
+        type: 'string',
+        defaultValue: '0',
+        group: '变量',
+      },
+    ],
+  },
+
+  // ============ 调试节点：打印日志 ============
+  debug_log: {
+    kind: 'debug_log',
+    label: '打印日志',
+    category: 'logic',
+    icon: 'Terminal',
+    color: 'emerald',
+    description: '输出日志到控制台（调试用）',
+    defaultSize: { width: 180, height: 80 },
+    inputPorts: [
+      { id: 'in', label: '输入', dataType: 'string', direction: 'input' },
+    ],
+    outputPorts: [],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'message',
+        label: '日志内容',
+        type: 'string',
+        defaultValue: 'Hello from node!',
+        group: '日志',
+      },
+      {
+        key: 'logLevel',
+        label: '级别',
+        type: 'select',
+        defaultValue: 'info',
+        group: '日志',
+        options: [
+          { label: '信息 (info)', value: 'info' },
+          { label: '警告 (warn)', value: 'warn' },
+          { label: '错误 (error)', value: 'error' },
+        ],
+      },
+    ],
+  },
+
+  // ============ 调试节点：断点 ============
+  debug_breakpoint: {
+    kind: 'debug_breakpoint',
+    label: '断点',
+    category: 'logic',
+    icon: 'CircleDot',
+    color: 'rose',
+    description: '运行到此节点暂停（调试用）',
+    defaultSize: { width: 160, height: 70 },
+    inputPorts: [
+      { id: 'in', label: '输入', dataType: 'boolean', direction: 'input' },
+    ],
+    outputPorts: [
+      { id: 'out', label: '继续', dataType: 'boolean', direction: 'output' },
+    ],
+    supportsSubLogic: false,
+    propertiesSchema: [
+      {
+        key: 'condition',
+        label: '断点条件',
+        type: 'string',
+        defaultValue: '',
+        group: '断点',
+        placeholder: '留空表示总是断',
+      },
     ],
   },
 }
@@ -313,6 +575,11 @@ export function getNodeTypeDefinition(kind: string): NodeTypeDefinition | undefi
 /** 获取所有可创建的节点类型（用于右键菜单，排除纯逻辑子节点） */
 export function getCreatableNodeTypes(): NodeTypeDefinition[] {
   return Object.values(NODE_TYPE_REGISTRY).filter((t) => t.category !== 'logic')
+}
+
+/** 获取所有逻辑子节点类型（用于子图编辑器工具栏） */
+export function getLogicNodeTypes(): NodeTypeDefinition[] {
+  return Object.values(NODE_TYPE_REGISTRY).filter((t) => t.category === 'logic')
 }
 
 /** 按分类获取节点类型 */

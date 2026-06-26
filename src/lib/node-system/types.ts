@@ -18,6 +18,13 @@ export interface FlowNodeData {
   properties: NodeProperties
   isCollapsed: boolean
   color?: string
+  /**
+   * 所属子图 ID（即父节点 ID）。
+   * - 主画布节点：subGraphId == null（或 undefined）
+   * - 子图节点：subGraphId === 父节点 ID（如某个 entity / block / item 节点的 id）
+   * 主画布渲染时会过滤掉 subGraphId 不为空的节点，子图编辑器只显示对应 subGraphId 的节点。
+   */
+  subGraphId?: string | null
   [key: string]: unknown
 }
 
@@ -56,6 +63,10 @@ export interface PrismaNodeShape {
   color: string | null
   isCollapsed: boolean
   properties: string
+  /** 所属子图 ID（父节点 ID）—— 子图节点才有值，主画布节点为 null */
+  subGraphId?: string | null
+  /** 父节点组 ID（用于节点组嵌套，与 subGraphId 不同） */
+  parentId?: string | null
 }
 
 /** Prisma Node ↔ FlowNode 转换：从 Prisma 模型 → FlowNode */
@@ -77,6 +88,8 @@ export function prismaNodeToFlowNode(p: PrismaNodeShape): FlowNode {
       properties,
       isCollapsed: p.isCollapsed,
       color: p.color ?? undefined,
+      // 保留 subGraphId，主画布据此过滤子图节点
+      subGraphId: p.subGraphId ?? null,
     },
     width: p.width ?? undefined,
     height: p.height ?? undefined,
@@ -97,5 +110,7 @@ export function flowNodeToPrismaNode(f: FlowNode, projectId: string) {
     color: f.data.color ?? null,
     isCollapsed: f.data.isCollapsed ?? false,
     properties: JSON.stringify(f.data.properties ?? {}),
+    // 写入 subGraphId（主画布节点为 null，子图节点为父节点 ID）
+    subGraphId: f.data.subGraphId ?? null,
   }
 }

@@ -185,6 +185,12 @@ export interface CanvasState {
   /* 节点组选择（框选中的节点） */
   groupingSelection: string[]
 
+  /* 函数节点详情视图：当前打开的函数节点 ID（双击打开） */
+  openedFunctionNodeId: string | null
+
+  /** "封装为函数"对话框打开状态（由右键菜单或浮动按钮触发） */
+  encapsulatorDialogOpen: boolean
+
   /* ----- Actions: 数据 ----- */
   setNodes: (nodes: FlowNode[]) => void
   setEdges: (edges: FlowEdge[]) => void
@@ -218,6 +224,20 @@ export interface CanvasState {
   groupSelected: (name: string, color: string) => string | null
   ungroupNode: (groupId: string) => void
 
+  /* ----- Actions: 函数节点封装 ----- */
+  encapsulateToFunction: (
+    name: string,
+    color: string,
+    nodeIds: string[],
+  ) => string | null
+  /** 双击函数节点 → 打开详情视图 */
+  openFunctionDetail: (functionNodeId: string) => void
+  closeFunctionDetail: () => void
+  /** 打开"封装为函数"对话框 */
+  openEncapsulatorDialog: () => void
+  /** 关闭"封装为函数"对话框 */
+  closeEncapsulatorDialog: () => void
+
   /* ----- Actions: 持久化 ----- */
   clearCanvas: () => void
   loadFromProject: (nodes: FlowNode[], edges: FlowEdge[]) => void
@@ -237,6 +257,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   selectedEdgeIds: [],
   contextMenu: null,
   groupingSelection: [],
+  openedFunctionNodeId: null,
+  encapsulatorDialogOpen: false,
 
   /* ----- Actions: 数据 ----- */
 
@@ -536,6 +558,181 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       }
     }),
 
+  /* ----- Actions: 函数节点封装 ----- */
+
+  /**
+   * 把多个选中节点封装为一个新的函数节点。
+   *
+   * 步骤：
+   *   1. 计算选中节点包围盒，确定函数节点位置
+   *   2. 推断函数节点的输入/输出端口（来自选中节点上"未被内部连线占用"的端口）
+   *   3. 创建 function 节点（kind='function'），把端口定义存入 properties
+   *   4. 把选中节点的 data.subGraphId 设为新函数节点的 ID（主画布将过滤这些节点）
+   *   5. 选中态切换为新建的函数节点
+   *
+   * 返回新函数节点 ID；失败（无选中节点）返回 null。
+   */
+  encapsulateToFunction: (name, color, nodeIds) => {
+    const { nodes, edges } = get()
+    if (nodeIds.length === 0) return null
+
+    const selectedNodes = nodes.filter((n) => nodeIds.includes(n.id))
+    if (selectedNodes.length === 0) return null
+
+    // 1) 计算包围盒
+    const bounds = computeBounds(selectedNodes)
+    if (!bounds) return null
+    const { minX, minY, maxX } = bounds
+    const centerX = (minX + maxX) / 2
+
+    const functionNodeId = makeId('function')
+
+    // 2) 推断端口：
+    //    - 内部连线：source 和 target 都在选中集合内的边（这些边属于函数内部，无需暴露）
+    //    - 输入端口：选中节点上的 input port，如果有外部连线指向它 → 暴露为函数输入
+    //    - 输出端口：选中节点上的 output port，如果它有连线指向外部节点 → 暴露为函数输出
+    const selectedIdSet = new Set(nodeIds)
+
+    // 收集外部入口边（外部 → 选中节点）
+    const incomingExternalEdges = edges.filter(
+      (e) => !selectedIdSet.has(e.source) && selectedIdSet.has(e.target),
+    )
+    // 收集外部出口边（选中节点 → 外部）
+    const outgoingExternalEdges = edges.filter(
+      (e) => selectedIdSet.has(e.source) && !selectedIdSet.has(e.target),
+    )
+
+    // 推断输入端口（去重 by target node + target port）
+    const inputPortKeys = new Set<string>()
+    const inputPorts: Array<{
+      id: string
+      label: string
+      dataType: string
+      direction: 'input'
+    }> = []
+    for (const edge of incomingExternalEdges) {
+      const key = `${edge.target}:${edge.targetHandle ?? ''}`
+      if (inputPortKeys.has(key)) continue
+      inputPortKeys.add(key)
+      const targetNode = nodes.find((n) => n.id === edge.target)
+      if (!targetNode) continue
+      const targetDef = getNodeTypeDefinition(targetNode.data.kind)
+      const targetPort = targetDef?.inputPorts.find(
+        (p) => p.id === edge.targetHandle,
+      )
+      const label = targetNode.data.title
+        ? `${String(targetNode.data.title).slice(0, 8)}.${targetPort?.label ?? 'in'}`
+        : targetPort?.label ?? 'in'
+      const dataType = targetPort?.dataType ?? 'string'
+      inputPorts.push({
+        id: `in_${inputPorts.length + 1}`,
+        label,
+        dataType,
+        direction: 'input',
+      })
+    }
+    // 至少保留 1 个调用端口
+    if (inputPorts.length === 0) {
+      inputPorts.push({
+        id: 'call',
+        label: '调用',
+        dataType: 'boolean',
+        direction: 'input',
+      })
+    }
+
+    // 推断输出端口
+    const outputPortKeys = new Set<string>()
+    const outputPorts: Array<{
+      id: string
+      label: string
+      dataType: string
+      direction: 'output'
+    }> = []
+    for (const edge of outgoingExternalEdges) {
+      const key = `${edge.source}:${edge.sourceHandle ?? ''}`
+      if (outputPortKeys.has(key)) continue
+      outputPortKeys.add(key)
+      const sourceNode = nodes.find((n) => n.id === edge.source)
+      if (!sourceNode) continue
+      const sourceDef = getNodeTypeDefinition(sourceNode.data.kind)
+      const sourcePort = sourceDef?.outputPorts.find(
+        (p) => p.id === edge.sourceHandle,
+      )
+      const label = sourceNode.data.title
+        ? `${String(sourceNode.data.title).slice(0, 8)}.${sourcePort?.label ?? 'out'}`
+        : sourcePort?.label ?? 'out'
+      const dataType = sourcePort?.dataType ?? 'string'
+      outputPorts.push({
+        id: `out_${outputPorts.length + 1}`,
+        label,
+        dataType,
+        direction: 'output',
+      })
+    }
+    if (outputPorts.length === 0) {
+      outputPorts.push({
+        id: 'return',
+        label: '返回',
+        dataType: 'string',
+        direction: 'output',
+      })
+    }
+
+    // 3) 创建函数节点
+    const functionNode: FlowNode = {
+      id: functionNodeId,
+      type: 'function',
+      position: { x: centerX - 110, y: minY - 80 },
+      data: {
+        kind: 'function',
+        title: name || '函数节点',
+        properties: {
+          name: name || 'myFunction',
+          color,
+          functionName: name || 'myFunction',
+          inputPorts,
+          outputPorts,
+          encapsulatedNodeIds: nodeIds,
+        },
+        isCollapsed: false,
+        color,
+        subGraphId: null,
+      },
+      width: 220,
+      height: 140,
+    }
+
+    // 4) 把选中节点的 subGraphId 设置为新函数节点 ID
+    //    同时清除它们的 selected 标记（避免出现在 selectedNodeIds）
+    const updatedNodes = nodes.map((n) => {
+      if (!selectedIdSet.has(n.id)) return n
+      return {
+        ...n,
+        data: { ...n.data, subGraphId: functionNodeId },
+        selected: false,
+      }
+    })
+
+    // 5) 切换选中态到函数节点
+    set({
+      nodes: [functionNode, ...updatedNodes],
+      selectedNodeIds: [functionNodeId],
+      groupingSelection: [],
+    })
+
+    return functionNodeId
+  },
+
+  openFunctionDetail: (functionNodeId) =>
+    set({ openedFunctionNodeId: functionNodeId }),
+
+  closeFunctionDetail: () => set({ openedFunctionNodeId: null }),
+
+  openEncapsulatorDialog: () => set({ encapsulatorDialogOpen: true }),
+
+  closeEncapsulatorDialog: () => set({ encapsulatorDialogOpen: false }),
+
   /* ----- Actions: 持久化 ----- */
 
   clearCanvas: () =>
@@ -544,10 +741,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       edges: [],
       nodeExtras: {},
       edgeExtras: {},
+      isInitialized: false,
       selectedNodeIds: [],
       selectedEdgeIds: [],
       groupingSelection: [],
       contextMenu: null,
+      openedFunctionNodeId: null,
+      encapsulatorDialogOpen: false,
     }),
 
   loadFromProject: (nodes, edges) =>
@@ -561,6 +761,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       selectedEdgeIds: [],
       groupingSelection: [],
       contextMenu: null,
+      openedFunctionNodeId: null,
+      encapsulatorDialogOpen: false,
     }),
 }))
 
@@ -573,6 +775,21 @@ export const selectSelectedNode = (s: CanvasState): FlowNode | null =>
 
 export const selectNodeCount = (s: CanvasState): number => s.nodes.length
 export const selectEdgeCount = (s: CanvasState): number => s.edges.length
+
+/** 主画布可见节点：subGraphId 为空的节点（即不属于任何函数节点内部） */
+export const selectRootNodes = (s: CanvasState): FlowNode[] =>
+  s.nodes.filter((n) => !n.data.subGraphId)
+
+/** 函数节点内部子节点：subGraphId === functionNodeId */
+export const selectFunctionChildren = (
+  s: CanvasState,
+  functionNodeId: string,
+): FlowNode[] =>
+  s.nodes.filter((n) => n.data.subGraphId === functionNodeId)
+
+/** 调试断点节点：所有 kind === 'debug_breakpoint' 的节点 */
+export const selectBreakpointNodes = (s: CanvasState): FlowNode[] =>
+  s.nodes.filter((n) => n.data.kind === 'debug_breakpoint')
 
 /* ------------------------------------------------------------------ */
 /* 默认初始节点（用于空画布演示）                                       */

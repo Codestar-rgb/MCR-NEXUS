@@ -198,10 +198,18 @@ export function CanvasContextMenu() {
     }
   }
 
-  /* 导出为函数节点 */
+  /* 导出为函数节点（多选时显示，触发封装对话框） */
   const handleExportFunction = () => {
+    const ids =
+      selectedNodeIds.length > 1 ? selectedNodeIds : groupingSelection
+    if (ids.length < 2) {
+      toast.warning('请先选择至少 2 个节点（按住 Shift 多选）')
+      closeContextMenu()
+      return
+    }
+    // 触发封装对话框（FunctionEncapsulator 监听此 counter）
+    useCanvasStore.getState().requestEncapsulatorDialog()
     closeContextMenu()
-    toast.info('导出为函数节点功能将在阶段 4 接入')
   }
 
   /* 全选 */
@@ -281,7 +289,12 @@ export function CanvasContextMenu() {
             />
             <MenuItem
               icon={<FunctionSquare className="h-3.5 w-3.5" />}
-              label="导出为函数节点"
+              label="封装为函数节点"
+              hint={
+                selectedNodeIds.length > 1
+                  ? `${selectedNodeIds.length} 个节点`
+                  : undefined
+              }
               onClick={handleExportFunction}
             />
             <MenuSeparator />

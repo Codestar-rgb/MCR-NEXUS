@@ -49,6 +49,9 @@ import { CanvasContextMenu } from '@/components/workspace/canvas/canvas-context-
 import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
 import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
 import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
+import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
+import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
+import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
 import {
   useCanvasStore,
   getNodeColorHex,
@@ -102,6 +105,9 @@ function NodeCanvasInner() {
   const setContextMenu = useCanvasStore((s) => s.setContextMenu)
   const closeContextMenu = useCanvasStore((s) => s.closeContextMenu)
   const selectNode = useCanvasStore((s) => s.selectNode)
+  const openFunctionDetail = useCanvasStore((s) => s.openFunctionDetail)
+  const closeFunctionDetail = useCanvasStore((s) => s.closeFunctionDetail)
+  const openedFunctionNodeId = useCanvasStore((s) => s.openedFunctionNodeId)
 
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
@@ -110,37 +116,53 @@ function NodeCanvasInner() {
   /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
   useCanvasSync(currentProjectId)
 
-  /* 把 store 中的 FlowNode[] 与 nodeExtras 合并为 RFNode[] */
+  /* 把 store 中的 FlowNode[] 与 nodeExtras 合并为 RFNode[]。
+   * 主画布只渲染 subGraphId 为空（即不属于任何子图）的节点；
+   * 子图节点（subGraphId === 父节点 ID）由子图编辑器单独渲染。
+   */
   const rfNodes = useMemo<RFNode[]>(() => {
-    return nodes.map((n) => {
-      const extra = nodeExtras[n.id] ?? {}
-      return {
-        id: n.id,
-        type: n.type,
-        position: n.position,
-        data: n.data,
-        width: n.width,
-        height: n.height,
-        selected: n.selected,
-        ...extra,
-      } as RFNode
-    })
+    return nodes
+      .filter((n) => !n.data.subGraphId)
+      .map((n) => {
+        const extra = nodeExtras[n.id] ?? {}
+        return {
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          data: n.data,
+          width: n.width,
+          height: n.height,
+          selected: n.selected,
+          ...extra,
+        } as RFNode
+      })
   }, [nodes, nodeExtras])
 
-  /* 把 store 中的 FlowEdge[] 转为 RFEdge[] */
+  /* 把 store 中的 FlowEdge[] 转为 RFEdge[]。
+   * 主画布只渲染两端节点都在主画布上的连线（两端 subGraphId 都为空）；
+   * 子图内部的连线由子图编辑器单独渲染，避免 React Flow 报"找不到节点"。
+   */
   const rfEdges = useMemo<RFEdge[]>(() => {
-    return edges.map((e) => {
-      return {
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        sourceHandle: e.sourceHandle ?? undefined,
-        targetHandle: e.targetHandle ?? undefined,
-        type: 'typed',
-        data: e.data,
-      } as RFEdge
-    })
-  }, [edges])
+    const nodeById = new Map(nodes.map((n) => [n.id, n]))
+    return edges
+      .filter((e) => {
+        const s = nodeById.get(e.source)
+        const t = nodeById.get(e.target)
+        // 两端节点必须存在且都不属于任何子图
+        return !!s && !!t && !s.data.subGraphId && !t.data.subGraphId
+      })
+      .map((e) => {
+        return {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          sourceHandle: e.sourceHandle ?? undefined,
+          targetHandle: e.targetHandle ?? undefined,
+          type: 'typed',
+          data: e.data,
+        } as RFEdge
+      })
+  }, [edges, nodes])
 
   /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
   const isValidConnection = useCallback<IsValidConnection<RFEdge>>(
@@ -254,6 +276,17 @@ function NodeCanvasInner() {
     [],
   )
 
+  /* 双击函数节点 → 打开详情视图（编辑内部子节点） */
+  const onNodeDoubleClick = useCallback(
+    (_: React.MouseEvent, node: RFNode) => {
+      const kind = (node.data as { kind?: string } | undefined)?.kind
+      if (kind === 'function') {
+        openFunctionDetail(node.id)
+      }
+    },
+    [openFunctionDetail],
+  )
+
   /* MiniMap 节点着色：按 kind 取主题色 hex */
   const miniMapNodeColor = useCallback((node: RFNode) => {
     return getNodeColorHex(node.type ?? '')
@@ -279,6 +312,7 @@ function NodeCanvasInner() {
         onConnect={handleConnect}
         isValidConnection={isValidConnection}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onPaneClick={onPaneClick}
         onNodeContextMenu={onNodeContextMenu}
         onPaneContextMenu={onPaneContextMenu}
@@ -368,6 +402,17 @@ function NodeCanvasInner() {
 
       {/* 右键上下文菜单（浮动） */}
       <CanvasContextMenu />
+
+      {/* 函数节点封装按钮 + 对话框（多选时显示） */}
+      <FunctionEncapsulator />
+
+      {/* 调试面板（右下角浮动） */}
+      <DebugPanel />
+
+      {/* 函数节点详情视图（双击函数节点打开，覆盖整个画布） */}
+      {openedFunctionNodeId && (
+        <FunctionNodeDetail onClose={closeFunctionDetail} />
+      )}
     </div>
   )
 }

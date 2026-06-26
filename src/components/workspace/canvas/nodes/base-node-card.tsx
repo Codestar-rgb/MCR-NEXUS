@@ -20,6 +20,7 @@ import { ChevronDown, ChevronRight, Box } from 'lucide-react'
 import * as LucideIcons from 'lucide-react'
 import { getNodeTypeDefinition } from '@/lib/node-system'
 import type { FlowNodeData } from '@/lib/node-system'
+import { useDebugStore } from '@/stores/debug-store'
 import { cn } from '@/lib/utils'
 import { PortHandle } from './port-handle'
 
@@ -143,6 +144,7 @@ interface BaseNodeCardProps extends NodeProps {
 function BaseNodeCardImpl({
   data,
   selected,
+  id,
   renderContent,
   renderSummary,
   className,
@@ -150,6 +152,13 @@ function BaseNodeCardImpl({
   disablePorts = false,
   portStartY = 38,
 }: BaseNodeCardProps) {
+  // 调试高亮（emerald 闪烁）：必须在任何早期 return 之前调用 hook
+  const executingNodeId = useDebugStore((s) => s.currentNodeId)
+  const debugStatus = useDebugStore((s) => s.status)
+  const isExecuting =
+    executingNodeId === id &&
+    (debugStatus === 'running' || debugStatus === 'paused')
+
   const def = getNodeTypeDefinition(data.kind)
   if (!def) return null
 
@@ -169,6 +178,7 @@ function BaseNodeCardImpl({
         selected
           ? cn(c.borderStrong, 'ring-2', c.ring)
           : 'hover:border-opacity-70',
+        isExecuting && 'nexcube-debug-executing',
         className,
       )}
       style={{ minWidth: def.defaultSize.width }}
