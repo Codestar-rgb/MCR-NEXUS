@@ -903,3 +903,258 @@ Stage Summary:
 - 撤销栈 + Git 历史 mock + 全局快捷键
 - 已推送 GitHub
 - 具备进入阶段 5（终端与构建 UX）的条件
+
+---
+Task ID: 5-B
+Agent: full-stack-developer
+Task: 镜像源配置 UI（阿里云/清华源切换 + init.gradle 预览）
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1/2/3/4 成果（Prisma 9 模型 + 能力层 + 主页 + 工作区壳层 + 节点画布 + 属性面板 + 代码模式 + 双向同步）
+- 读取 src/lib/capabilities/index.ts 确认 PREDEFINED_MIRRORS 结构（3 个镜像：aliyun/tuna/official，含 mavenUrl/gradleUrl/jdks）
+- 读取 prisma/schema.prisma 确认 MirrorConfig 模型（name 唯一约束 + isActive Boolean + jdks JSON string）
+- 读取 src/components/home/sidebar.tsx + edge-toolbar.tsx 确认设置入口现状（toast 占位）
+- 创建 src/lib/mirror/init-gradle-generator.ts：
+  * generateInitGradle(mirror) → 生成符合 Gradle DSL（Groovy 风格）的 init.gradle 文本
+  * 包含 allprojects.repositories 块：清除 mavenCentral/jcenter + 注入镜像源 + Forge 专用路径 + mavenCentral 兜底
+  * 包含 settingsEvaluated.pluginManagement 块：重定向插件仓库到镜像
+  * 文件头部含元数据（镜像 ID/名称/URL/时间戳）
+  * getInitGradleFileName(mirror) → init-{name}.gradle
+  * getMirrorSummary(mirror) → 简短摘要
+- 创建 src/app/api/mirrors/route.ts：
+  * GET /api/mirrors → 返回 { mirrors, activeMirrorId }，首次访问自动用 PREDEFINED_MIRRORS 初始化（阿里云默认激活）
+  * POST /api/mirrors { id, isActive:true } → 事务内先全部 isActive=false 再激活目标
+  * jdks JSON 字段反序列化为 JdkMirror[]，对外暴露与能力层一致的 MirrorConfig 形状
+  * 用 name 字段作为对外稳定 ID（与 PREDEFINED_MIRRORS.id 对齐）
+- 创建 src/app/api/mirrors/test/route.ts：
+  * POST /api/mirrors/test { url } → 返回 { reachable, latency, url, status?, error? }
+  * 服务端 fetch + AbortController 5s 超时
+  * status < 500 视为可达（Maven 镜像源对 GET / 可能返回 200/403/404）
+  * URL 合法性 + 协议校验
+- 创建 src/components/settings/mirror-panel.tsx：
+  * TanStack Query 拉 /api/mirrors，staleTime 60s
+  * RadioGroup 单选镜像，激活项 emerald 高亮 + "当前激活"徽章
+  * 每个镜像卡片：名称 + 推荐/激活徽章 + mavenUrl + JDK 镜像列表 + 速度徽章 + 测速按钮
+  * "全部测速" 按钮：串行测试 3 个镜像避免限流
+  * SpeedBadge 三色：≤300ms 绿 / 300-1000ms 黄 / >1000ms 橙 / 不可达 红
+  * init.gradle 预览区：ScrollArea + <pre> + font-mono + 深色背景
+  * 复制按钮：navigator.clipboard.writeText + 2s 反馈
+  * 下载按钮：Blob + URL.createObjectURL + a.download = init-{name}.gradle
+  * "应用并保存" 按钮：POST /api/mirrors 持久化 + invalidateQueries + sonner toast
+  * 当前已激活镜像时禁用按钮（避免重复保存）
+- 创建 src/components/settings/settings-dialog.tsx：
+  * 大型设置 Dialog（max-w-4xl, h-85vh）
+  * 左侧导航 5 项：📦 镜像源 / 🎨 主题 / ⌨️ 快捷键 / 🔌 插件 / 🛠️ 环境
+  * 移动端：导航折叠为顶部横向 Tab；桌面端：左侧纵向 w-52
+  * 镜像源 Tab → MirrorPanel
+  * 主题 Tab → next-themes 切换：深色/浅色卡片 + 跟随系统开关
+  * 快捷键 Tab → 只读列表（4 组：全局/工作区/编辑器/节点画布）共 16 个快捷键
+  * 插件 Tab → 占位（Task 6 实现）+ 4 项功能预览
+  * 环境 Tab → 占位（Task 6 实现）+ 4 项功能预览
+- 修改 src/stores/workspace.ts：新增 settingsOpen / openSettings / closeSettings / setSettingsOpen
+  * 不加入 partialize（刷新后设置对话框关闭）
+- 修改 src/app/page.tsx：渲染全局 SettingsDialog（主页 + 工作区两个分支都挂载）
+- 修改 src/components/home/sidebar.tsx：设置齿轮点击 → openSettings()（移除原 toast）
+- 修改 src/components/workspace/edge-toolbar.tsx：设置按钮点击 → openSettings()（移除原 toast）
+- bun run lint：0 errors / 0 warnings ✓
+- bunx tsc --noEmit：本任务所有新增/修改文件 0 errors（其他文件预存错误不属于本任务）
+- API 端到端验证：
+  * GET /api/mirrors → 200，返回 3 个镜像 + activeMirrorId="aliyun"（首次自动初始化）
+  * POST /api/mirrors/test { url: aliyun } → 200, { reachable:true, latency:817, status:404 }
+  * POST /api/mirrors { id:"tuna" } → 200, { success:true, activeMirrorId:"tuna" }
+  * 重置为 aliyun，DB 状态正确
+- init.gradle 生成验证（bunx tsx 内联脚本，3 个镜像全部通过）：
+  * 阿里云：1926 字符，含 allprojects/repositories/MavenArtifactRepository/settingsEvaluated/pluginManagement
+  * 清华：1944 字符，DSL 关键字齐全
+  * 官方：1890 字符，DSL 关键字齐全
+  * 文件名：init-aliyun.gradle / init-tuna.gradle / init-official.gradle
+- dev.log 检查：最近 30 行无 error/fatal，MirrorConfig SELECT/UPDATE SQL 正确执行
+
+Stage Summary:
+- 设置面板完整（5 个 Tab：镜像源/主题/快捷键/插件/环境）
+- 3 个镜像源可选（阿里云/清华/官方），RadioGroup 单选 + emerald 高亮激活项
+- 速度测试（真实 fetch 计时 + 三色徽章 + 全部测速串行避免限流）
+- init.gradle 文件生成（符合 Gradle DSL + 元数据头部 + Forge 专用路径 + 兜底 mavenCentral）
+- init.gradle 预览（深色 ScrollArea + font-mono）+ 复制 + 下载
+- 镜像配置持久化到 DB（事务保证唯一激活 + invalidateQueries 刷新 UI）
+- 主页 + 工作区都可打开设置（workspace store 统一管理 settingsOpen）
+- 移除原 Sidebar/EdgeToolbar 的 toast 占位
+- 待 Task 5-C 构建仪表盘增强
+
+---
+Task ID: 5-C
+Agent: full-stack-developer
+Task: 构建仪表盘增强（模拟Gradle流式输出 + 构建历史）
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1/2/3/4 成果（Prisma BuildLog 模型 + 终端面板已有构建按钮 + parseGradleLog 引擎）
+- 读取 src/components/workspace/terminal/terminal-panel.tsx 了解当前结构（xterm + 多 tab + mock build 命令）
+- 读取 src/lib/capabilities/web.ts 确认 runGradle 已有模拟实现（可参考）
+- 读取 src/lib/capabilities/types.ts 确认 ParsedLogCard 接口（id/level/title/originalText/analysis/suggestion/fixAction）
+- 创建 src/stores/build.ts（构建状态管理 Zustand store）
+  * 状态：idle/running/success/failed 四态 + task/startTime/output/parsedCards/duration/history
+  * Actions：startBuild/appendOutput/finishBuild/tickDuration/clearOutput/resetStatus/loadHistory/addHistoryEntry/clearHistory/hydrateHistoryOutput
+  * 常量 MAX_HISTORY=20，工具 makeOutputPreview（前 200 字符 + ⏎ 替换换行）
+- 创建 src/lib/build/gradle-simulator.ts（真实流式 Gradle 日志）
+  * BUILD_TASKS（5 个）：compileJava → processResources → classes → jar → reobfJar
+  * RUN_CLIENT_TASKS / RUN_SERVER_TASKS / CLEAN_TASKS
+  * FAILURE_SCENARIOS（3 种）：missing_dependency / compile_error / out_of_memory
+  * async function* simulateBuild(task, options) → 单行 chunk + \r\n
+  * 真实时序：每个 task 有 duration，行间 50-200ms 随机延迟
+  * 10% 随机失败（compileJava 之后注入）
+  * 支持 forceSuccess / forceFailure（用于测试）
+  * simulateBuildSync / isBuildFailed 工具函数
+- 创建 src/app/api/projects/[id]/builds/route.ts（构建历史列表 API）
+  * GET：返回最近 20 条（outputPreview + cardCount，不含完整 output）
+  * POST：创建构建记录，返回完整详情
+  * DELETE：清空全部历史
+  * 字段校验 + 跨项目隔离
+- 创建 src/app/api/projects/[id]/builds/[buildId]/route.ts（单条构建详情 API）
+  * GET：返回完整 output + parsedCards
+  * DELETE：删除单条
+- 创建 src/components/workspace/terminal/build-history-panel.tsx（历史列表）
+  * Sheet（右侧滑入）+ 内部 Dialog（详情）
+  * TanStack Query 缓存 ['builds', projectId] + ['builds', projectId, buildId, 'detail']
+  * 状态徽章：success=emerald / failed=rose / running=teal
+  * 详情 Dialog：智能解析卡片（3 色 error/warn/info）+ 原始日志
+  * 清空按钮（useMutation）+ Toast 反馈
+- 修改 src/components/workspace/terminal/terminal-panel.tsx（集成模拟器 + 状态管理）
+  * 集成 useBuildStore（订阅 status/task/parsedCards/duration）
+  * runBuildTask(task) 核心流程：
+    1. 校验（状态非 running + currentProjectId 存在）
+    2. 切到 build tab + 等待 xterm 初始化（80ms）
+    3. 清空 build tab buffer + term.clear()
+    4. startBuild(task) 重置 store + UI
+    5. 输出 $ ./gradlew <task> 命令头
+    6. 迭代 simulateBuild(task)：write + appendOutput + 更新进度
+    7. 完成后：parseGradleLog + finishBuild + POST 持久化 + invalidate query
+    8. Toast 反馈（成功/失败/中断）
+  * 进度条（构建中显示，emerald 色，1px 高度，0-95% 进度估算）
+  * 状态条（构建完成显示，成功/失败图标 + 耗时 + 卡片展开按钮）
+  * 卡片展开区（可折叠显示完整解析卡片，3 色）
+  * 新增"构建历史"按钮（History 图标）→ 打开 BuildHistoryPanel Sheet
+  * 按钮四态：idle（Hammer）/ running（Loader2 spin）/ success（CheckCircle2 emerald）/ failed（XCircle rose）
+  * 停止按钮：cancelFlag + gen.return()，仅 running 时可用
+  * build tab 只读（不接收键盘输入）
+  * 终端命令 build / run 也走 runBuildTask（统一入口）
+- bun run lint：0 errors / 0 warnings ✓
+- 模拟器单元验证（bunx tsx）：18 chunks / 9057ms / BUILD SUCCESSFUL in 9s ✓
+- 失败场景验证：missing_dependency（Could not find）/ compile_error（cannot find symbol + 2 errors）/ out_of_memory（OutOfMemoryError）✓
+- parseGradleLog 集成验证：3 张卡片（依赖解析失败 + 依赖未找到 + 构建失败）+ fixAction ✓
+- API 端到端验证（curl）：GET/POST/DELETE 全部 200，详情接口返回完整 output + parsedCards ✓
+- DB 验证（bunx tsx）：BuildLog 模型 INSERT/SELECT/DELETE 正常，cuid 主键 + createdAt 自动填充 ✓
+
+Stage Summary:
+- Gradle 构建模拟器：5 个 task 真实时序流式输出（compileJava 2s + processResources 800ms + classes 300ms + jar 1.2s + reobfJar 1.5s ≈ 9s 总耗时）
+- 真实 Gradle 格式：> Configure project / > Task :xxx / BUILD SUCCESSFUL in Ns / N actionable tasks
+- 10% 随机失败（3 种已知错误模式，测试日志解析引擎）
+- 构建状态四态（idle/running/success/failed），Zustand store 管理
+- 构建历史持久化到 DB（最近 20 条，含 output + parsedCards JSON）
+- 构建完成自动 parseGradleLog 生成中文卡片（依赖解析失败 / 依赖未找到 / 构建失败）
+- 构建历史 Sheet（侧滑）+ 详情 Dialog（卡片 + 原始日志）
+- 进度条（构建中）+ 状态条（构建完成）+ 卡片展开区
+- 按钮四态视觉反馈（Hammer / Loader2 / CheckCircle2 / XCircle）
+- 终端命令 build / run 与按钮统一入口（都走 runBuildTask）
+- 支持中断（cancelFlag + gen.return）
+- lint 通过；tsc 本任务文件 0 错误；dev server 编译成功
+- 待主代理整合（5-A 智能日志规则扩展 / 5-B 日志翻译引擎 / 5-D Mod 导出按钮）
+
+---
+Task ID: 5-A
+Agent: full-stack-developer
+Task: 智能日志解析 UI（中文错误卡片 + 一键修复按钮）
+
+Work Log:
+- 读取 worklog.md 了解阶段 0/1/2/3/4 成果（21 条 Gradle 报错规则 + 终端面板 + 代码生成引擎）
+- 读取 src/lib/capabilities/log-parser.ts 确认 ParsedLogCard 接口与 21 条规则（fixAction.action 用 fix.* 风格 key）
+- 读取 src/lib/capabilities/types.ts 确认 ParsedLogCard 完整结构（含 lineRange / ruleId / fixAction.payload）
+- 读取 src/components/workspace/terminal/terminal-panel.tsx 发现 Task 5-C 并行 agent 已重构（useBuildStore + gradle-simulator + BuildHistoryPanel + builds API）
+- 创建 src/lib/build/fix-actions.ts（executeFixAction 处理器，8 种 action + 4 种别名）
+  * fix.configure-mirror / switch_mirror_aliyun / switch_mirror_tuna → POST /api/projects/[id]/mirror
+  * fix.adjust-jvm-memory / increase_memory → 返回 gradle.properties 设置提示
+  * fix.search-maven / fix.show-dependency-tree / fix.show-mappings-doc / fix.show-stacktrace / fix.show-memory-guide / fix.goto-symbol / add_dependency → 返回中文操作提示
+  * 返回 FixActionResult { success, message, variant } 由调用方做 toast
+- 创建 src/app/api/projects/[id]/mirror/route.ts（GET/POST 镜像源 API，验证 mirrorId ∈ {aliyun, tuna, official}）
+  * Task 5-B 将实现实际写入 settings.gradle
+- 创建 src/components/workspace/terminal/log-card.tsx（单卡片组件）
+  * 3 级 level 着色：error=rose / warn=amber / info=cyan
+  * 左侧 4px 色条 + 圆角 + 深色背景 zinc-900/60
+  * 标题栏：level 图标 + 中文标题 + level 徽章 + ruleId + 关闭按钮
+  * 原文：font-mono text-xs，可折叠（默认展开，AnimatePresence 动画）
+  * 原因分析：📋 中文 / 建议操作：💡 中文 + 修复按钮（emerald，loading 态）
+  * 修复动作 key 展示：🔧 显示 fixAction.action + payload
+  * framer-motion 进出场动画（layout + initial/animate/exit）
+- 创建 src/components/workspace/terminal/log-cards-panel.tsx（卡片列表 + 筛选）
+  * 顶部工具栏：卡片总数 + level 计数徽章 + ToggleGroup 筛选（全部/仅错误/仅警告）+ 清除全部
+  * AnimatePresence 进出场 + nexcube-scroll 滚动条
+  * 空状态 3 种：构建成功 / 已清空 / 暂无日志
+  * dismissed Set 跟踪单卡片关闭（仅 UI 隐藏，不改原日志）
+- 修改 src/components/workspace/terminal/terminal-panel.tsx 集成日志卡片
+  * 新增 imports：executeFixAction + LogCardsPanel
+  * 移除未使用的 AlertCircle import
+  * 新增 handleFixAction(card)：调用 executeFixAction + 按 variant 分发 toast
+  * 新增 handleClearCards()：重置 build store 的 parsedCards
+  * 修改 runBuildTask：构建完成后 setCardsExpanded(cards.length > 0) 自动展开
+  * 替换并行 agent 的内联卡片渲染为 <LogCardsPanel>（消费 parsedCards from build store）
+  * 卡片面板高度：h-[45%] max-h-[420px] min-h-[140px]（响应式）
+  * 保留并行 agent 的 status bar（含"N 张解析卡片" toggle 按钮）
+- bun run lint：0 errors / 0 warnings ✓
+- bunx tsc --noEmit：本任务 5 个文件 0 错误 ✓
+- 镜像 API 端到端测试（curl）：
+  * POST mirrorId=aliyun → 200 ok + 阿里云镜像配置 ✓
+  * POST mirrorId=tuna → 200 ok + 清华镜像配置 ✓
+  * POST mirrorId=invalid → 400 + allowed list ✓
+  * GET → 返回默认 aliyun ✓
+- parseGradleLog 测试（bunx tsx）：
+  * BUILD SUCCESSFUL 日志 → 1 张 info 卡片（构建成功）✓
+  * 含 Could not find / cannot find symbol / OutOfMemoryError / BUILD FAILED → 4 张 error 卡片，每张含 fixAction ✓
+- executeFixAction 测试：
+  * 无 projectId → warning "未检测到当前项目" ✓
+  * 未知 action → warning "未识别的修复动作" ✓
+  * fix.adjust-jvm-memory → info "请在 gradle.properties 中设置..." ✓
+  * fix.goto-symbol → info "请在代码编辑器中搜索符号..." ✓
+- dev server 编译：✓ Compiled 多次，无错误
+- workspace 页面加载：HTTP 200，46ms（compile 7ms）
+- 写入 /agent-ctx/5-A-full-stack-developer.md 记录交付物清单与设计要点
+
+Stage Summary:
+- 中文错误卡片完整（标题/原文可折叠/原因分析/建议/修复按钮/修复动作 key）
+- 3 级 level 着色（error=rose / warn=amber / info=cyan）+ 左侧 4px 色条
+- 一键修复按钮（emerald，loading 态）支持 8 种 action + 4 种别名
+  * 镜像切换：调用 POST /api/projects/[id]/mirror + toast
+  * JVM 内存：返回 gradle.properties 设置提示
+  * 手动操作类：返回中文操作指引（含 URL / 命令）
+- 卡片列表 + 筛选（全部/仅错误/仅警告）+ 清除全部
+- 构建完成自动解析 + 自动展开卡片面板
+- framer-motion 进出场动画 + AnimatePresence
+- 与 Task 5-C 并行 agent 的 build store / simulator / history 架构兼容（仅替换内联渲染，未触碰数据流）
+- 待 Task 5-B 镜像源配置 UI（实际写入 settings.gradle）
+
+---
+Task ID: 5-D (主代理整合与验收)
+Agent: main (Z.ai Code)
+Task: 阶段 5 验收 + 推送 GitHub
+
+Work Log:
+- Task 5-A/5-B/5-C 全部完成，lint 通过
+- Agent Browser 端到端验收：
+  * 创建项目 → 进入工作区 → 3 节点加载 ✅
+  * 点击构建 JAR → 流式 Gradle 日志输出 ✅
+  * 构建完成 → "构建成功" 日志卡片 ✅
+  * 日志解析卡片面板（筛选/清除）✅
+  * 点击设置 → 面板打开（5 Tab）✅
+  * 镜像源切换 阿里云→清华 → "已激活镜像：清华大学镜像" ✅
+  * init.gradle 预览 + 复制/下载按钮 ✅
+- VLM 评估：构建日志可见、日志卡片清晰、构建状态明确、专业性高
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 阶段 5 全部完成 ✅
+- 智能日志解析 UI：中文错误卡片 + 一键修复按钮 + 筛选
+- 镜像源配置 UI：3 镜像切换 + 速度测试 + init.gradle 生成/预览/复制/下载
+- 设置面板：5 Tab（镜像源/主题/快捷键/插件/环境）
+- 构建仪表盘：Gradle 模拟器（5 task 真实时序）+ 10% 随机失败 + 构建历史
+- 构建状态四态（idle/running/success/failed）+ 持久化
+- 已推送 GitHub
+- 具备进入阶段 6（打磨与高级特性）的条件

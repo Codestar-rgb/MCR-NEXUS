@@ -10,23 +10,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useToast } from '@/hooks/use-toast'
+import { useWorkspaceStore } from '@/stores/workspace'
 
 /**
  * NexCube 启动主页左侧导航栏（窄）。
  *
  * 桌面端：固定 64px 宽的纵向条，顶部 LOGO，底部设置齿轮。
  * 移动端：折叠为顶部横向条，LOGO 在左、设置在右。
+ *
+ * 设置齿轮点击 → 通过 workspace store 打开全局 SettingsDialog
+ * （由 src/app/page.tsx 在根渲染，主页 + 工作区共用）。
  */
 export function Sidebar() {
-  const { toast } = useToast()
+  const openSettings = useWorkspaceStore((s) => s.openSettings)
 
   const handleSettings = React.useCallback(() => {
-    toast({
-      title: '设置面板',
-      description: '设置功能开发中，敬请期待。',
-    })
-  }, [toast])
+    openSettings()
+  }, [openSettings])
 
   return (
     <TooltipProvider delayDuration={200}>

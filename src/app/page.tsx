@@ -8,6 +8,7 @@ import { OpenCard } from '@/components/home/open-card'
 import { ImportCard } from '@/components/home/import-card'
 import { ProjectWizard } from '@/components/home/project-wizard'
 import { WorkspaceShell } from '@/components/workspace/workspace-shell'
+import { SettingsDialog } from '@/components/settings/settings-dialog'
 import { useWorkspaceStore } from '@/stores/workspace'
 
 export default function Home() {
@@ -16,6 +17,8 @@ export default function Home() {
   // 视图切换：home 显示主页，workspace 显示工作区
   const currentView = useWorkspaceStore((s) => s.currentView)
   const openProject = useWorkspaceStore((s) => s.openProject)
+  const settingsOpen = useWorkspaceStore((s) => s.settingsOpen)
+  const setSettingsOpen = useWorkspaceStore((s) => s.setSettingsOpen)
 
   // mount guard：避免 persist 中可能残留的 workspace 状态在 SSR 后
   // 由于 hydration 顺序问题导致闪烁；本任务中 currentView 不持久化，
@@ -54,10 +57,20 @@ export default function Home() {
     [openProject],
   )
 
+  // 全局设置对话框（主页 + 工作区共用）
+  const settingsDialog = (
+    <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+  )
+
   // 工作区视图：直接渲染 WorkspaceShell（占满整个视口）
   // 注意：需要等 mount 后再渲染工作区，避免 SSR/persist 闪烁
   if (mounted && currentView === 'workspace') {
-    return <WorkspaceShell />
+    return (
+      <>
+        <WorkspaceShell />
+        {settingsDialog}
+      </>
+    )
   }
 
   // 主页视图
@@ -96,6 +109,9 @@ export default function Home() {
         onOpenChange={setWizardOpen}
         onCreated={handleCreated}
       />
+
+      {/* 全局设置对话框（主页 + 工作区共用） */}
+      {settingsDialog}
     </div>
   )
 }

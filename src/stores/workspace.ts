@@ -102,10 +102,18 @@ export interface WorkspaceState {
   /* 任务提示 */
   taskNotifications: TaskNotification[]
 
+  /* 设置面板（全局，主页 + 工作区均可打开） */
+  settingsOpen: boolean
+
   /* ----- Actions: 视图 ----- */
   setView: (view: WorkspaceView) => void
   openProject: (projectId: string) => void
   closeProject: () => void
+
+  /* ----- Actions: 设置面板 ----- */
+  setSettingsOpen: (open: boolean) => void
+  openSettings: () => void
+  closeSettings: () => void
 
   /* ----- Actions: 模式 ----- */
   setMode: (mode: WorkspaceMode) => void
@@ -225,6 +233,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       /* 任务提示 */
       taskNotifications: INITIAL_NOTIFICATIONS,
 
+      /* 设置面板 */
+      settingsOpen: false,
+
       /* ----- Actions: 视图 ----- */
 
       setView: (view) => set({ currentView: view }),
@@ -250,6 +261,12 @@ export const useWorkspaceStore = create<WorkspaceState>()(
           selectedNodeName: null,
           selectedFilePath: null,
         }),
+
+      /* ----- Actions: 设置面板 ----- */
+
+      setSettingsOpen: (open) => set({ settingsOpen: open }),
+      openSettings: () => set({ settingsOpen: true }),
+      closeSettings: () => set({ settingsOpen: false }),
 
       /* ----- Actions: 模式 ----- */
 

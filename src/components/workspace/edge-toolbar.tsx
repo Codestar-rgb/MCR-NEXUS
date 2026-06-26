@@ -63,6 +63,11 @@ import {
 } from '@/stores/workspace'
 import { cn } from '@/lib/utils'
 
+/**
+ * 设置按钮点击 → 通过 workspace store 打开全局 SettingsDialog
+ * （由 src/app/page.tsx 在根渲染，主页 + 工作区共用）。
+ */
+
 /* ------------------------------------------------------------------ */
 /* 主组件                                                              */
 /* ------------------------------------------------------------------ */
@@ -71,6 +76,7 @@ export function EdgeToolbar() {
   const mode = useWorkspaceStore((s) => s.mode)
   const setMode = useWorkspaceStore((s) => s.setMode)
   const unreadCount = useWorkspaceStore(selectUnreadNotificationCount)
+  const openSettings = useWorkspaceStore((s) => s.openSettings)
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -159,7 +165,7 @@ export function EdgeToolbar() {
           <HSpacer />
           <ToolButton
             label="设置"
-            onClick={() => toast.info('设置功能开发中')}
+            onClick={() => openSettings()}
             Icon={Settings}
           />
         </div>

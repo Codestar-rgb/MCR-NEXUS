@@ -1,28 +1,30 @@
 'use client'
 
 /**
- * NexCube 底部终端面板（Task 1-C）
+ * NexCube 底部终端面板（Task 1-C + Task 5-C 增强）
  *
  * 功能：
  *  - 多标签（默认 2 个："终端 1"、"构建输出"，点击 + 新增"终端 N"）
  *  - 每个标签独立 xterm 实例 + 独立命令历史 + 独立输出 buffer
  *  - 可折叠（点击 ▾/▴ 或 store.toggleTerminal）
- *      · 展开：terminalHeight（默认 192px ≈ h-48）
- *      · 折叠：仅 header（h-9 = 36px）
  *  - 构建按钮组（header 右侧）：
- *      · 构建 JAR（emerald，流式 Gradle 日志 → 切到"构建输出" tab）
- *      · 启动测试（teal，流式 MC 启动日志）
+ *      · 构建 JAR（emerald，调用 gradle-simulator 流式输出 → 切到"构建输出" tab）
+ *      · 启动测试（teal，模拟 runClient 日志流）
+ *      · 构建历史（zinc，弹出 Sheet 显示历史列表 + 详情）
  *      · 停止（muted，仅构建/运行中可用）
  *      · 清理（ghost，清空当前 tab）
  *  - xterm.js：黑底（#0a0a0a）绿字（#10b981）+ 12px mono + cursorBlink
  *  - mock 命令：help / clear / build / run / nodes list / echo
  *  - 输入处理：累积字符 → \r 执行；Backspace 删除；↑/↓ 历史；Ctrl+C 中断
  *
- * 实现要点：
- *  - xterm 必须在 useEffect 中初始化（'use client' 组件仍会 SSR 预渲染）
- *  - 多 tab 切换时销毁旧实例、初始化新实例，并用 tab.buffer 还原显示内容
- *  - ResizeObserver 监听容器尺寸变化调用 FitAddon.fit()
- *  - 卸载时 dispose terminal + 断开 ResizeObserver
+ * Task 5-C 增强：
+ *  - 构建状态用 Zustand store（idle/running/success/failed）
+ *  - 流式日志由 gradle-simulator 的 async generator 生成（真实 Gradle 时序）
+ *  - 10% 概率随机失败（missing_dependency / compile_error / out_of_memory）
+ *  - 构建完成自动调用 parseGradleLog 生成解析卡片
+ *  - 构建完成 POST /api/projects/[id]/builds 持久化到 DB
+ *  - 构建历史按钮 → BuildHistoryPanel（Sheet）展示历史
+ *  - 进度条（基于任务步骤估算）+ 解析卡片条（success/failed 时显示）
  */
 
 import '@xterm/xterm/css/xterm.css'
@@ -30,28 +32,41 @@ import '@xterm/xterm/css/xterm.css'
 import * as React from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { useQueryClient } from '@tanstack/react-query'
 import {
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   Eraser,
   Hammer,
+  History,
   Loader2,
   Play,
   Plus,
   ScrollText,
+  Sparkles,
   Square,
   Terminal as TerminalIcon,
   X,
+  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { useBuildStore, type BuildTask } from '@/stores/build'
+import { simulateBuild, isBuildFailed } from '@/lib/build/gradle-simulator'
+import { executeFixAction } from '@/lib/build/fix-actions'
+import { parseGradleLog } from '@/lib/capabilities/log-parser'
+import type { ParsedLogCard } from '@/lib/capabilities/types'
+import { BuildHistoryPanel } from './build-history-panel'
+import { LogCardsPanel } from './log-cards-panel'
 import { cn } from '@/lib/utils'
 
 /* ------------------------------------------------------------------ */
@@ -70,7 +85,7 @@ interface TabState {
   history: string[]
 }
 
-const WELCOME_LINE = 'NexCube Terminal v0.1.0 — 输入 help 查看可用命令'
+const WELCOME_LINE = 'NexCube Terminal v0.2.0 — 输入 help 查看可用命令'
 const PROMPT = '$ '
 /** 终端 header 折叠态高度（h-9 = 36px），与 WorkspaceShell 中 motion.section 折叠高度对齐 */
 export const TERMINAL_HEADER_HEIGHT = 36
@@ -90,6 +105,14 @@ const TERM_THEME = {
   cyan: '#22d3ee',
 } as const
 
+/** 各任务的预估步骤数（用于进度条估算） */
+const TASK_TOTAL_STEPS: Record<string, number> = {
+  build: 8, // configure + 5 tasks + success + summary
+  runClient: 9,
+  runServer: 9,
+  clean: 4,
+}
+
 /* ------------------------------------------------------------------ */
 /* 工具函数                                                            */
 /* ------------------------------------------------------------------ */
@@ -104,8 +127,9 @@ function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms))
 }
 
-function randomBetween(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min
+/** 流式 chunk 转为存储用（\r\n → \n） */
+function normalizeForStore(chunk: string): string {
+  return chunk.replace(/\r\n/g, '\n')
 }
 
 /* ------------------------------------------------------------------ */
@@ -130,33 +154,6 @@ const NODES_LIST = [
   '  \u2022 [item]   Ruby         nexcube:ruby',
   '',
 ].join('\r\n')
-
-const GRADLE_BUILD_LOG = [
-  '> Configure project :',
-  'ForgeGradle 6.0.21',
-  'Loading Forge 1.20.1-47.3.7 (mapping official_1.20.1)',
-  '> Task :compileJava',
-  '> Task :processResources',
-  '> Task :classes',
-  '> Task :jar',
-  '> Task :reobfJar',
-  'BUILD SUCCESSFUL in 12s',
-  '6 actionable tasks: 6 executed',
-  '',
-]
-
-const RUN_LOG = [
-  'Starting Minecraft 1.20.1 with Forge 47.3.7...',
-  '[LaunchWrapper] Loading primary transform class',
-  '[LaunchWrapper] Calling tweakers',
-  '[FML] Forge Mod Loader version 47.3.7 for Minecraft 1.20.1 loading',
-  '[FML] Java 21.0.5 detected',
-  '[Client thread/INFO] Setting user: Player',
-  '[Client thread/INFO] LWJGL Version: 3.3.1',
-  '[Client thread/INFO] Created: 1024x1024 textures-atlas',
-  '[Client thread/INFO] Stopping!',
-  '',
-]
 
 /* ------------------------------------------------------------------ */
 /* 默认 tab 列表（模块级常量，便于 useState / Map 共享同一份引用）       */
@@ -185,10 +182,22 @@ const INITIAL_TABS: TabState[] = [
 
 export function TerminalPanel() {
   const terminalOpen = useWorkspaceStore((s) => s.terminalOpen)
-  const terminalHeight = useWorkspaceStore((s) => s.terminalHeight)
   const activeTabId = useWorkspaceStore((s) => s.activeTerminalTab)
   const setActiveTabId = useWorkspaceStore((s) => s.setActiveTerminalTab)
   const toggleTerminal = useWorkspaceStore((s) => s.toggleTerminal)
+  const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
+
+  /* ----- build store ----- */
+  const buildStatus = useBuildStore((s) => s.status)
+  const buildTask = useBuildStore((s) => s.task)
+  const parsedCards = useBuildStore((s) => s.parsedCards)
+  const buildDuration = useBuildStore((s) => s.duration)
+  const startBuild = useBuildStore((s) => s.startBuild)
+  const appendOutput = useBuildStore((s) => s.appendOutput)
+  const finishBuild = useBuildStore((s) => s.finishBuild)
+
+  /* ----- query client for cache invalidation ----- */
+  const queryClient = useQueryClient()
 
   /* ----- refs ----- */
   const containerRef = React.useRef<HTMLDivElement | null>(null)
@@ -220,11 +229,17 @@ export function TerminalPanel() {
 
   /* ----- state ----- */
   const [tabsUi, setTabsUi] = React.useState<TabState[]>(INITIAL_TABS)
+  /** 构建进度（0-100） */
+  const [progress, setProgress] = React.useState(0)
+  /** 构建历史 Sheet 开合 */
+  const [historyOpen, setHistoryOpen] = React.useState(false)
+  /** 解析卡片是否展开（在 build tab 显示） */
+  const [cardsExpanded, setCardsExpanded] = React.useState(false)
 
-  const [isBuilding, setIsBuilding] = React.useState(false)
-  const [isRunning, setIsRunning] = React.useState(false)
   /** 构建中断标志 */
   const cancelFlagRef = React.useRef<boolean>(false)
+  /** 当前正在迭代的 generator（用于中断） */
+  const generatorRef = React.useRef<AsyncGenerator<string> | null>(null)
 
   /* ---------------------------------------------------------------- */
   /* 写入辅助                                                          */
@@ -250,54 +265,138 @@ export function TerminalPanel() {
   }, [write])
 
   /* ---------------------------------------------------------------- */
-  /* 流式日志                                                          */
+  /* 构建任务核心（流式 simulator + store + 持久化）                    */
   /* ---------------------------------------------------------------- */
 
-  /** 流式 Gradle 构建日志（写入当前 active tab） */
-  const streamBuildLog = React.useCallback(
-    async (targetTabId?: string) => {
-      // 切到指定 tab（构建按钮触发时切到"构建输出"）
-      if (targetTabId && targetTabId !== activeTabIdRef.current) {
-        setActiveTabId(targetTabId)
+  const runBuildTask = React.useCallback(
+    async (task: NonNullable<BuildTask>) => {
+      if (buildStatus === 'running') {
+        toast.warning('已有构建正在进行中')
+        return
+      }
+      if (!currentProjectId) {
+        toast.warning('请先选择一个项目')
+        return
+      }
+      if (!terminalOpen) toggleTerminal()
+
+      // 切到"构建输出"tab
+      if (activeTabIdRef.current !== 'build') {
+        setActiveTabId('build')
         // 等待 useEffect 完成 xterm 初始化（一帧即可）
-        await delay(60)
+        await delay(80)
       }
 
-      setIsBuilding(true)
+      // 清空 build tab 内容
+      const buildTab = tabsMap.get('build')
+      if (buildTab) buildTab.buffer = ''
+      if (termRef.current) termRef.current.clear()
+
+      // 重置 store + UI
+      startBuild(task)
+      setProgress(0)
+      setCardsExpanded(false)
       cancelFlagRef.current = false
 
+      // 输出命令头
+      writeLine(`$ ./gradlew ${task}`)
       writeLine('')
-      for (const line of GRADLE_BUILD_LOG) {
-        if (cancelFlagRef.current) {
-          writeLine('^CBuild interrupted')
-          break
+
+      const totalSteps = TASK_TOTAL_STEPS[task] ?? 8
+      let currentStep = 0
+
+      const gen = simulateBuild(task)
+      generatorRef.current = gen
+
+      try {
+        for await (const chunk of gen) {
+          if (cancelFlagRef.current) {
+            writeLine('^CBuild interrupted')
+            break
+          }
+          write(chunk)
+          appendOutput(normalizeForStore(chunk))
+          currentStep = Math.min(currentStep + 1, totalSteps)
+          setProgress(Math.round((currentStep / totalSteps) * 95))
         }
-        writeLine(line)
-        await delay(randomBetween(400, 800))
+      } catch (e) {
+        writeLine(
+          `Error: ${e instanceof Error ? e.message : String(e)}`,
+        )
+      } finally {
+        generatorRef.current = null
       }
 
-      setIsBuilding(false)
-    },
-    [setActiveTabId, writeLine],
-  )
+      // 读取最终输出（含失败日志）
+      const storeState = useBuildStore.getState()
+      const finalOutput = storeState.output
+      const failed = isBuildFailed(finalOutput)
+      const cards: ParsedLogCard[] = parseGradleLog(finalOutput)
+      const duration = storeState.startTime
+        ? Date.now() - storeState.startTime
+        : 0
 
-  /** 流式 runClient 日志 */
-  const streamRunLog = React.useCallback(async () => {
-    setIsRunning(true)
-    cancelFlagRef.current = false
+      // 完成构建（写入 store 历史）
+      finishBuild(!failed, cards, duration)
+      setProgress(100)
+      // 自动展开解析卡片（如果有）
+      setCardsExpanded(cards.length > 0)
 
-    writeLine('')
-    for (const line of RUN_LOG) {
+      // 持久化到 DB
+      try {
+        const res = await fetch(
+          `/api/projects/${currentProjectId}/builds`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              task,
+              status: failed ? 'failed' : 'success',
+              output: finalOutput,
+              parsedCards: cards,
+              duration,
+            }),
+          },
+        )
+        if (!res.ok) {
+          console.warn('Failed to persist build log:', await res.text())
+        } else {
+          await queryClient.invalidateQueries({
+            queryKey: ['builds', currentProjectId],
+          })
+        }
+      } catch (e) {
+        console.error('Failed to persist build log:', e)
+      }
+
+      // Toast 反馈
       if (cancelFlagRef.current) {
-        writeLine('^CRun interrupted')
-        break
+        toast.info('构建已中断')
+      } else if (failed) {
+        toast.error(
+          `构建失败 · ${cards.length} 个问题待解决`,
+        )
+      } else {
+        toast.success(
+          `构建成功 · 耗时 ${(duration / 1000).toFixed(1)}s`,
+        )
       }
-      writeLine(line)
-      await delay(randomBetween(300, 600))
-    }
-
-    setIsRunning(false)
-  }, [writeLine])
+    },
+    [
+      buildStatus,
+      currentProjectId,
+      terminalOpen,
+      toggleTerminal,
+      setActiveTabId,
+      tabsMap,
+      write,
+      writeLine,
+      startBuild,
+      appendOutput,
+      finishBuild,
+      queryClient,
+    ],
+  )
 
   /* ---------------------------------------------------------------- */
   /* 命令执行                                                          */
@@ -328,10 +427,10 @@ export function TerminalPanel() {
           writePrompt()
           return
         case 'build':
-          await streamBuildLog()
+          await runBuildTask('build')
           break
         case 'run':
-          await streamRunLog()
+          await runBuildTask('runClient')
           break
         case 'nodes':
           if (args[0] === 'list' || !args[0]) {
@@ -352,7 +451,7 @@ export function TerminalPanel() {
       }
       writePrompt()
     },
-    [streamBuildLog, streamRunLog, writeLine, writePrompt, tabsMap],
+    [runBuildTask, writeLine, writePrompt, tabsMap],
   )
 
   /* ---------------------------------------------------------------- */
@@ -414,18 +513,24 @@ export function TerminalPanel() {
     if (tab) {
       if (tab.buffer) {
         term.write(tab.buffer)
-      } else {
-        // 首次打开：欢迎语
+      } else if (tab.type !== 'build') {
+        // 首次打开（非 build tab）：欢迎语
         const welcome = WELCOME_LINE + '\r\n\r\n'
         term.write(welcome)
         tab.buffer = welcome
       }
     }
 
-    writePrompt()
+    // build tab 不显示 prompt（输出专用）
+    if (activeTabId !== 'build') {
+      writePrompt()
+    }
 
     /* ----- onData：处理键盘输入 ----- */
     const disposable = term.onData((data) => {
+      // build tab 只读，不接收输入
+      if (activeTabIdRef.current === 'build') return
+
       if (data === '\r') {
         // Enter
         term.write('\r\n')
@@ -573,7 +678,9 @@ export function TerminalPanel() {
     if (termRef.current) {
       termRef.current.clear()
     }
-    writePrompt()
+    if (activeTabId !== 'build') {
+      writePrompt()
+    }
     toast.success('终端已清空')
   }, [activeTabId, writePrompt, tabsMap])
 
@@ -582,27 +689,68 @@ export function TerminalPanel() {
   /* ---------------------------------------------------------------- */
 
   const handleBuild = React.useCallback(async () => {
-    if (isBuilding) return
-    if (!terminalOpen) toggleTerminal()
-    // 切到"构建输出"标签，并流式输出
-    await streamBuildLog('build')
-  }, [isBuilding, terminalOpen, toggleTerminal, streamBuildLog])
+    await runBuildTask('build')
+  }, [runBuildTask])
 
   const handleRun = React.useCallback(async () => {
-    if (isRunning) return
-    if (!terminalOpen) toggleTerminal()
-    await streamRunLog()
-  }, [isRunning, terminalOpen, toggleTerminal, streamRunLog])
+    await runBuildTask('runClient')
+  }, [runBuildTask])
 
   const handleStop = React.useCallback(() => {
-    if (!isBuilding && !isRunning) return
+    if (buildStatus !== 'running') return
     cancelFlagRef.current = true
+    if (generatorRef.current) {
+      void generatorRef.current.return(undefined).catch(() => {
+        /* ignore */
+      })
+    }
     toast.info('已发送停止信号')
-  }, [isBuilding, isRunning])
+  }, [buildStatus])
+
+  /* ---------------------------------------------------------------- */
+  /* 日志卡片：修复动作处理（Task 5-A）                                 */
+  /* ---------------------------------------------------------------- */
+
+  /** 一键修复按钮回调：根据 fixAction.action 调用 executeFixAction */
+  const handleFixAction = React.useCallback(
+    async (card: ParsedLogCard) => {
+      if (!card.fixAction) return
+      const result = await executeFixAction(
+        card.fixAction.action,
+        { projectId: currentProjectId },
+        card.fixAction.payload,
+      )
+      switch (result.variant) {
+        case 'success':
+          toast.success(result.message)
+          break
+        case 'error':
+          toast.error(result.message)
+          break
+        case 'warning':
+          toast.warning(result.message)
+          break
+        default:
+          toast.info(result.message)
+      }
+    },
+    [currentProjectId],
+  )
+
+  /** 清空所有卡片：重置 build store 的 parsedCards */
+  const handleClearCards = React.useCallback(() => {
+    useBuildStore.setState({ parsedCards: [] })
+  }, [])
 
   /* ---------------------------------------------------------------- */
   /* 渲染                                                              */
   /* ---------------------------------------------------------------- */
+
+  const isBuilding = buildStatus === 'running'
+  const showCards =
+    activeTabId === 'build' &&
+    parsedCards.length > 0 &&
+    (buildStatus === 'success' || buildStatus === 'failed')
 
   return (
     <div className="flex h-full w-full flex-col bg-zinc-950">
@@ -693,17 +841,29 @@ export function TerminalPanel() {
                   'h-7 gap-1 rounded-md px-2 text-[11px] font-medium shadow-none',
                   'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300',
                   'hover:bg-emerald-500/25 hover:text-emerald-200',
+                  buildStatus === 'success' &&
+                    !isBuilding &&
+                    'border-emerald-500/50',
+                  buildStatus === 'failed' &&
+                    !isBuilding &&
+                    'border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20',
                 )}
               >
                 {isBuilding ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
+                ) : buildStatus === 'success' ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : buildStatus === 'failed' ? (
+                  <XCircle className="h-3 w-3" />
                 ) : (
                   <Hammer className="h-3 w-3" />
                 )}
                 <span className="hidden md:inline">构建 JAR</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">构建 JAR（流式 Gradle 日志）</TooltipContent>
+            <TooltipContent side="bottom">
+              构建 JAR（流式 Gradle 日志）
+            </TooltipContent>
           </Tooltip>
 
           {/* 启动测试 */}
@@ -712,7 +872,7 @@ export function TerminalPanel() {
               <Button
                 size="sm"
                 onClick={handleRun}
-                disabled={isRunning}
+                disabled={isBuilding}
                 aria-label="启动测试客户端"
                 className={cn(
                   'h-7 gap-1 rounded-md px-2 text-[11px] font-medium shadow-none',
@@ -720,7 +880,7 @@ export function TerminalPanel() {
                   'hover:bg-teal-500/25 hover:text-teal-200',
                 )}
               >
-                {isRunning ? (
+                {isBuilding && buildTask === 'runClient' ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
                   <Play className="h-3 w-3" />
@@ -728,7 +888,28 @@ export function TerminalPanel() {
                 <span className="hidden md:inline">启动测试</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">启动 Minecraft 测试客户端</TooltipContent>
+            <TooltipContent side="bottom">
+              启动 Minecraft 测试客户端
+            </TooltipContent>
+          </Tooltip>
+
+          {/* 构建历史 */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setHistoryOpen(true)}
+                aria-label="构建历史"
+                className={cn(
+                  'h-7 w-7 rounded-md p-0',
+                  'text-muted-foreground hover:bg-accent hover:text-emerald-300',
+                )}
+              >
+                <History className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">构建历史</TooltipContent>
           </Tooltip>
 
           {/* 停止 */}
@@ -738,7 +919,7 @@ export function TerminalPanel() {
                 size="sm"
                 variant="ghost"
                 onClick={handleStop}
-                disabled={!isBuilding && !isRunning}
+                disabled={!isBuilding}
                 aria-label="停止运行"
                 className={cn(
                   'h-7 w-7 rounded-md p-0 text-[11px] font-medium',
@@ -798,6 +979,68 @@ export function TerminalPanel() {
         </div>
       </header>
 
+      {/* ---------- 进度条（构建中显示） ---------- */}
+      {isBuilding && (
+        <div className="flex h-1 shrink-0 items-center bg-zinc-900 px-0">
+          <Progress
+            value={progress}
+            className="h-1 rounded-none bg-zinc-900 [&>[data-slot=progress-indicator]]:bg-emerald-500"
+          />
+        </div>
+      )}
+
+      {/* ---------- 构建状态条（构建完成显示，含耗时与解析卡片切换） ---------- */}
+      {activeTabId === 'build' &&
+        !isBuilding &&
+        (buildStatus === 'success' || buildStatus === 'failed') &&
+        buildTask && (
+          <div
+            className={cn(
+              'flex h-7 shrink-0 items-center gap-2 border-b px-2 text-[11px]',
+              buildStatus === 'success'
+                ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300'
+                : 'border-rose-500/20 bg-rose-500/5 text-rose-300',
+            )}
+          >
+            {buildStatus === 'success' ? (
+              <CheckCircle2 className="h-3 w-3" />
+            ) : (
+              <XCircle className="h-3 w-3" />
+            )}
+            <span className="font-medium">
+              {buildStatus === 'success' ? '构建成功' : '构建失败'}
+            </span>
+            <span className="text-muted-foreground">
+              · 耗时 {(buildDuration / 1000).toFixed(1)}s
+            </span>
+            {parsedCards.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setCardsExpanded((v) => !v)}
+                className="ml-auto flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] hover:bg-zinc-800"
+                aria-expanded={cardsExpanded}
+              >
+                <Sparkles className="h-2.5 w-2.5" />
+                {parsedCards.length} 张解析卡片
+                <span className="text-muted-foreground">
+                  {cardsExpanded ? '▾' : '▸'}
+                </span>
+              </button>
+            )}
+          </div>
+        )}
+
+      {/* ---------- 解析卡片展开区（在 build tab 内，Task 5-A LogCardsPanel） ---------- */}
+      {showCards && cardsExpanded && (
+        <div className="h-[45%] max-h-[420px] min-h-[140px] shrink-0 border-b border-zinc-800/60 bg-zinc-950">
+          <LogCardsPanel
+            cards={parsedCards}
+            onFix={handleFixAction}
+            onClearAll={handleClearCards}
+          />
+        </div>
+      )}
+
       {/* ---------- Body：xterm 挂载点（仅展开时可见） ---------- */}
       {terminalOpen && (
         <div
@@ -811,6 +1054,17 @@ export function TerminalPanel() {
           style={{ contain: 'strict' }}
         />
       )}
+
+      {/* ---------- 构建历史 Sheet ---------- */}
+      <BuildHistoryPanel
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        projectId={currentProjectId}
+      />
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/* 文件结束                                                            */
+/* ------------------------------------------------------------------ */
