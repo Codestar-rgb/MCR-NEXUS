@@ -68,4 +68,4 @@ server.log
 
 # Mini-services runtime
 /mini-services/*/node_modules/
-/mini-services/*/*.log
+/mini-services/*/*.logtool-results/

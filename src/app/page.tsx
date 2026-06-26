@@ -7,9 +7,21 @@ import { CreateCard } from '@/components/home/create-card'
 import { OpenCard } from '@/components/home/open-card'
 import { ImportCard } from '@/components/home/import-card'
 import { ProjectWizard } from '@/components/home/project-wizard'
+import { WorkspaceShell } from '@/components/workspace/workspace-shell'
+import { useWorkspaceStore } from '@/stores/workspace'
 
 export default function Home() {
   const [wizardOpen, setWizardOpen] = React.useState(false)
+
+  // 视图切换：home 显示主页，workspace 显示工作区
+  const currentView = useWorkspaceStore((s) => s.currentView)
+  const openProject = useWorkspaceStore((s) => s.openProject)
+
+  // mount guard：避免 persist 中可能残留的 workspace 状态在 SSR 后
+  // 由于 hydration 顺序问题导致闪烁；本任务中 currentView 不持久化，
+  // 但仍加这一层保险
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
 
   const handleCreate = React.useCallback(() => {
     setWizardOpen(true)
@@ -19,22 +31,36 @@ export default function Home() {
     console.log('[NexCube] onImport — 导入向导待接入')
   }, [])
 
-  const handleOpen = React.useCallback((projectId: string) => {
-    // 触摸最近打开时间
-    fetch(`/api/projects/${projectId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ touch: true }),
-    }).catch(() => {})
-    console.log('[NexCube] onOpen — 工作区待接入（阶段 1），projectId =', projectId)
-  }, [])
+  const handleOpen = React.useCallback(
+    (projectId: string) => {
+      // 触摸最近打开时间
+      fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ touch: true }),
+      }).catch(() => {})
+      // 切换到工作区
+      openProject(projectId)
+    },
+    [openProject],
+  )
 
-  const handleCreated = React.useCallback((projectId: string) => {
-    console.log('[NexCube] 项目已创建，进入工作区，projectId =', projectId)
-    // 阶段 1 接入工作区后这里会路由跳转，本阶段先关闭向导
-    setWizardOpen(false)
-  }, [])
+  const handleCreated = React.useCallback(
+    (projectId: string) => {
+      // 关闭向导并进入工作区
+      setWizardOpen(false)
+      openProject(projectId)
+    },
+    [openProject],
+  )
 
+  // 工作区视图：直接渲染 WorkspaceShell（占满整个视口）
+  // 注意：需要等 mount 后再渲染工作区，避免 SSR/persist 闪烁
+  if (mounted && currentView === 'workspace') {
+    return <WorkspaceShell />
+  }
+
+  // 主页视图
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground md:flex-row">
       {/* 左侧导航（桌面端纵向 / 移动端顶部条） */}

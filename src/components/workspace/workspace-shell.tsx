@@ -1,0 +1,220 @@
+'use client'
+
+/**
+ * NexCube 工作区外壳层（阶段 1-A → 1-C 整合）
+ *
+ * 布局结构（桌面端）：
+ *
+ *   ┌───────────────────────────────────────────────────────┐
+ *   │ 顶部仪表盘 (TopDashboard)                              │  h-14
+ *   ├───────┬─────────────────────────────────┬─────────────┤
+ *   │ 工程   │                                  │             │
+ *   │ 树     │   节点画布 / 代码编辑器            │  属性面板    │
+ *   │       │   (中间内容区)                     │             │
+ *   │ w-64  │   [工程卡片]      [任务提示区]      │  w-80       │
+ *   │       │                                  │             │
+ *   │       │                    [小地图]        │             │
+ *   ├───────┴─────────────────────────────────┴─────────────┤
+ *   │ 底部终端 (TerminalPanel · 可折叠)                       │  h-48 / h-9
+ *   └───────────────────────────────────────────────────────┘
+ *                                       [右边缘工具栏] w-12
+ *
+ * 整合情况：
+ *  - 顶部：TopDashboard（Task 1-A）
+ *  - 左侧：PanelPlaceholder（待 Task 1-B 整合 FileTreePanel）
+ *  - 中间：NodeCanvasPlaceholder（Task 1-D）/ CodeEditor 占位（Task 2）
+ *  - 右侧：PropertyPanel（Task 1-D）
+ *  - 底部：TerminalPanel（Task 1-C，xterm.js 多标签可折叠）
+ *  - 右边缘：EdgeToolbar（Task 1-C，模式切换 + 工具 + 系统）
+ */
+
+import * as React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Code2 } from 'lucide-react'
+
+import { TopDashboard } from '@/components/workspace/top-dashboard'
+import { FileTreePanel } from '@/components/workspace/file-tree'
+import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
+import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
+import {
+  TerminalPanel,
+  TERMINAL_HEADER_HEIGHT,
+} from '@/components/workspace/terminal/terminal-panel'
+import { EdgeToolbar } from '@/components/workspace/edge-toolbar'
+import {
+  TooltipProvider,
+} from '@/components/ui/tooltip'
+import { useWorkspaceStore } from '@/stores/workspace'
+import { cn } from '@/lib/utils'
+
+/* ------------------------------------------------------------------ */
+/* 主组件                                                              */
+/* ------------------------------------------------------------------ */
+
+export function WorkspaceShell() {
+  const mode = useWorkspaceStore((s) => s.mode)
+  const leftSidebarOpen = useWorkspaceStore((s) => s.leftSidebarOpen)
+  const leftSidebarWidth = useWorkspaceStore((s) => s.leftSidebarWidth)
+  const rightPanelOpen = useWorkspaceStore((s) => s.rightPanelOpen)
+  const rightPanelWidth = useWorkspaceStore((s) => s.rightPanelWidth)
+  const terminalOpen = useWorkspaceStore((s) => s.terminalOpen)
+  const terminalHeight = useWorkspaceStore((s) => s.terminalHeight)
+
+  return (
+    <TooltipProvider delayDuration={200}>
+      <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
+        {/* 顶部仪表盘 */}
+        <TopDashboard />
+
+        {/* 主体：[左+中+右 + 终端] + 右边缘工具栏 */}
+        <div className="flex min-h-0 flex-1">
+          {/* 左+中+右 + 终端 的垂直容器（终端全宽于左侧三栏） */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            {/* 上半部分：左文件树 + 中画布 + 右属性面板 */}
+            <div className="flex min-h-0 flex-1">
+              {/* 左侧文件树 */}
+              <AnimatePresence initial={false}>
+                {leftSidebarOpen ? (
+                  <motion.aside
+                    key="left-sidebar"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: leftSidebarWidth, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="shrink-0 overflow-hidden border-r border-border bg-sidebar/30"
+                    aria-label="工程文件树"
+                  >
+                    <FileTreePanel className="h-full border-0" />
+                  </motion.aside>
+                ) : null}
+              </AnimatePresence>
+
+              {/* 中间内容区（节点画布 / 代码编辑器）+ 浮层（工程卡片、任务提示、小地图） */}
+              <main className="relative flex min-w-0 flex-1 flex-col">
+                <div className="relative min-h-0 flex-1">
+                  <AnimatePresence mode="wait">
+                    {mode === 'node' ? (
+                      <motion.div
+                        key="node-canvas"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute inset-0"
+                      >
+                        {/* Task 1-D 节点画布占位（React Flow v12 + 浮动工程卡 + 任务通知） */}
+                        <NodeCanvasPlaceholder />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="code-editor"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute inset-0"
+                      >
+                        <PanelPlaceholder
+                          title="代码编辑器"
+                          hint="CodeEditor (Monaco)"
+                          taskId="Task 2"
+                          icon={<Code2 className="h-6 w-6" />}
+                          className="h-full"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </main>
+
+              {/* 右侧属性面板 */}
+              <AnimatePresence initial={false}>
+                {rightPanelOpen ? (
+                  <motion.aside
+                    key="right-panel"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: rightPanelWidth, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="shrink-0 overflow-hidden border-l border-border bg-sidebar/30"
+                    aria-label="属性面板"
+                  >
+                    {/* Task 1-D 属性面板（动态标题 + Tabs + 拖拽贴图区） */}
+                    <PropertyPanel />
+                  </motion.aside>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
+            {/* 下半部分：底部终端（全宽于左+中+右三栏，可折叠） */}
+            <motion.section
+              key="terminal"
+              initial={false}
+              animate={{
+                height: terminalOpen ? terminalHeight : TERMINAL_HEADER_HEIGHT,
+              }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="shrink-0 overflow-hidden border-t border-border bg-background"
+              aria-label="终端面板"
+            >
+              {/* Task 1-C 终端面板（xterm.js 多标签 + 构建按钮组 + mock 命令） */}
+              <TerminalPanel />
+            </motion.section>
+          </div>
+
+          {/* 右边缘工具栏（Task 1-C，模式切换 + 视图控制 + 工具 + 系统，始终全高） */}
+          <EdgeToolbar />
+        </div>
+      </div>
+    </TooltipProvider>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 子组件：占位面板                                                    */
+/* ------------------------------------------------------------------ */
+
+interface PanelPlaceholderProps {
+  title: string
+  hint: string
+  taskId: string
+  icon: React.ReactNode
+  className?: string
+}
+
+function PanelPlaceholder({
+  title,
+  hint,
+  taskId,
+  icon,
+  className,
+}: PanelPlaceholderProps) {
+  return (
+    <div className={cn('relative h-full w-full', className)}>
+      {/* 主体占位 */}
+      <div
+        className={cn(
+          'flex h-full w-full flex-col items-center justify-center gap-3',
+          'border-2 border-dashed border-border/60 bg-muted/5 p-6 text-center',
+        )}
+      >
+        <div
+          className={cn(
+            'flex h-12 w-12 items-center justify-center rounded-xl',
+            'border border-emerald-500/20 bg-emerald-500/5 text-emerald-400/80',
+          )}
+          aria-hidden
+        >
+          {icon}
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+          <p className="font-mono text-[11px] text-muted-foreground">{hint}</p>
+          <p className="text-[10px] text-muted-foreground/60">
+            待 <span className="text-emerald-400/80">{taskId}</span> 实现
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
