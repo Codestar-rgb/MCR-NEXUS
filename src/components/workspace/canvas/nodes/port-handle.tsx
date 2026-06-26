@@ -63,7 +63,7 @@ export function PortHandle({
         <div
           className={cn(
             'pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap text-[10px] font-medium',
-            isLeft ? 'left-4' : 'right-4',
+            isLeft ? 'left-3' : 'right-3',
           )}
           style={{ color: def.hex }}
         >

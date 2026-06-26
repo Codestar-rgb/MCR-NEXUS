@@ -108,13 +108,14 @@ function NodeCanvasInner() {
   const setContextMenu = useCanvasStore((s) => s.setContextMenu)
   const closeContextMenu = useCanvasStore((s) => s.closeContextMenu)
   const selectNode = useCanvasStore((s) => s.selectNode)
+  const isInitialized = useCanvasStore((s) => s.isInitialized)
   const openFunctionDetail = useCanvasStore((s) => s.openFunctionDetail)
   const closeFunctionDetail = useCanvasStore((s) => s.closeFunctionDetail)
   const openedFunctionNodeId = useCanvasStore((s) => s.openedFunctionNodeId)
 
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setEdges: setRFEdges, setNodes: setRFNodes } = useReactFlow()
 
   /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
   useCanvasSync(currentProjectId)
@@ -166,6 +167,14 @@ function NodeCanvasInner() {
         } as RFEdge
       })
   }, [edges, nodes])
+
+  /* 阶段修复：store 加载后同步到 ReactFlow 内部 store（解决 controlled edges 不渲染问题） */
+  useEffect(() => {
+    if (isInitialized) {
+      setRFNodes(rfNodes)
+      setRFEdges(rfEdges)
+    }
+  }, [isInitialized, rfNodes, rfEdges, setRFNodes, setRFEdges])
 
   /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
   const isValidConnection = useCallback<IsValidConnection<RFEdge>>(
@@ -308,6 +317,7 @@ function NodeCanvasInner() {
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
       <ReactFlow
+        key={`canvas-${currentProjectId}-${isInitialized}`}
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={stableNodeTypes}
@@ -324,7 +334,7 @@ function NodeCanvasInner() {
         onPaneContextMenu={onPaneContextMenu}
         onNodeDragStop={onNodeDragStop}
         nodesDraggable={perfConfig.nodesDraggable}
-        onlyRenderVisibleElements={perfConfig.onlyRenderVisibleElements}
+        onlyRenderVisibleElements={false}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         minZoom={0.05}

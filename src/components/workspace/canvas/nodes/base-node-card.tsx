@@ -180,33 +180,23 @@ function BaseNodeCardImpl({
         <>
           {/* 左侧输入端口 */}
           {def.inputPorts.map((port, i) => (
-            <div
+            <PortHandle
               key={port.id}
-              className="absolute left-0"
-              style={{ top: `${portStartY + i * 22}px` }}
-            >
-              <PortHandle
-                dataType={port.dataType}
-                position={Position.Left}
-                portId={port.id}
-                label={port.label}
-              />
-            </div>
+              dataType={port.dataType}
+              position={Position.Left}
+              portId={port.id}
+              label={port.label}
+            />
           ))}
           {/* 右侧输出端口 */}
           {def.outputPorts.map((port, i) => (
-            <div
+            <PortHandle
               key={port.id}
-              className="absolute right-0"
-              style={{ top: `${portStartY + i * 22}px` }}
-            >
-              <PortHandle
-                dataType={port.dataType}
-                position={Position.Right}
-                portId={port.id}
-                label={port.label}
-              />
-            </div>
+              dataType={port.dataType}
+              position={Position.Right}
+              portId={port.id}
+              label={port.label}
+            />
           ))}
         </>
       )}

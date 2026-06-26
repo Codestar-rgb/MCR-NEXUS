@@ -46,8 +46,8 @@ function TypedEdgeImpl({
 }: TypedEdgeProps) {
   const dataTypeRaw: string = data?.dataType ?? 'any'
   const dataType = dataTypeRaw as PortDataType
-  const def = PORT_TYPES[dataType] ?? PORT_TYPES.any
-  const color = def.hex
+  const def = PORT_TYPES[dataType] ?? { hex: '#94a3b8', label: '未知', color: 'slate', icon: 'Circle', type: 'any', description: '' }
+  const color = def.hex ?? '#94a3b8'
   const label = data?.label
 
   const [edgePath, labelX, labelY] = getBezierPath({

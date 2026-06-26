@@ -102,6 +102,10 @@ export function isPortCompatible(source: PortDataType, target: PortDataType): bo
   if (source === 'entity' && target === 'string') return true
   // itemstack → string
   if (source === 'itemstack' && target === 'string') return true
+  // entity/itemstack → boolean（存在即触发）
+  if ((source === 'entity' || source === 'itemstack') && target === 'boolean') return true
+  // any → boolean（万能触发）
+  if (source === 'any' && target === 'boolean') return true
   return false
 }
 
