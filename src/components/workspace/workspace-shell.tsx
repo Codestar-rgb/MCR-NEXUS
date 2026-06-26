@@ -35,6 +35,7 @@ import { Code2 } from 'lucide-react'
 import { TopDashboard } from '@/components/workspace/top-dashboard'
 import { FileTreePanel } from '@/components/workspace/file-tree'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
+import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
 import {
   TerminalPanel,
@@ -114,13 +115,7 @@ export function WorkspaceShell() {
                         transition={{ duration: 0.15 }}
                         className="absolute inset-0"
                       >
-                        <PanelPlaceholder
-                          title="代码编辑器"
-                          hint="CodeEditor (Monaco)"
-                          taskId="Task 2"
-                          icon={<Code2 className="h-6 w-6" />}
-                          className="h-full"
-                        />
+                        <CodeEditorPanel className="h-full" />
                       </motion.div>
                     )}
                   </AnimatePresence>
