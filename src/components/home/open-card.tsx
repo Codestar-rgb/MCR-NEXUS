@@ -1,34 +1,24 @@
 'use client'
 
 import * as React from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { FolderOpen, Clock } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  listContainerVariants,
-  listItemVariants,
-  listItemTransition,
-} from '@/components/providers/framer-provider'
 import { cn } from '@/lib/utils'
 import type { ModLoader, RecentProject } from '@/types'
 
 interface OpenCardProps {
-  /** 打开指定项目 */
   onOpen?: (projectId: string) => void
-  /** 创建新项目（当列表为空时引导用户） */
   onCreate?: () => void
 }
 
-/** 加载器徽章颜色映射 —— 全部使用 emerald/teal/cyan/amber 体系 */
 const LOADER_STYLES: Record<ModLoader, string> = {
-  forge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  fabric: 'bg-teal-500/10 text-teal-300 border-teal-500/20',
-  neoforge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
-  quilt: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  forge: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
+  fabric: 'bg-teal-500/10 text-teal-300 ring-teal-500/20',
+  neoforge: 'bg-cyan-500/10 text-cyan-300 ring-cyan-500/20',
+  quilt: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
 }
 
 const LOADER_LABEL: Record<ModLoader, string> = {
@@ -38,20 +28,14 @@ const LOADER_LABEL: Record<ModLoader, string> = {
   quilt: 'Quilt',
 }
 
-/**
- * 打开项目卡片：包含「最近打开」列表。
- *
- * 数据来源：GET /api/projects?recent=true（尚未实现，先走 mock 降级）。
- */
 export function OpenCard({ onOpen, onCreate }: OpenCardProps) {
-  const { data, isLoading, isError } = useQuery<RecentProject[]>({
+  const { data, isLoading } = useQuery<RecentProject[]>({
     queryKey: ['projects', 'recent'],
     queryFn: async () => {
       const res = await fetch('/api/projects?recent=true', { cache: 'no-store' })
       if (!res.ok) throw new Error('failed to load recent projects')
       return (await res.json()) as RecentProject[]
     },
-    // API 尚未实现时静默降级到空列表
     placeholderData: [],
     retry: false,
   })
@@ -59,14 +43,17 @@ export function OpenCard({ onOpen, onCreate }: OpenCardProps) {
   const projects = (data ?? []).slice(0, 5)
 
   return (
-    <Card
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
       className={cn(
-        'border bg-card p-5 transition-colors duration-200',
-        'hover:border-emerald-500/40',
+        'relative overflow-hidden rounded-xl border border-border/60 bg-card/50 p-5 transition-all duration-200',
+        'hover:border-primary/30 hover:bg-card/80',
       )}
     >
       <div className="flex items-center gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-teal-500/30 bg-teal-500/10 text-teal-300">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-300 ring-1 ring-teal-500/15">
           <FolderOpen className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
@@ -77,41 +64,34 @@ export function OpenCard({ onOpen, onCreate }: OpenCardProps) {
         </div>
       </div>
 
-      {/* 分隔线 */}
-      <div className="my-4 h-px w-full bg-border" />
+      <div className="my-4 h-px w-full bg-border/50" />
 
       {/* 最近列表 */}
       <div className="max-h-64 overflow-y-auto pr-1 nexcube-scroll">
         {isLoading ? (
           <RecentListSkeleton />
-        ) : isError || projects.length === 0 ? (
+        ) : projects.length === 0 ? (
           <EmptyState onCreate={onCreate} />
         ) : (
-          <motion.ul
-            className="flex flex-col gap-1.5"
-            variants={listContainerVariants}
-            initial="initial"
-            animate="animate"
-            style={{ willChange: 'transform, opacity' }}
-          >
-            <AnimatePresence initial={false}>
-              {projects.map((p) => (
-                <RecentItem key={p.id} project={p} onOpen={onOpen} />
-              ))}
-            </AnimatePresence>
-          </motion.ul>
+          <ul className="flex flex-col gap-1">
+            {projects.map((p, idx) => (
+              <RecentItem key={p.id} project={p} onOpen={onOpen} index={idx} />
+            ))}
+          </ul>
         )}
       </div>
-    </Card>
+    </motion.div>
   )
 }
 
 function RecentItem({
   project,
   onOpen,
+  index,
 }: {
   project: RecentProject
   onOpen?: (id: string) => void
+  index: number
 }) {
   const openedLabel = React.useMemo(() => {
     try {
@@ -126,20 +106,21 @@ function RecentItem({
 
   return (
     <motion.li
-      variants={listItemVariants}
-      transition={listItemTransition}
-      style={{ willChange: 'transform, opacity' }}
+      initial={{ opacity: 0, x: -4 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, delay: 0.15 + index * 0.04 }}
     >
       <button
         type="button"
         onClick={() => onOpen?.(project.id)}
         className={cn(
-          'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors',
-          'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50',
+          'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-all duration-150',
+          'hover:bg-accent/50 hover:shadow-sm',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
         )}
       >
-        {/* 项目缩略图占位（小圆角方块） */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-gradient-to-br from-emerald-500/15 to-teal-500/10 text-[10px] font-bold text-emerald-400">
+        {/* 项目缩略图：渐变背景 + 首字母 */}
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-primary/5 text-[10px] font-bold text-primary ring-1 ring-primary/15">
           {project.name.slice(0, 2).toUpperCase()}
         </div>
 
@@ -159,15 +140,14 @@ function RecentItem({
           </div>
         </div>
 
-        <Badge
-          variant="outline"
+        <span
           className={cn(
-            'shrink-0 border text-[10px] font-medium',
+            'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ring-1',
             LOADER_STYLES[project.loader],
           )}
         >
           {LOADER_LABEL[project.loader]} {project.loaderVersion}
-        </Badge>
+        </span>
       </button>
     </motion.li>
   )
@@ -177,10 +157,7 @@ function RecentListSkeleton() {
   return (
     <ul className="flex flex-col gap-1.5">
       {Array.from({ length: 3 }).map((_, i) => (
-        <li
-          key={i}
-          className="flex items-center gap-3 rounded-lg px-2.5 py-2"
-        >
+        <li key={i} className="flex items-center gap-3 rounded-lg px-2.5 py-2">
           <div className="h-8 w-8 shrink-0 animate-pulse rounded-md bg-muted" />
           <div className="flex-1 space-y-1.5">
             <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
@@ -204,7 +181,7 @@ function EmptyState({ onCreate }: { onCreate?: () => void }) {
         <button
           type="button"
           onClick={onCreate}
-          className="mt-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 hover:underline"
+          className="mt-1 text-xs font-medium text-primary hover:text-primary/80 hover:underline"
         >
           立即创建 →
         </button>

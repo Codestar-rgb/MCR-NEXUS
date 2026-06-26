@@ -3,6 +3,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+ * NexCube Design System v2.0
+ *
+ * 设计语言：现代专业 IDE + Minecraft 创客精神
+ * 参考：Cursor（玻璃拟态）+ Linear（精致排版）+ VSCode（功能密度）
+ *
+ * 配色：深蓝黑背景 + teal 品牌色 + 柔和语义色
+ * ============================================================ */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -45,71 +54,95 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* 浅色模式（保留兼容，但默认深色） */
+  --background: oklch(0.98 0.002 240);
+  --foreground: oklch(0.18 0.01 240);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.18 0.01 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.18 0.01 240);
+  --primary: oklch(0.65 0.15 180);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.96 0.005 240);
+  --secondary-foreground: oklch(0.2 0.01 240);
+  --muted: oklch(0.96 0.005 240);
+  --muted-foreground: oklch(0.52 0.01 240);
+  --accent: oklch(0.95 0.01 180);
+  --accent-foreground: oklch(0.2 0.01 240);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.9 0.005 240);
+  --input: oklch(0.9 0.005 240);
+  --ring: oklch(0.65 0.15 180);
+  --chart-1: oklch(0.65 0.15 180);
+  --chart-2: oklch(0.6 0.12 200);
+  --chart-3: oklch(0.7 0.18 160);
+  --chart-4: oklch(0.75 0.18 70);
+  --chart-5: oklch(0.65 0.2 300);
+  --sidebar: oklch(0.97 0.002 240);
+  --sidebar-foreground: oklch(0.18 0.01 240);
+  --sidebar-primary: oklch(0.65 0.15 180);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.95 0.01 180);
+  --sidebar-accent-foreground: oklch(0.2 0.01 240);
+  --sidebar-border: oklch(0.9 0.005 240);
+  --sidebar-ring: oklch(0.65 0.15 180);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* === NexCube 深色主题 v2.0 ===
+   * 深蓝黑背景（带微蓝紫调，比纯灰更精致）
+   * 4 层背景层级，营造空间深度
+   */
+
+  /* 背景层级（从深到浅） */
+  --background: oklch(0.14 0.015 250);        /* bg-base: 近黑带蓝调 #0a0a0f */
+  --card: oklch(0.18 0.018 250);              /* bg-surface: 面板背景 #12121a */
+  --popover: oklch(0.2 0.02 250);             /* bg-elevated: 卡片/浮窗 #1a1a24 */
+
+  --foreground: oklch(0.96 0.005 240);        /* text-primary: #f4f4f5 */
+  --card-foreground: oklch(0.96 0.005 240);
+  --popover-foreground: oklch(0.96 0.005 240);
+
+  /* 品牌色：teal（替换 emerald，更精致专业） */
+  --primary: oklch(0.72 0.15 180);            /* #2dd4bf teal-400 */
+  --primary-foreground: oklch(0.14 0.015 250);
+
+  --secondary: oklch(0.24 0.02 250);          /* bg-hover 层 */
+  --secondary-foreground: oklch(0.96 0.005 240);
+
+  --muted: oklch(0.22 0.015 250);             /* 辅助背景 */
+  --muted-foreground: oklch(0.62 0.012 240);  /* text-secondary: #a1a1aa */
+
+  --accent: oklch(0.26 0.035 180);            /* 品牌色浅底 */
+  --accent-foreground: oklch(0.82 0.12 180);  /* 品牌色文字 */
+
+  /* 语义色（统一降低饱和度，暗色适配） */
+  --destructive: oklch(0.68 0.18 22);         /* #f87171 red-400 柔和 */
+  --success: oklch(0.72 0.17 160);            /* #34d399 emerald-400 */
+  --warning: oklch(0.78 0.16 75);             /* #fbbf24 amber-400 */
+  --info: oklch(0.7 0.13 230);               /* #60a5fa blue-400 */
+
+  /* 边框（精致半透明） */
+  --border: oklch(0.35 0.015 250 / 40%);      /* border-default */
+  --input: oklch(0.3 0.015 250 / 50%);
+  --ring: oklch(0.72 0.15 180 / 60%);         /* 品牌色 ring */
+
+  /* 图表色（与品牌色协调） */
+  --chart-1: oklch(0.72 0.15 180);            /* teal */
+  --chart-2: oklch(0.68 0.16 200);            /* cyan */
+  --chart-3: oklch(0.72 0.17 160);            /* emerald */
+  --chart-4: oklch(0.75 0.16 75);             /* amber */
+  --chart-5: oklch(0.68 0.18 300);            /* violet */
+
+  /* 侧边栏 */
+  --sidebar: oklch(0.16 0.018 250);
+  --sidebar-foreground: oklch(0.96 0.005 240);
+  --sidebar-primary: oklch(0.72 0.15 180);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.24 0.02 250);
+  --sidebar-accent-foreground: oklch(0.96 0.005 240);
+  --sidebar-border: oklch(0.3 0.015 250 / 40%);
+  --sidebar-ring: oklch(0.72 0.15 180 / 60%);
 }
 
 @layer base {
@@ -117,14 +150,83 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv01", "cv02", "cv03", "cv04", "ss01";
+  }
+
+  /* 精致文字渲染 */
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+    text-rendering: optimizeLegibility;
   }
 }
 
-/* NexCube 自定义滚动条 —— 用于最近项目列表等窄滚动区域 */
+/* ============================================================
+ * NexCube 工具类
+ * ============================================================ */
+
+/* 玻璃拟态（用于浮窗、工具栏、模态） */
+@layer utilities {
+  .glass {
+    background: color-mix(in oklch, var(--popover) 75%, transparent);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+  }
+  .glass-strong {
+    background: color-mix(in oklch, var(--popover) 88%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  /* 品牌辉光阴影 */
+  .shadow-glow {
+    box-shadow: 0 0 20px oklch(0.72 0.15 180 / 15%);
+  }
+  .shadow-glow-strong {
+    box-shadow: 0 0 30px oklch(0.72 0.15 180 / 25%), 0 0 60px oklch(0.72 0.15 180 / 10%);
+  }
+
+  /* 精致阴影层级 */
+  .shadow-elevated {
+    box-shadow:
+      0 1px 2px oklch(0 0 0 / 0.3),
+      0 4px 12px oklch(0 0 0 / 0.4),
+      0 0 0 1px oklch(1 0 0 / 0.05);
+  }
+  .shadow-floating {
+    box-shadow:
+      0 4px 12px oklch(0 0 0 / 0.4),
+      0 8px 24px oklch(0 0 0 / 0.5),
+      0 0 0 1px oklch(1 0 0 / 0.06);
+  }
+
+  /* 品牌色渐变文字 */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, oklch(0.82 0.12 180), oklch(0.72 0.15 180));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* 品牌色渐变背景 */
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, oklch(0.72 0.15 180), oklch(0.68 0.16 200));
+  }
+
+  /* 微妙边框高亮 */
+  .border-highlight {
+    border-color: oklch(0.72 0.15 180 / 30%);
+  }
+}
+
+/* ============================================================
+ * NexCube 自定义滚动条（更精致）
+ * ============================================================ */
+
 .nexcube-scroll {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.5 0 0 / 35%) transparent;
+  scrollbar-color: oklch(0.4 0.015 250 / 50%) transparent;
 }
 .nexcube-scroll::-webkit-scrollbar {
   width: 6px;
@@ -134,24 +236,81 @@
   background: transparent;
 }
 .nexcube-scroll::-webkit-scrollbar-thumb {
-  background-color: oklch(0.5 0 0 / 35%);
+  background-color: oklch(0.4 0.015 250 / 50%);
   border-radius: 9999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 .nexcube-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: oklch(0.6 0 0 / 50%);
+  background-color: oklch(0.5 0.015 250 / 70%);
+  background-clip: content-box;
 }
 
-/* NexCube 连线流动动画 —— typed-edge.tsx 使用 */
+/* 全局滚动条（非 nexcube-scroll 区域） */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: oklch(0.14 0.015 250);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: oklch(0.35 0.015 250 / 60%);
+  border-radius: 9999px;
+  border: 2px solid oklch(0.14 0.015 250);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: oklch(0.45 0.015 250 / 80%);
+  background-clip: content-box;
+}
+
+/* ============================================================
+ * NexCube 动画
+ * ============================================================ */
+
+/* 连线流动动画 */
 @keyframes nexcube-edge-flow {
-  from {
-    stroke-dashoffset: 10;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
+  from { stroke-dashoffset: 10; }
+  to { stroke-dashoffset: 0; }
 }
 
-/* NexCube 节点画布样式微调 */
+/* 调试节点执行高亮 */
+@keyframes nexcube-debug-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.15 180 / 55%), 0 0 16px 2px oklch(0.72 0.15 180 / 35%);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(0.72 0.15 180 / 0%), 0 0 24px 4px oklch(0.72 0.15 180 / 55%);
+  }
+}
+.nexcube-debug-executing {
+  animation: nexcube-debug-pulse 1.2s ease-in-out infinite;
+  z-index: 10;
+}
+
+/* 品牌色脉冲（用于活动指示器） */
+@keyframes nexcube-brand-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.nexcube-pulse {
+  animation: nexcube-brand-pulse 2s ease-in-out infinite;
+}
+
+/* 微妙入场动画 */
+@keyframes nexcube-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.nexcube-fade-in {
+  animation: nexcube-fade-in 0.2s ease-out;
+}
+
+/* ============================================================
+ * React Flow 样式微调
+ * ============================================================ */
+
 .react-flow__attribution {
   display: none !important;
 }
@@ -170,16 +329,25 @@
   pointer-events: all;
 }
 
-/* NexCube 调试节点执行高亮 —— emerald 闪烁脉冲 */
-@keyframes nexcube-debug-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55), 0 0 16px 2px rgba(16, 185, 129, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0), 0 0 24px 4px rgba(16, 185, 129, 0.55);
-  }
+/* React Flow 控件按钮美化 */
+.react-flow__controls-button {
+  background: var(--popover) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+  transition: background 0.15s;
 }
-.nexcube-debug-executing {
-  animation: nexcube-debug-pulse 1.2s ease-in-out infinite;
-  z-index: 10;
+.react-flow__controls-button:hover {
+  background: var(--accent) !important;
+}
+.react-flow__controls-button svg {
+  fill: var(--muted-foreground);
+}
+.react-flow__controls-button:hover svg {
+  fill: var(--primary);
+}
+
+/* React Flow 小地图美化 */
+.react-flow__minimap {
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
 }

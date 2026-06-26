@@ -262,15 +262,21 @@ export function ProjectWizard({ open, onOpenChange, onCreated }: ProjectWizardPr
   }
 
   /* -------------------- modId 自动生成 -------------------- */
+  // 用 ref 跟踪用户是否手动编辑过 modId，避免被 name 变化覆盖
+  const modIdManuallyEdited = React.useRef(false)
   const handleNameChange = (value: string) => {
     setForm((f) => {
       const next = { ...f, name: value }
-      // 如果 modId 还没手动改过，自动从 name 生成
-      if (!f.modId || f.modId === slugify(f.name)) {
+      // 只有用户没手动改过 modId 时，才自动从 name 生成
+      if (!modIdManuallyEdited.current) {
         next.modId = slugify(value)
       }
       return next
     })
+  }
+  const handleModIdChange = (value: string) => {
+    modIdManuallyEdited.current = true
+    setForm((f) => ({ ...f, modId: value }))
   }
 
   /* ------------------------------------------------------------------ */
@@ -487,7 +493,7 @@ function StepBasicInfo({
             <Input
               id="mod-id"
               value={form.modId}
-              onChange={(e) => setForm((f) => ({ ...f, modId: e.target.value }))}
+              onChange={(e) => handleModIdChange(e.target.value)}
               placeholder="example_mod"
               className={cn('h-9 font-mono', !modIdValid && form.modId && 'border-destructive/60 focus-visible:ring-destructive/30')}
             />

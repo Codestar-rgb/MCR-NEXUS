@@ -13,13 +13,12 @@ import {
 import { useWorkspaceStore } from '@/stores/workspace'
 
 /**
- * NexCube 启动主页左侧导航栏（窄）。
+ * NexCube 左侧导航栏 v2.0
  *
- * 桌面端：固定 64px 宽的纵向条，顶部 LOGO，底部设置齿轮。
- * 移动端：折叠为顶部横向条，LOGO 在左、设置在右。
- *
- * 设置齿轮点击 → 通过 workspace store 打开全局 SettingsDialog
- * （由 src/app/page.tsx 在根渲染，主页 + 工作区共用）。
+ * 设计改进：
+ * - LOGO 带辉光
+ * - 更精致的设置按钮 hover 效果
+ * - 品牌色点缀
  */
 export function Sidebar() {
   const openSettings = useWorkspaceStore((s) => s.openSettings)
@@ -32,12 +31,12 @@ export function Sidebar() {
     <TooltipProvider delayDuration={200}>
       {/* 桌面端：纵向 */}
       <aside
-        className="hidden md:flex md:w-16 md:flex-col md:items-center md:justify-between md:border-r md:bg-sidebar md:py-5"
+        className="hidden md:flex md:w-16 md:flex-col md:items-center md:justify-between md:border-r md:border-border/50 md:bg-sidebar md:py-5"
         aria-label="主导航"
       >
-        <div className="flex flex-col items-center gap-1">
-          <NexCubeLogo size={32} />
-          <span className="mt-1 text-[10px] font-medium tracking-wider text-muted-foreground">
+        <div className="flex flex-col items-center gap-1.5">
+          <NexCubeLogo size={32} className="shadow-glow rounded-lg" />
+          <span className="text-[10px] font-medium tracking-wider text-muted-foreground">
             NEX
           </span>
         </div>
@@ -49,7 +48,7 @@ export function Sidebar() {
               size="icon"
               aria-label="打开设置"
               onClick={handleSettings}
-              className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+              className="h-10 w-10 rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-primary"
             >
               <Settings className="h-[18px] w-[18px]" />
             </Button>
@@ -59,9 +58,9 @@ export function Sidebar() {
       </aside>
 
       {/* 移动端：顶部横向条 */}
-      <div className="flex items-center justify-between border-b bg-sidebar px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between border-b border-border/50 bg-sidebar px-4 py-3 md:hidden">
         <div className="flex items-center gap-2">
-          <NexCubeLogo size={26} />
+          <NexCubeLogo size={26} className="shadow-glow rounded" />
           <span className="text-sm font-semibold tracking-wide">NexCube</span>
         </div>
         <Button
@@ -69,7 +68,7 @@ export function Sidebar() {
           size="icon"
           aria-label="打开设置"
           onClick={handleSettings}
-          className="h-9 w-9 text-muted-foreground"
+          className="h-9 w-9 text-muted-foreground hover:text-primary"
         >
           <Settings className="h-[18px] w-[18px]" />
         </Button>

@@ -83,13 +83,13 @@ export default function Home() {
 
       {/* 主内容区 */}
       <main className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-8 sm:px-8 md:py-12">
+        <div className="mx-auto flex w-full max-w-xl flex-1 flex-col gap-10 px-6 py-10 sm:px-10 md:py-16">
           <WelcomeHeader />
 
-          {/* 三张卡片：垂直排列，最大宽度 480 居中 */}
+          {/* 三张卡片：垂直排列，最大宽度 520 居中 */}
           <section
             aria-label="项目操作"
-            className="mx-auto flex w-full max-w-[480px] flex-col gap-4"
+            className="mx-auto flex w-full max-w-[520px] flex-col gap-4"
           >
             <CreateCard onCreate={handleCreate} />
             <OpenCard onOpen={handleOpen} onCreate={handleCreate} />
@@ -97,10 +97,10 @@ export default function Home() {
           </section>
 
           {/* 底部信息 */}
-          <footer className="mt-auto pt-6 text-center text-[11px] text-muted-foreground/60">
+          <footer className="mt-auto pt-8 text-center text-[11px] text-muted-foreground/50">
             <span>NexCube · 双轨制 MC 模组开发 IDE</span>
             <span className="mx-2" aria-hidden>·</span>
-            <span>目标 MC 1.20.1 + Forge 47.3.x</span>
+            <span>MC 1.20.1 + Forge 47.3.x</span>
           </footer>
         </div>
       </main>

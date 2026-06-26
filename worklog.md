@@ -1588,3 +1588,66 @@ Stage Summary:
 - 颜色映射新增 pink/fuchsia
 - 已推送 GitHub
 - NexCube 持续迭代优化完成
+
+---
+Task ID: R1 (UI 重设计第 1 轮)
+Agent: main (Z.ai Code)
+Task: 设计系统重构 + 主页重设计 + 修复 modId bug
+
+Work Log:
+- 重写 src/app/globals.css 配色系统 v2.0：
+  * 深蓝黑背景（oklch 0.14 0.015 250，带微蓝紫调）
+  * 4 层背景层级（base/surface/elevated/hover）
+  * 品牌色从 emerald 改为 teal（#2dd4bf，更精致专业）
+  * 柔和语义色（success/warning/error/info 统一降饱和度）
+  * 精致边框（半透明）+ 品牌色 ring
+- 添加工具类：
+  * .glass / .glass-strong（玻璃拟态）
+  * .shadow-glow / .shadow-glow-strong（品牌辉光）
+  * .shadow-elevated / .shadow-floating（精致阴影层级）
+  * .text-gradient-brand（品牌色渐变文字）
+  * .bg-gradient-brand（品牌色渐变背景）
+- 重设计 NexCubeLogo v2.0：
+  * teal 渐变（teal-300→teal-900）
+  * 内部几何线条增强科技感
+  * 中心圆点代表"核心"
+  * 微妙高光
+- 重设计 WelcomeHeader v2.0：
+  * 标题层级清晰（"欢迎使用"轻 + "NexCube"品牌色渐变重）
+  * 字号增大（36px）
+  * LOGO 带辉光
+  * 版本信息用精致徽章
+  * framer-motion 入场动画
+- 重设计三卡片（CreateCard/OpenCard/ImportCard）v2.0：
+  * 渐变图标背景 + ring
+  * hover 品牌色辉光 + 上浮
+  * 精致边框 + 阴影
+  * framer-motion 入场动画 + stagger
+  * 最近项目列表美化
+- 修复 modId slug 重复 bug：
+  * 用 ref 跟踪用户是否手动编辑 modId
+  * handleModIdChange 标记手动编辑
+  * handleNameChange 只在未手动编辑时自动生成
+- 优化主页布局间距：
+  * max-w-2xl → max-w-xl
+  * gap-8 → gap-10
+  * max-w-[480px] → max-w-[520px]
+  * 底部信息对齐优化
+- Agent Browser + VLM 验收：
+  * 品牌感 8/10（之前无记忆点）
+  * 标题层级 9/10（之前模糊）
+  * 卡片精致度 8/10（之前简陋）
+  * 配色专业度 9/10（之前刺眼）
+  * 现代 IDE 差距 8/10（之前业余感）
+  * modId 自动生成正确（无重复）
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 第 1 轮 UI 重设计完成 ✅
+- 设计系统 v2.0 建立（深蓝黑 + teal 品牌色）
+- 主页焕然一新（品牌感强、层级清晰、配色专业）
+- modId bug 修复
+- VLM 综合评分 8.4/10（从"丑陋"提升到"专业级"）
+- 已推送 GitHub
+- 待第 2 轮：工作区 + 节点卡片
