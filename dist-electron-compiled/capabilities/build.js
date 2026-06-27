@@ -68,22 +68,26 @@ async function runGradle(projectPath, task, options, onOutput, onComplete) {
         env,
         shell: isWin,
     });
-    currentProcess.stdout?.on('data', (chunk) => {
+    const proc = currentProcess;
+    if (!proc) {
+        throw new Error('Failed to spawn Gradle process');
+    }
+    proc.stdout?.on('data', (chunk) => {
         onOutput(chunk.toString('utf-8'));
     });
-    currentProcess.stderr?.on('data', (chunk) => {
+    proc.stderr?.on('data', (chunk) => {
         onOutput(chunk.toString('utf-8'));
     });
-    currentProcess.on('exit', (code) => {
+    proc.on('exit', (code) => {
         currentProcess = null;
         onComplete(code ?? 1);
     });
-    currentProcess.on('error', (err) => {
+    proc.on('error', (err) => {
         onOutput(`Error: ${err.message}\n`);
         currentProcess = null;
         onComplete(1);
     });
-    return { pid: currentProcess.pid ?? -1 };
+    return { pid: proc.pid ?? -1 };
 }
 async function stopGradle() {
     if (currentProcess) {

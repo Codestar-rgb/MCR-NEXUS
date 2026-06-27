@@ -245,7 +245,7 @@ function LogicNodeCardImpl(props: NodeProps) {
   if (!def) return null
 
   const IconComponent =
-    (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[def.icon] ?? Box
+    (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[def.icon] ?? Box
 
   const c = getColorClasses(def.color)
   const properties = (data.properties ?? {}) as Record<string, unknown>

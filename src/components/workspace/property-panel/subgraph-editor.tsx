@@ -369,7 +369,7 @@ function SubgraphEditorInner({
 
   /* 父节点图标 */
   const parentIcon = parentNodeKind
-    ? (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[
+    ? (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
         getNodeTypeDefinition(parentNodeKind)?.icon ?? 'Boxes'
       ] ?? Boxes
     : Boxes
@@ -531,7 +531,7 @@ function SubgraphEditorInner({
                 </div>
                 {getLogicNodeTypes().map((def) => {
                   const Icon =
-                    (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[
+                    (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
                       def.icon
                     ] ?? Plus
                   return (

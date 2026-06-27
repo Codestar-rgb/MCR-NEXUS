@@ -77,7 +77,7 @@ function BaseNodeCardImpl({
   if (!def) return null
 
   const IconComponent =
-    (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[
+    (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[
       def.icon
     ] ?? Box
 
