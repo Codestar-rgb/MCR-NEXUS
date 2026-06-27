@@ -161,9 +161,37 @@ function WorkspaceCard({
   projectId: string | null
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const [isDragOver, setIsDragOver] = React.useState(false)
+  const { renameWorkspace, deleteWorkspace } = useWsStore()
+
+  // 节点拖拽迁移到工作区
+  const handleDragOver = React.useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setIsDragOver(true)
+  }, [])
+
+  const handleDragLeave = React.useCallback(() => {
+    setIsDragOver(false)
+  }, [])
+
+  const handleDrop = React.useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const nodeId = e.dataTransfer.getData('text/node-id')
+    if (!nodeId || !projectId) return
+    // 迁移节点到新工作区
+    const canvasState = useCanvasStore.getState()
+    const node = canvasState.nodes.find((n) => n.id === nodeId)
+    if (!node) return
+    if (node.data.subGraphId === workspace.id) return // 已在此工作区
+    canvasState.updateNode(nodeId, {
+      data: { ...node.data, subGraphId: workspace.id },
+    })
+    toast.success(`节点已迁移到「${workspace.name}」`)
+  }, [workspace.id, workspace.name, projectId])
   const [renaming, setRenaming] = React.useState(false)
   const [name, setName] = React.useState(workspace.name)
-  const { renameWorkspace, deleteWorkspace } = useWsStore()
 
   const colorHex = COLOR_HEX[workspace.color] ?? COLOR_HEX.teal
 
@@ -189,6 +217,9 @@ function WorkspaceCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: 0.03 }}
       className="relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <motion.button
         onClick={onClick}
@@ -203,6 +234,7 @@ function WorkspaceCard({
           isActive
             ? 'border-primary/30 bg-primary/5 shadow-sm'
             : 'border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/40',
+          isDragOver && 'border-primary/50 bg-primary/10 ring-2 ring-primary/20',
         )}
       >
         {/* 颜色标识条 */}

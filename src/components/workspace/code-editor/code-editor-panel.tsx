@@ -93,7 +93,6 @@ export function CodeEditorPanel({ className }: CodeEditorPanelProps) {
 
   return (
     <div className={`flex h-full flex-col bg-background ${className ?? ''}`}>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <CodeToolbar {...({ activeFile: activeFile ?? null, syncStatus: activeFile?.isDirty ? 'dirty' : 'synced', pendingSync, syncResult, onSyncToNodes: () => activeFile && syncCodeToNodes(activeFile.path ?? '', activeFile.value ?? ''), onConfirmSync: confirmSync, onCancelSync: cancelSync } as any)} />
       {openFiles.length > 0 && (
         <FileTabs {...({ files: openFiles, activeFileId, onSelectFile: setActiveFileId, onCloseFile: handleCloseFile } as any)} />

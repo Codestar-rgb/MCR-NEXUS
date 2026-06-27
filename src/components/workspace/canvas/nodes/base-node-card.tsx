@@ -93,6 +93,11 @@ function BaseNodeCardImpl({
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData('text/node-id', id)
+        e.dataTransfer.effectAllowed = 'move'
+      }}
       className={cn(
         'group relative rounded-xl border bg-card/95 shadow-lg backdrop-blur transition-all',
         c.border,
