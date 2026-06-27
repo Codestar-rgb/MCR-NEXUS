@@ -2177,3 +2177,47 @@ Stage Summary:
 - 装备/武器有完整 Tier/ArmorMaterial 接口实现（非占位）
 - 贴图、语言文件、创造物品栏全部生成
 - 已推送 GitHub（a3de726）
+
+---
+Task ID: R10 (P1-e/f/g + P2-b/c 代码生成深化)
+Agent: main (Z.ai Code)
+Task: 群系/结构/维度数据包格式 + 配方节点 + 导出构建指引
+
+Work Log:
+P1-e/f/g: 群系/结构/维度正确 Forge 1.20.1 数据包格式
+- 群系：worldgen/biome/<id>.json
+  effects/spawners(7类)/spawn_costs/carvers/features(10层)
+  原来是非标准扁平 JSON
+- 结构：worldgen/structure/<id>.json
+  spacing/separation/salt/biomes/step/terrain_adaptation
+  原来是非标准 structure.json
+- 维度：dimension_type/<id>.json
+  ultrawarm/natural/piglin_safe/has_skylight/coordinate_scale/
+  min_y/height/gravity/fixed_time/infiniburn/monster_spawn_light_level
+  原来缺少必需字段
+- 全部用 Boolean()/Number() 安全类型转换
+
+P2-b: 配方节点类型 + JSON 代码生成
+- 新 'recipe' 节点类型（advanced 分类，orange 色）
+  - 5 种配方类型：crafting/smelting/blasting/smoking/stonecutting
+  - 属性：recipeType/resultItem/resultCount/ingredientA/B/C/cookingTime/experience
+  - 3 输入端口（材料）+ 1 输出端口（产物）
+- generateRecipeFile 输出 data/<modId>/recipes/<id>.json
+  - crafting → crafting_shapeless JSON
+  - smelting/blasting/smoking → minecraft:<type> JSON with cookingtime
+  - stonecutting → minecraft:stonecutting JSON
+- nodeTypes 注册 recipe → GenericNodeCard
+
+P2-c: 导出构建指引
+- ExportDialog 成功后显示 5 步构建说明：
+  1. 解压  2. 安装 JDK 17  3. ./gradlew build  4. ./gradlew runClient
+  5. 复制 JAR 到 mods/
+- 首次构建下载时间警告（5-15 分钟）
+
+Stage Summary:
+- 4 项改进全部完成 ✅
+- 群系/结构/维度从非标准 JSON 提升为正确 1.20.1 数据包格式
+- 配方节点支持 5 种类型，生成正确 recipes JSON
+- 导出后有完整构建指引，用户知道下一步该做什么
+- 13 种节点类型全部有正确 codegen（11 内置 + spell + recipe）
+- 已推送 GitHub（1edd7f7）
