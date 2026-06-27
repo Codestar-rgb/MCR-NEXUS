@@ -46,6 +46,7 @@ import {
 import { MirrorPanel } from '@/components/settings/mirror-panel'
 import { EnvironmentPanel } from '@/components/settings/environment-panel'
 import { AdaptersPanel } from '@/components/settings/adapters-panel'
+import { PluginPanel } from '@/components/settings/plugin-panel'
 import { ShortcutsPanel as ShortcutsPanelEditable } from '@/components/settings/shortcuts-panel'
 import { useI18n } from '@/hooks/use-i18n'
 
@@ -165,7 +166,14 @@ export function SettingsDialog({ open, onOpenChange, defaultTab = 'mirror' }: Se
                 {tab === 'mirror' && <MirrorPanel />}
                 {tab === 'theme' && <ThemePanel />}
                 {tab === 'shortcuts' && <ShortcutsPanelEditable />}
-                {tab === 'plugins' && <AdaptersPanel />}
+                {tab === 'plugins' && (
+                  <div className="space-y-6">
+                    <PluginPanel />
+                    <div className="border-t border-border/30 pt-4">
+                      <AdaptersPanel />
+                    </div>
+                  </div>
+                )}
                 {tab === 'env' && <EnvironmentPanel />}
               </motion.div>
             </AnimatePresence>
