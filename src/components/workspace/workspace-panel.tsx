@@ -23,6 +23,7 @@ import {
 import { useWorkspaceStore as useWsStore } from '@/stores/workspace-store'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useCanvasStore } from '@/stores/canvas'
+import { WORKSPACE_TEMPLATES } from '@/lib/workspace-templates'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -41,8 +42,7 @@ const COLOR_HEX: Record<string, string> = {
 export function WorkspacePanel({ className }: { className?: string }) {
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
   const { workspaces, activeWorkspaceId, loadWorkspaces, createWorkspace, setActive, isLoading } = useWsStore()
-  const [creating, setCreating] = React.useState(false)
-  const [newName, setNewName] = React.useState('')
+  const [templateDialogOpen, setTemplateDialogOpen] = React.useState(false)
 
   // 加载工作区
   React.useEffect(() => {
@@ -51,15 +51,24 @@ export function WorkspacePanel({ className }: { className?: string }) {
     }
   }, [currentProjectId, loadWorkspaces])
 
-  const handleCreate = async () => {
-    if (!newName.trim() || !currentProjectId) return
-    const id = await createWorkspace(currentProjectId, newName.trim())
-    if (id) {
-      setActive(id)
-      toast.success('工作区已创建', { description: newName.trim() })
+  const handleCreateFromTemplate = async (templateId: string, name: string, color: string, icon: string) => {
+    if (!currentProjectId) return
+    // 调用 API 创建带模板的工作区
+    const res = await fetch(`/api/projects/${currentProjectId}/workspaces`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, color, icon, template: templateId }),
+    })
+    if (!res.ok) {
+      toast.error('创建失败')
+      return
     }
-    setNewName('')
-    setCreating(false)
+    const ws = await res.json()
+    // 刷新工作区列表
+    await loadWorkspaces(currentProjectId)
+    setActive(ws.id)
+    toast.success('工作区已创建', { description: `${name} · ${ws.nodeCount} 节点` })
+    setTemplateDialogOpen(false)
   }
 
   return (
@@ -75,7 +84,7 @@ export function WorkspacePanel({ className }: { className?: string }) {
           工作区
         </h3>
         <button
-          onClick={() => setCreating(true)}
+          onClick={() => setTemplateDialogOpen(true)}
           className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/40 hover:text-primary"
           aria-label="新建工作区"
         >
@@ -105,38 +114,8 @@ export function WorkspacePanel({ className }: { className?: string }) {
               ))}
             </AnimatePresence>
 
-            {/* 新建输入框 */}
-            {creating && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="flex items-center gap-2 rounded-lg border border-primary/40 bg-card/60 p-2">
-                  <input
-                    autoFocus
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreate()
-                      if (e.key === 'Escape') { setCreating(false); setNewName('') }
-                    }}
-                    placeholder="工作区名称"
-                    className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
-                  />
-                  <button onClick={handleCreate} className="text-primary hover:text-primary/80">
-                    <Check className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={() => { setCreating(false); setNewName('') }} className="text-muted-foreground hover:text-foreground">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
             {/* 空状态 */}
-            {workspaces.length === 0 && !creating && (
+            {workspaces.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Box className="h-6 w-6 text-muted-foreground/30" />
                 <p className="text-[11px] text-muted-foreground">点击 + 创建工作区</p>
@@ -152,6 +131,13 @@ export function WorkspacePanel({ className }: { className?: string }) {
           {workspaces.length} 个工作区 · 右键管理
         </p>
       </div>
+
+      {/* 模板选择对话框 */}
+      <TemplateDialog
+        open={templateDialogOpen}
+        onClose={() => setTemplateDialogOpen(false)}
+        onCreate={handleCreateFromTemplate}
+      />
     </aside>
   )
 }
@@ -293,5 +279,118 @@ function WorkspaceCard({
         </>
       )}
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 模板选择对话框                                                      */
+/* ------------------------------------------------------------------ */
+
+function TemplateDialog({
+  open,
+  onClose,
+  onCreate,
+}: {
+  open: boolean
+  onClose: () => void
+  onCreate: (templateId: string, name: string, color: string, icon: string) => void
+}) {
+  const [selected, setSelected] = React.useState('blank')
+  const [name, setName] = React.useState('')
+
+  React.useEffect(() => {
+    if (open) {
+      setSelected('blank')
+      setName('')
+    }
+  }, [open])
+
+  const templates = WORKSPACE_TEMPLATES
+
+  const handleCreate = () => {
+    const template = templates.find((t) => t.id === selected)
+    if (!template) return
+    onCreate(template.id, name.trim() || template.name, template.color, template.icon)
+  }
+
+  if (!open) return null
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+        className="fixed left-1/2 top-1/2 z-50 w-[520px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl border border-border/50 bg-popover/95 shadow-floating backdrop-blur-xl"
+      >
+        {/* 标题 */}
+        <div className="border-b border-border/30 px-5 py-4">
+          <h3 className="text-sm font-semibold text-foreground">新建工作区</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">选择模板快速创建</p>
+        </div>
+
+        {/* 名称输入 */}
+        <div className="px-5 py-3">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="工作区名称（留空使用模板名）"
+            className="h-8 w-full rounded-md border border-border/40 bg-background/50 px-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary/40 focus:outline-none"
+          />
+        </div>
+
+        {/* 模板列表 */}
+        <div className="nexcube-scroll max-h-64 overflow-y-auto px-3 pb-3">
+          <div className="grid grid-cols-1 gap-2">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setSelected(t.id)}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg border p-3 text-left transition-all',
+                  selected === t.id
+                    ? 'border-primary/40 bg-primary/5'
+                    : 'border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/40',
+                )}
+              >
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+                  style={{
+                    backgroundColor: `${COLOR_HEX[t.color] ?? '#94a3b8'}15`,
+                    color: COLOR_HEX[t.color] ?? '#94a3b8',
+                  }}
+                >
+                  <Box className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-foreground">{t.name}</div>
+                  <div className="text-[11px] text-muted-foreground">{t.description}</div>
+                </div>
+                {selected === t.id && (
+                  <Check className="h-4 w-4 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 底部操作 */}
+        <div className="flex justify-end gap-2 border-t border-border/30 px-5 py-3">
+          <button
+            onClick={onClose}
+            className="rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent/40"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleCreate}
+            className="rounded-md bg-gradient-brand px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-glow"
+          >
+            创建
+          </button>
+        </div>
+      </motion.div>
+    </>
   )
 }

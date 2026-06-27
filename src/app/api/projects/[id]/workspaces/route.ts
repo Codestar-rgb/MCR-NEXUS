@@ -90,13 +90,62 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
       },
     })
 
+    // 如果指定了模板，创建模板节点
+    const templateId = String(body.template ?? '')
+    let nodeCount = 0
+    let edgeCount = 0
+
+    if (templateId && templateId !== 'blank') {
+      const { WORKSPACE_TEMPLATES } = await import('@/lib/workspace-templates')
+      const template = WORKSPACE_TEMPLATES.find((t) => t.id === templateId)
+      if (template && template.nodes.length > 0) {
+        const createdNodes = []
+        for (const tn of template.nodes) {
+          const node = await db.node.create({
+            data: {
+              project: { connect: { id } },
+              subGraphId: workspace.id,
+              type: tn.type,
+              title: tn.title,
+              positionX: tn.positionX,
+              positionY: tn.positionY,
+              isCollapsed: false,
+              properties: JSON.stringify(tn.properties),
+            },
+          })
+          createdNodes.push(node)
+        }
+
+        // 创建连线
+        for (const te of template.edges) {
+          const source = createdNodes[te.sourceIndex]
+          const target = createdNodes[te.targetIndex]
+          if (source && target) {
+            await db.connection.create({
+              data: {
+                project: { connect: { id } },
+                sourceNodeId: source.id,
+                targetNodeId: target.id,
+                sourcePort: te.sourcePort,
+                targetPort: te.targetPort,
+                dataType: te.dataType,
+              },
+            })
+          }
+        }
+
+        nodeCount = createdNodes.length
+        edgeCount = template.edges.length
+      }
+    }
+
     return NextResponse.json({
       id: workspace.id,
       name: workspace.name,
       color: workspace.color,
       icon: workspace.icon,
-      nodeCount: 0,
-      edgeCount: 0,
+      nodeCount,
+      edgeCount,
       sortOrder: workspace.sortOrder,
     }, { status: 201 })
   } catch (err) {
