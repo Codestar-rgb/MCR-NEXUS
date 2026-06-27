@@ -21,20 +21,25 @@ interface ShortcutItem {
 }
 
 const DEFAULT_SHORTCUTS: ShortcutItem[] = [
+  // 全局（已绑定）
   { id: 'undo', label: '撤销', group: '全局', defaultKeys: 'ctrl+z' },
   { id: 'redo', label: '重做', group: '全局', defaultKeys: 'ctrl+shift+z' },
-  { id: 'save', label: '保存', group: '全局', defaultKeys: 'ctrl+s' },
-  { id: 'build', label: '构建', group: '全局', defaultKeys: 'ctrl+b' },
-  { id: 'export', label: '导出', group: '全局', defaultKeys: 'ctrl+e' },
-  { id: 'toggleMode', label: '切换模式', group: '全局', defaultKeys: 'ctrl+/' },
+  { id: 'save', label: '保存（自动同步）', group: '全局', defaultKeys: 'ctrl+s' },
+  { id: 'toggleMode', label: '切换节点/代码模式', group: '全局', defaultKeys: 'ctrl+/' },
+  // 工作区（已绑定）
+  { id: 'search', label: '搜索节点', group: '工作区', defaultKeys: 'ctrl+p' },
+  { id: 'command', label: '命令面板', group: '工作区', defaultKeys: 'ctrl+shift+p' },
+  { id: 'clone', label: '克隆选中节点', group: '工作区', defaultKeys: 'ctrl+d' },
+  { id: 'copy', label: '复制节点', group: '工作区', defaultKeys: 'ctrl+c' },
+  { id: 'paste', label: '粘贴节点', group: '工作区', defaultKeys: 'ctrl+v' },
   { id: 'fitView', label: '适应视图', group: '工作区', defaultKeys: 'ctrl+0' },
   { id: 'zoomIn', label: '放大', group: '工作区', defaultKeys: 'ctrl+=' },
   { id: 'zoomOut', label: '缩小', group: '工作区', defaultKeys: 'ctrl+-' },
-  { id: 'format', label: '格式化代码', group: '编辑器', defaultKeys: 'alt+shift+f' },
-  { id: 'findReplace', label: '查找替换', group: '编辑器', defaultKeys: 'ctrl+h' },
+  { id: 'build', label: '构建', group: '工作区', defaultKeys: 'ctrl+b' },
+  { id: 'export', label: '导出', group: '工作区', defaultKeys: 'ctrl+e' },
 ]
 
-const GROUPS = ['全局', '工作区', '编辑器']
+const GROUPS = ['全局', '工作区']
 
 export function ShortcutsPanel() {
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({})

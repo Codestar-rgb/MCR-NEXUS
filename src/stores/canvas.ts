@@ -205,7 +205,7 @@ export interface CanvasState {
   updateNodeData: (id: string, dataUpdates: Record<string, unknown>) => void
   removeNode: (id: string) => void
   removeNodes: (ids: string[]) => void
-  cloneNodeById: (id: string) => void
+  cloneNodeById: (id: string) => FlowNode | undefined
   applyNodeChanges: (changes: NodeChange[]) => void
   applyEdgeChanges: (changes: EdgeChange[]) => void
   onConnect: (connection: Connection) => void
@@ -322,9 +322,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   cloneNodeById: (id) => {
     const { nodes } = get()
     const original = nodes.find((n) => n.id === id)
-    if (!original) return
+    if (!original) return undefined
     const cloned = cloneFlowNode(original)
     set((s) => ({ nodes: [...s.nodes, cloned] }))
+    return cloned
   },
 
   applyNodeChanges: (changes) =>

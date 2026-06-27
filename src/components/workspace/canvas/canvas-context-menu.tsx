@@ -30,6 +30,7 @@ import {
   Box,
   Trash2,
   Copy,
+  CopyPlus,
   Pencil,
   ChevronsUpDown,
   Group as GroupIcon,
@@ -47,6 +48,7 @@ import {
   createFlowNode,
 } from '@/stores/canvas'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { useClipboardStore } from '@/stores/clipboard'
 import { cn } from '@/lib/utils'
 
 /** Tailwind 色名 → hex 映射（用于菜单中显示节点类型颜色点） */
@@ -144,12 +146,38 @@ export function CanvasContextMenu() {
     })
   }
 
-  /* 复制节点 */
+  /* 复制节点到剪贴板 */
   const handleCopy = () => {
     if (!contextMenu.nodeId) return
-    cloneNodeById(contextMenu.nodeId)
+    const ids =
+      selectedNodeIds.length > 1 && selectedNodeIds.includes(contextMenu.nodeId)
+        ? selectedNodeIds
+        : [contextMenu.nodeId]
+    const selectedNodes = nodes.filter((n) => ids.includes(n.id))
+    if (selectedNodes.length === 0) return
+    useClipboardStore.getState().copy(selectedNodes)
     closeContextMenu()
-    toast.success('已复制节点')
+    toast.success(`已复制 ${selectedNodes.length} 个节点到剪贴板`)
+  }
+
+  /* 克隆节点（就地复制，偏移 20px） */
+  const handleClone = () => {
+    if (!contextMenu.nodeId) return
+    const ids =
+      selectedNodeIds.length > 1 && selectedNodeIds.includes(contextMenu.nodeId)
+        ? selectedNodeIds
+        : [contextMenu.nodeId]
+    useClipboardStore.getState().pushUndo(nodes, useCanvasStore.getState().edges, '克隆节点')
+    const clonedIds: string[] = []
+    for (const id of ids) {
+      const cloned = cloneNodeById(id)
+      if (cloned) clonedIds.push(cloned.id)
+    }
+    if (clonedIds.length > 0) {
+      useCanvasStore.getState().setGroupingSelection(clonedIds)
+    }
+    closeContextMenu()
+    toast.success(`已克隆 ${clonedIds.length} 个节点`)
   }
 
   /* 删除节点（含多选） */
@@ -278,8 +306,14 @@ export function CanvasContextMenu() {
             <MenuItem
               icon={<Copy className="h-3.5 w-3.5" />}
               label="复制节点"
-              shortcut="Ctrl+D"
+              shortcut="Ctrl+C"
               onClick={handleCopy}
+            />
+            <MenuItem
+              icon={<CopyPlus className="h-3.5 w-3.5" />}
+              label="克隆节点"
+              shortcut="Ctrl+D"
+              onClick={handleClone}
             />
             <MenuItem
               icon={<Pencil className="h-3.5 w-3.5" />}

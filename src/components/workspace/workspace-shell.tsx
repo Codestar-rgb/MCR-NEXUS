@@ -43,7 +43,7 @@ import { StatusBar } from '@/components/workspace/status-bar'
 import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { CommandPalette } from '@/components/workspace/command-palette'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
-import { useCanvasStore } from '@/stores/canvas'
+import { useCanvasStore, createFlowNode } from '@/stores/canvas'
 import { useClipboardStore } from '@/stores/clipboard'
 import { toast } from 'sonner'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
@@ -92,8 +92,9 @@ export function WorkspaceShell() {
   const setTerminalHeight = useWorkspaceStore((s) => s.setTerminalHeight)
   const toggleTerminal = useWorkspaceStore((s) => s.toggleTerminal)
 
-  /* 全局搜索（Ctrl+P） */
-  const [searchOpen, setSearchOpen] = React.useState(false)
+  /* 全局搜索（Ctrl+P） — 状态提升到 workspace store，供 EdgeToolbar 共享 */
+  const searchOpen = useWorkspaceStore((s) => s.searchOpen)
+  const setSearchOpen = useWorkspaceStore((s) => s.setSearchOpen)
 
   /* 命令面板（Ctrl+Shift+P） */
   const [commandOpen, setCommandOpen] = React.useState(false)
@@ -117,7 +118,7 @@ export function WorkspaceShell() {
           setCommandOpen((v) => !v)
         } else {
           e.preventDefault()
-          setSearchOpen((v) => !v)
+          useWorkspaceStore.getState().toggleSearch()
         }
         return
       }
@@ -146,6 +147,29 @@ export function WorkspaceShell() {
         if (pasted.length > 0) {
           pasted.forEach((n) => canvasState.addNode(n))
           toast.success(`已粘贴 ${pasted.length} 个节点`)
+        }
+        return
+      }
+
+      // Ctrl+D: 克隆选中节点（就地复制，偏移 20px）
+      if (ctrl && e.key === 'd' && !e.shiftKey) {
+        e.preventDefault()
+        const canvasState = useCanvasStore.getState()
+        const selectedIds = canvasState.selectedNodeIds
+        if (selectedIds.length === 0) {
+          toast.info('请先选中一个节点')
+          return
+        }
+        const { pushUndo } = useClipboardStore.getState()
+        pushUndo(canvasState.nodes, canvasState.edges, '克隆节点')
+        const clonedIds: string[] = []
+        for (const id of selectedIds) {
+          const cloned = canvasState.cloneNodeById(id)
+          if (cloned) clonedIds.push(cloned.id)
+        }
+        if (clonedIds.length > 0) {
+          canvasState.setGroupingSelection(clonedIds)
+          toast.success(`已克隆 ${clonedIds.length} 个节点`)
         }
         return
       }
@@ -414,7 +438,21 @@ export function WorkspaceShell() {
       <CommandPalette
         open={commandOpen}
         onClose={() => setCommandOpen(false)}
-        onCreateNode={() => toast.info('请在画布上右键创建节点')}
+        onCreateNode={(kind) => {
+          try {
+            const node = createFlowNode(kind, { x: 200, y: 200 })
+            useCanvasStore.getState().addNode(node)
+            useCanvasStore.getState().selectNode(node.id)
+            useWorkspaceStore.getState().setSelectedNode(
+              node.id,
+              kind,
+              node.data.title,
+            )
+            toast.success(`已创建 ${node.data.title} 节点`)
+          } catch (err) {
+            toast.error(`创建节点失败: ${err instanceof Error ? err.message : '未知错误'}`)
+          }
+        }}
         onAutoLayout={handleAutoLayout}
         onSave={() => toast.success('项目已保存（自动同步）')}
         onExport={() => toast.info('请在终端区点击导出')}

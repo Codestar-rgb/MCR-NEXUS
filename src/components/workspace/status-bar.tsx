@@ -48,6 +48,10 @@ export function StatusBar() {
           {t('status.copyPaste')}
         </span>
         <span className="flex items-center gap-1">
+          <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+D</kbd>
+          克隆
+        </span>
+        <span className="flex items-center gap-1">
           <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+Z</kbd>
           {t('status.undo')}
         </span>

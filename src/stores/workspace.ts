@@ -105,6 +105,10 @@ export interface WorkspaceState {
   /* 设置面板（全局，主页 + 工作区均可打开） */
   settingsOpen: boolean
 
+  /* 浮层状态（供 EdgeToolbar / TopDashboard 共享控制） */
+  searchOpen: boolean
+  bellOpen: boolean
+
   /* ----- Actions: 视图 ----- */
   setView: (view: WorkspaceView) => void
   openProject: (projectId: string) => void
@@ -114,6 +118,12 @@ export interface WorkspaceState {
   setSettingsOpen: (open: boolean) => void
   openSettings: () => void
   closeSettings: () => void
+
+  /* ----- Actions: 浮层 ----- */
+  setSearchOpen: (open: boolean) => void
+  toggleSearch: () => void
+  setBellOpen: (open: boolean) => void
+  toggleBell: () => void
 
   /* ----- Actions: 模式 ----- */
   setMode: (mode: WorkspaceMode) => void
@@ -236,6 +246,10 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       /* 设置面板 */
       settingsOpen: false,
 
+      /* 浮层 */
+      searchOpen: false,
+      bellOpen: false,
+
       /* ----- Actions: 视图 ----- */
 
       setView: (view) => set({ currentView: view }),
@@ -267,6 +281,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       setSettingsOpen: (open) => set({ settingsOpen: open }),
       openSettings: () => set({ settingsOpen: true }),
       closeSettings: () => set({ settingsOpen: false }),
+
+      setSearchOpen: (open) => set({ searchOpen: open }),
+      toggleSearch: () => set((s) => ({ searchOpen: !s.searchOpen })),
+      setBellOpen: (open) => set({ bellOpen: open }),
+      toggleBell: () => set((s) => ({ bellOpen: !s.bellOpen })),
 
       /* ----- Actions: 模式 ----- */
 

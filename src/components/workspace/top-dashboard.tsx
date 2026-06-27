@@ -118,8 +118,9 @@ export function TopDashboard() {
     staleTime: 60_000,
   })
 
-  // 通知下拉
-  const [bellOpen, setBellOpen] = React.useState(false)
+  // 通知下拉 — 状态提升到 workspace store，供 EdgeToolbar 共享
+  const bellOpen = useWorkspaceStore((s) => s.bellOpen)
+  const setBellOpen = useWorkspaceStore((s) => s.setBellOpen)
   const bellRef = React.useRef<HTMLDivElement | null>(null)
 
   // 点击外部关闭通知下拉
@@ -132,18 +133,16 @@ export function TopDashboard() {
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [bellOpen])
+  }, [bellOpen, setBellOpen])
 
   const handleBellClick = React.useCallback(() => {
-    setBellOpen((open) => {
-      const next = !open
-      if (next && unreadCount > 0) {
-        // 打开时顺手标记为已读（仅清计数，不删条目）
-        setTimeout(() => markAllRead(), 800)
-      }
-      return next
-    })
-  }, [unreadCount, markAllRead])
+    const next = !bellOpen
+    setBellOpen(next)
+    if (next && unreadCount > 0) {
+      // 打开时顺手标记为已读（仅清计数，不删条目）
+      setTimeout(() => markAllRead(), 800)
+    }
+  }, [bellOpen, setBellOpen, unreadCount, markAllRead])
 
   return (
     <TooltipProvider delayDuration={200}>

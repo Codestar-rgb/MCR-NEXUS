@@ -45,6 +45,9 @@ import {
   useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
+import { Plus } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
+import { toast } from 'sonner'
 import { nodeTypes } from '@/components/workspace/canvas/nodes'
 import { TypedEdge } from '@/components/workspace/canvas/typed-edge'
 import { CanvasContextMenu } from '@/components/workspace/canvas/canvas-context-menu'
@@ -59,6 +62,7 @@ import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
 // 性能压测面板已移除（对用户无意义）
 import {
   useCanvasStore,
+  createFlowNode,
   getNodeColorHex,
 } from '@/stores/canvas'
 import { useWorkspaceStore } from '@/stores/workspace'
@@ -145,7 +149,7 @@ function NodeCanvasInner() {
 
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
-  const { screenToFlowPosition, setCenter } = useReactFlow()
+  const { screenToFlowPosition, setCenter, fitView, zoomIn, zoomOut } = useReactFlow()
 
   /* 节点选中时自动定位到画布中心 */
   const selectedNodeId = useCanvasStore((s) => s.selectedNodeIds[0] ?? null)
@@ -157,6 +161,21 @@ function NodeCanvasInner() {
     const y = node.position.y + (node.height ?? 100)
     setCenter(x, y, { zoom: 1.2, duration: 300 })
   }, [selectedNodeId, nodes, setCenter])
+
+  /* 缩放事件总线：EdgeToolbar 通过 window CustomEvent 触发缩放命令 */
+  React.useEffect(() => {
+    const onFit = () => fitView({ padding: 0.25, duration: 400 })
+    const onIn = () => zoomIn({ duration: 300 })
+    const onOut = () => zoomOut({ duration: 300 })
+    window.addEventListener('nexcube:zoom-fit', onFit)
+    window.addEventListener('nexcube:zoom-in', onIn)
+    window.addEventListener('nexcube:zoom-out', onOut)
+    return () => {
+      window.removeEventListener('nexcube:zoom-fit', onFit)
+      window.removeEventListener('nexcube:zoom-in', onIn)
+      window.removeEventListener('nexcube:zoom-out', onOut)
+    }
+  }, [fitView, zoomIn, zoomOut])
 
   /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
   useCanvasSync(currentProjectId)
@@ -263,6 +282,56 @@ function NodeCanvasInner() {
     (connection) => onConnectStore(connection),
     [onConnectStore],
   )
+
+  /* 连接拒绝反馈：记录拖拽起点，结束时若未成功连接则提示原因 */
+  const pendingConnectionRef = React.useRef<{ source: string; sourceHandle: string | null } | null>(null)
+  const handleConnectStart = useCallback((_: React.MouseEvent | React.TouchEvent, params: { nodeId?: string | null; handleId?: string | null }) => {
+    if (params.nodeId) {
+      pendingConnectionRef.current = { source: params.nodeId, sourceHandle: params.handleId ?? null }
+    }
+  }, [])
+  const handleConnectEnd = useCallback((event: MouseEvent | TouchEvent) => {
+    const pending = pendingConnectionRef.current
+    pendingConnectionRef.current = null
+    if (!pending) return
+
+    // 检测落点位置对应的节点（通过 DOM 查询）
+    const touch = 'touches' in event ? event.touches[0] ?? event.changedTouches[0] : null
+    const clientX = touch ? touch.clientX : (event as MouseEvent).clientX
+    const clientY = touch ? touch.clientY : (event as MouseEvent).clientY
+    const el = document.elementFromPoint(clientX, clientY)
+    const targetNode = el?.closest('[data-nodeid]') as HTMLElement | null
+    const targetId = targetNode?.getAttribute('data-nodeid') ?? null
+
+    // 若落点不在任何节点上（拖到空白处），不提示
+    if (!targetId) return
+    // 若落点是源节点自身，不提示
+    if (targetId === pending.source) return
+
+    // 判断为何被拒绝
+    const sourceNode = nodes.find((n) => n.id === pending.source)
+    const targetNode2 = nodes.find((n) => n.id === targetId)
+    if (!sourceNode || !targetNode2) return
+    const sourceDef = getNodeTypeDefinition(sourceNode.data.kind)
+    const targetDef = getNodeTypeDefinition(targetNode2.data.kind)
+    if (!sourceDef || !targetDef) return
+
+    const sourcePort = sourceDef.outputPorts.find((p) => p.id === pending.sourceHandle) ?? sourceDef.outputPorts[0]
+    const targetPort = targetDef.inputPorts[0]
+    if (!sourcePort || !targetPort) return
+
+    if (!isPortCompatible(sourcePort.dataType, targetPort.dataType)) {
+      const PORT_LABELS: Record<string, string> = {
+        entity: '实体', boolean: '布尔', number: '数值', string: '字符串',
+        itemstack: '物品堆', any: '通用', block: '方块', void: '空',
+      }
+      const sLabel = PORT_LABELS[sourcePort.dataType] ?? sourcePort.dataType
+      const tLabel = PORT_LABELS[targetPort.dataType] ?? targetPort.dataType
+      toast.warning(`无法连接：${sourcePort.label}(${sLabel}) 不兼容 ${targetPort.label}(${tLabel})`, {
+        description: '请连接数据类型兼容的端口，或使用转换节点。',
+      })
+    }
+  }, [nodes])
 
   /* 画布空白右键 → 弹出"创建节点 / 全选 / 清空"菜单 */
   const onPaneContextMenu = useCallback(
@@ -377,6 +446,8 @@ function NodeCanvasInner() {
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={handleConnect}
+        onConnectStart={handleConnectStart}
+        onConnectEnd={handleConnectEnd}
         isValidConnection={isValidConnection}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
@@ -439,6 +510,16 @@ function NodeCanvasInner() {
       </ReactFlow>
       </motion.div>
       </AnimatePresence>
+
+      {/* 空画布引导覆盖层（无节点时显示，含快捷创建按钮） */}
+      {rfNodes.length === 0 && (
+        <EmptyCanvasOverlay onCreateNode={(kind) => {
+          const node = createFlowNode(kind, { x: 0, y: 0 })
+          useCanvasStore.getState().addNode(node)
+          useCanvasStore.getState().selectNode(node.id)
+          setSelectedNode(node.id, kind, node.data.title)
+        }} />
+      )}
 
       {/* 节点对齐辅助线（拖拽时显示） */}
       <AlignmentLines />
@@ -504,6 +585,65 @@ function NodeCanvasInner() {
       {openedFunctionNodeId && (
         <FunctionNodeDetail onClose={closeFunctionDetail} />
       )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 空画布引导覆盖层                                                    */
+/* ------------------------------------------------------------------ */
+
+const EMPTY_QUICK_NODES = [
+  { kind: 'entity', label: '实体', icon: 'Boxes' },
+  { kind: 'block', label: '方块', icon: 'Box' },
+  { kind: 'item', label: '物品', icon: 'Package' },
+] as const
+
+function EmptyCanvasOverlay({ onCreateNode }: { onCreateNode: (kind: string) => void }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+      <div className="pointer-events-auto flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border/40 bg-card/20 px-8 py-10 text-center backdrop-blur-sm">
+        <div className="relative">
+          <div className="absolute inset-0 -m-4 rounded-full bg-primary/8 blur-2xl" aria-hidden />
+          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/5">
+            <Plus className="h-7 w-7 text-primary" />
+          </div>
+        </div>
+        <div>
+          <p className="text-base font-semibold text-foreground">开始你的模组构建</p>
+          <p className="mt-1.5 max-w-xs text-[12px] leading-relaxed text-muted-foreground">
+            画布为空。点击下方按钮快速创建节点，或右键画布空白处查看全部节点类型。
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {EMPTY_QUICK_NODES.map((n) => {
+            const Icon = (LucideIcons as unknown as Record<
+              string,
+              React.ComponentType<{ className?: string }>
+            >)[n.icon] ?? Plus
+            return (
+              <button
+                key={n.kind}
+                onClick={() => onCreateNode(n.kind)}
+                className="group flex items-center gap-1.5 rounded-lg border border-border/40 bg-card/40 px-3.5 py-2 text-[12px] font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-card/60"
+              >
+                <Icon className="h-3.5 w-3.5 text-primary transition-transform group-hover:scale-110" />
+                {n.label}
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground/50">
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-border/40 bg-muted/30 px-1.5 py-0.5 font-mono">Ctrl+P</kbd>
+            搜索
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-border/40 bg-muted/30 px-1.5 py-0.5 font-mono">Ctrl+Shift+P</kbd>
+            命令
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
