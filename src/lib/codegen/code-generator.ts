@@ -117,25 +117,26 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
 
   const content = `package com.example.mod.entity;
 
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
 /**
  * NexCube 自动生成的实体类
- * 节点 ID：${node.id}
  * 节点名称：${node.data.title}
+ * 注册 ID：${registryId}
  */
 public class ${className} extends PathfinderMob {
 
-    public ${className}(EntityType<? extends ${className}> type, Level level) {
+    public ${className}(EntityType<? extends Mob> type, Level level) {
         super(type, level);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return PathfinderMob.createLivingAttributes()
+        return PathfinderMob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, ${health.toFixed(1)}F)
             .add(Attributes.ATTACK_DAMAGE, ${attack.toFixed(1)}F)
             .add(Attributes.ARMOR, ${armor.toFixed(1)}F)
@@ -173,13 +174,12 @@ function generateBlockFile(node: FlowNode): GeneratedFile | null {
   const content = `package com.example.mod.block;
 
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 /**
  * NexCube 自动生成的方块类
- * 节点 ID：${node.id}
  * 节点名称：${node.data.title}
+ * 注册 ID：${registryId}
  */
 public class ${className} extends Block {
 
@@ -280,78 +280,135 @@ ${code}
 
 /**
  * 生成装备类（ArmorItem）
+ *
+ * Forge 1.20.1 的 ArmorMaterial 是接口，需自定义实现。
+ * 使用匿名内部类简化代码。
  */
 function generateEquipmentFile(node: FlowNode): GeneratedFile | null {
-  const p = node.data.properties ?? {}
-  const className = toClassName(String(p.registryId ?? 'new_armor'))
-  const slot = p.equipmentSlot === 'head' ? 'HEAD' : p.equipmentSlot === 'chest' ? 'CHEST' : p.equipmentSlot === 'legs' ? 'LEGS' : 'FEET'
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
+  const registryId = String(p.registryId ?? 'new_armor')
+  const className = toClassName(registryId)
+  const slot = p.equipmentSlot === 'head' ? 'HELMET' : p.equipmentSlot === 'chest' ? 'CHESTPLATE' : p.equipmentSlot === 'legs' ? 'LEGGINGS' : 'BOOTS'
+  const armorValue = Number(p.armorValue ?? 5)
+  const armorToughness = Number(p.armorToughness ?? 0)
+  const knockbackResistance = Number(p.knockbackResistance ?? 0)
+  const enchantability = Number(p.enchantability ?? 15)
+  const durability = Number(p.durability ?? 400)
 
   const content = `package com.example.mod.item;
 
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 
 /**
  * ${p.name ?? 'Custom Armor'} - 由 NexCube 自动生成
  * 装备槽: ${p.equipmentSlot}
- * 护甲值: ${p.armorValue}
- * 韧性: ${p.armorToughness}
+ * 护甲值: ${armorValue}
+ * 韧性: ${armorToughness}
  */
 public class ${className} extends ArmorItem {
-    public ${className}() {
-        super(new ArmorMaterial(
-            ${p.armorValue}F,              // protection
-            ${p.armorToughness}F,          // toughness
-            ${p.knockbackResistance}F,     // knockback resistance
-            SoundEvents.ARMOR_EQUIP_DIAMOND,
-            ${p.enchantability},            // enchantability
-            () -> new ItemStack(net.minecraft.world.item.Items.DIAMOND), // repair material
-            () -> "${p.registryId}"         // name
-        ), ArmorItem.Type.${slot}, new Properties()
-            .durability(${p.durability})
+
+    // 自定义护甲材质（Forge 1.20.1 ArmorMaterial 接口实现）
+    public static final ArmorMaterial MATERIAL = new ArmorMaterial() {
+        @Override
+        public int getDefenseForType(ArmorItem.Type type) {
+            return ${armorValue};
+        }
+        @Override
+        public int getDurabilityForType(ArmorItem.Type type) {
+            return new int[]{13, 15, 16, 11}[type.getSlot().getIndex()];
+        }
+        @Override
+        public int getEnchantmentValue() { return ${enchantability}; }
+        @Override
+        public SoundEvent getEquipSound() { return SoundEvents.ARMOR_EQUIP_DIAMOND; }
+        @Override
+        public net.minecraft.world.item.crafting.Ingredient getRepairIngredient() {
+            return net.minecraft.world.item.crafting.Ingredient.of(new ItemStack(Items.DIAMOND));
+        }
+        @Override
+        public String getName() { return "${registryId}"; }
+        @Override
+        public float getToughness() { return ${armorToughness}F; }
+        @Override
+        public float getKnockbackResistance() { return ${knockbackResistance}F; }
+    };
+
+    public ${className}(Properties properties) {
+        super(MATERIAL, ArmorItem.Type.${slot}, properties
+            .durability(${durability})
             .rarity(Rarity.EPIC)
         );
     }
 }
 `
-  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id }
+  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id, language: 'java' }
 }
 
 /**
  * 生成武器类（SwordItem / AxeItem）
+ *
+ * Forge 1.20.1 SwordItem 构造函数：
+ *   SwordItem(Tier tier, int attackDamage, float attackSpeed, Properties properties)
+ * Tier 决定挖掘等级、附魔值、耐久等。
  */
 function generateWeaponFile(node: FlowNode): GeneratedFile | null {
-  const p = node.data.properties ?? {}
-  const className = toClassName(String(p.registryId ?? 'new_weapon'))
-  const tier = p.weaponType === 'bow' ? 'Tiers.WOOD' : p.weaponType === 'axe' ? 'Tiers.DIAMOND' : 'Tiers.DIAMOND'
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
+  const registryId = String(p.registryId ?? 'new_weapon')
+  const className = toClassName(registryId)
+  const attackDamage = Number(p.attackDamage ?? 7)
+  const attackSpeed = Number(p.attackSpeed ?? -2.4)
+  const durability = Number(p.durability ?? 500)
+  const enchantability = Number(p.enchantability ?? 14)
 
   const content = `package com.example.mod.item;
 
 import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.Items;
 
 /**
  * ${p.name ?? 'Custom Weapon'} - 由 NexCube 自动生成
  * 类型: ${p.weaponType}
- * 攻击伤害: ${p.attackDamage}
- * 攻击速度: ${p.attackSpeed}
+ * 攻击伤害: ${attackDamage}
+ * 攻击速度: ${attackSpeed}
  */
 public class ${className} extends SwordItem {
-    public ${className}() {
-        super(${tier}, ${p.attackDamage}, ${p.attackSpeed}F, new Properties()
-            .durability(${p.durability})
+
+    // 自定义武器 Tier（Forge 1.20.1 Tier 接口实现）
+    public static final Tier TIER = new Tier() {
+        @Override
+        public int getUses() { return ${durability}; }
+        @Override
+        public float getSpeed() { return 8.0F; }
+        @Override
+        public float getAttackDamageBonus() { return ${attackDamage}F; }
+        @Override
+        public int getLevel() { return 3; }
+        @Override
+        public int getEnchantmentValue() { return ${enchantability}; }
+        @Override
+        public Ingredient getRepairIngredient() {
+            return Ingredient.of(Items.DIAMOND);
+        }
+    };
+
+    public ${className}(Properties properties) {
+        super(TIER, ${attackDamage}, ${attackSpeed}F, properties
             .rarity(Rarity.RARE)
-            .enchantable(${p.enchantability})
         );
     }
 }
 `
-  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id }
+  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id, language: 'java' }
 }
 
 /**
@@ -539,11 +596,15 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   if (hasEntities) imports.push(`import ${pkg}.entity.ModEntities;`)
   if (hasPotions) imports.push(`import ${pkg}.effect.ModEffects;`)
 
+  const hasCreatables = hasItems || hasBlocks
+  if (hasCreatables) imports.push(`import ${pkg}.ModCreativeTabs;`)
+
   const registerCalls: string[] = []
   if (hasItems) registerCalls.push('        ModItems.REGISTER.register(bus);')
   if (hasBlocks) registerCalls.push('        ModBlocks.REGISTER.register(bus);')
   if (hasEntities) registerCalls.push('        ModEntities.REGISTER.register(bus);')
   if (hasPotions) registerCalls.push('        ModEffects.REGISTER.register(bus);')
+  if (hasCreatables) registerCalls.push('        ModCreativeTabs.REGISTER.register(bus);')
 
   const content = `package ${pkg};
 
@@ -581,6 +642,7 @@ function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile |
   if (itemNodes.length === 0) return null
 
   const pkg = 'com.example.mod.item'
+  const hasFood = itemNodes.some((n) => n.data.kind === 'food')
   const entries = itemNodes.map((n) => {
     const registryId = getStr(n, 'registryId', n.id)
     const className = toClassName(registryId)
@@ -592,7 +654,7 @@ function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile |
       return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties().food(new FoodProperties.Builder().nutrition(${nutrition}).saturationMod(${saturation}F).build())));`
     }
     if (kind === 'weapon' || kind === 'equipment') {
-      return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties())); // ${className} 自定义类待接入`
+      return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new ${className}(new Item.Properties()));`
     }
     return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties()));`
   })
@@ -600,7 +662,7 @@ function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile |
   const content = `package ${pkg};
 
 import net.minecraft.world.item.Item;
-import net.minecraftforge.eventbus.api.IEventBus;
+${hasFood ? 'import net.minecraft.world.food.FoodProperties;\n' : ''}import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -637,7 +699,8 @@ function generateModBlocksFile(modId: string, nodes: FlowNode[]): GeneratedFile 
     const hardness = getNum(n, 'hardness', 3)
     const resistance = getNum(n, 'resistance', 6)
     const lightLevel = getNum(n, 'lightLevel', 0)
-    return `    public static final RegistryObject<Block> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Block(BlockBehaviour.Properties.of()\n            .strength(${hardness}F, ${resistance}F)\n            .lightLevel(s -> ${lightLevel})));`
+    // 优先使用自定义 Block 子类（已在单独文件中生成）
+    return `    public static final RegistryObject<Block> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new ${className}(BlockBehaviour.Properties.of()\n            .strength(${hardness}F, ${resistance}F)\n            .lightLevel(s -> ${lightLevel})));`
   })
 
   // BlockItem 联动注册
@@ -688,13 +751,13 @@ function generateModEntitiesFile(modId: string, nodes: FlowNode[]): GeneratedFil
   const entries = entityNodes.map((n) => {
     const registryId = getStr(n, 'registryId', n.id)
     const className = toClassName(registryId) + 'Entity'
-    return `    public static final RegistryObject<EntityType<${className}>> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> EntityType.Builder.of(${className}::new, MobCategory.CREATURE).sized(0.6f, 1.8f).build("${registryId}"));`
+    return `    public static final RegistryObject<EntityType<${className}>> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> EntityType.Builder\n            .of(${className}::new, MobCategory.CREATURE)\n            .sized(0.6f, 1.8f)\n            .build());`
   })
 
   const attrLines = entityNodes.map((n) => {
     const registryId = getStr(n, 'registryId', n.id)
     const className = toClassName(registryId) + 'Entity'
-    return `        if (event.getEntityType() == ${registryId.toUpperCase()}.get()) {\n            event.put(${className}.createAttributes().build());\n        }`
+    return `        event.put(${registryId.toUpperCase()}.get(), ${className}.createAttributes().build());`
   })
 
   const content = `package ${pkg};
@@ -736,25 +799,139 @@ ${attrLines.join('\n\n')}
 }
 
 /**
- * 生成 mods.toml（Forge 模组声明）
+ * 生成 mods.toml（Forge 模组声明 + 依赖）
  */
 function generateModsToml(modId: string): GeneratedFile {
   const content = `modLoader="javafml"
 loaderVersion="[47,)"
 license="MIT"
 
+# 模组声明
 [[mods]]
 modId="${modId}"
 version="1.0.0"
 displayName="NexCube Mod"
 description='''
-Generated by NexCube.
+Generated by NexCube — Next-generation Minecraft Mod IDE.
 '''
+
+# 依赖声明（Forge 47.x = MC 1.20.1）
+[[dependencies.${modId}]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${modId}]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="BOTH"
 `
   return {
     filePath: 'src/main/resources/META-INF/mods.toml',
     content,
     language: 'toml',
+  }
+}
+
+/**
+ * 生成语言文件（en_us.json + zh_cn.json）
+ * 为每个节点生成对应的物品/方块/实体显示名
+ */
+function generateLangFile(modId: string, nodes: FlowNode[], lang: 'en_us' | 'zh_cn'): GeneratedFile {
+  const entries: string[] = []
+
+  for (const node of nodes) {
+    const kind = node.data.kind
+    const registryId = getStr(node, 'registryId', node.id)
+    const title = node.data.title
+
+    if (['item', 'equipment', 'weapon', 'food'].includes(kind)) {
+      entries.push(`  "item.${modId}.${registryId}": "${title}"`)
+    } else if (kind === 'block') {
+      entries.push(`  "block.${modId}.${registryId}": "${title}"`)
+    } else if (kind === 'entity') {
+      entries.push(`  "entity.${modId}.${registryId}": "${title}"`)
+    } else if (kind === 'potion') {
+      entries.push(`  "effect.${modId}.${registryId}": "${title}"`)
+    }
+  }
+
+  const content = `{
+${entries.join(',\n')}${entries.length > 0 ? ',' : ''}
+  "itemGroup.${modId}": "${modId}"
+}
+`
+  return {
+    filePath: `src/main/resources/assets/${modId}/lang/${lang}.json`,
+    content,
+    language: 'json',
+  }
+}
+
+/**
+ * 生成创造模式物品栏分组（CreativeModeTab）
+ *
+ * Forge 1.20.1 用 DeferredRegister<CreativeModeTab> 注册。
+ * 自动将所有物品/方块加入该分组。
+ */
+function generateCreativeTabFile(modId: string, nodes: FlowNode[]): GeneratedFile {
+  const modClassName = toModClassName(modId)
+  const pkg = 'com.example.mod'
+
+  // 收集所有要加入物品栏的 RegistryObject 引用
+  const itemRefs: string[] = []
+  for (const node of nodes) {
+    const kind = node.data.kind
+    const registryId = getStr(node, 'registryId', node.id)
+    const upper = registryId.toUpperCase()
+    if (['item', 'equipment', 'weapon', 'food'].includes(kind)) {
+      itemRefs.push(`            output.accept(ModItems.${upper}.get());`)
+    } else if (kind === 'block') {
+      itemRefs.push(`            output.accept(ModBlocks.${upper}_ITEM.get());`)
+    }
+  }
+
+  const content = `package ${pkg};
+
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.RegistryObject;
+import ${pkg}.item.ModItems;
+import ${pkg}.block.ModBlocks;
+
+/**
+ * 创造模式物品栏分组（NexCube 自动生成）
+ * 将所有模组物品/方块集中显示在一个创造标签页中
+ */
+public class ModCreativeTabs {
+
+    public static final DeferredRegister<CreativeModeTab> REGISTER =
+        DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ${modClassName}.MOD_ID);
+
+    public static final RegistryObject<CreativeModeTab> MAIN_TAB = REGISTER.register("main",
+        () -> CreativeModeTab.builder()
+            .title(Component.translatable("itemGroup.${modId}"))
+            .icon(() -> new ItemStack(Items.DIAMOND))
+            .displayItems((params, output) -> {
+${itemRefs.join('\n')}
+            })
+            .build()
+    );
+}
+`
+  return {
+    filePath: `src/main/java/com/example/mod/ModCreativeTabs.java`,
+    content,
+    language: 'java',
   }
 }
 
@@ -859,6 +1036,18 @@ export function generateProjectCode(
 
   // 4. 资源文件
   files.push(generateModsToml(modId))
+
+  // 5. 语言文件（en_us + zh_cn）
+  files.push(generateLangFile(modId, nodes, 'en_us'))
+  files.push(generateLangFile(modId, nodes, 'zh_cn'))
+
+  // 6. 创造模式物品栏分组（有物品/方块时生成）
+  const hasCreatables = nodes.some((n) =>
+    ['item', 'equipment', 'weapon', 'food', 'block'].includes(n.data.kind),
+  )
+  if (hasCreatables) {
+    files.push(generateCreativeTabFile(modId, nodes))
+  }
 
   return {
     files,

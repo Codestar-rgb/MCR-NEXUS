@@ -126,6 +126,27 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
       zip.file(`${topFolder}/${f.path}`, f.content)
     }
 
+    // 5b) 提取节点贴图（base64 → PNG 文件，打包进 assets 目录）
+    for (const node of flowNodes) {
+      const tex = node.data.properties?.texture
+      if (typeof tex === 'string' && tex.startsWith('data:image/')) {
+        try {
+          // 解析 data URL: data:image/png;base64,xxxx
+          const match = tex.match(/^data:image\/(\w+);base64,(.+)$/)
+          if (match) {
+            const ext = match[1] === 'jpeg' ? 'jpg' : match[1]
+            const base64Data = match[2]
+            const registryId = String(node.data.properties?.registryId ?? node.id)
+            // 贴图路径：assets/<modId>/textures/<kind>/<registryId>.png
+            const texPath = `src/main/resources/assets/${project.modId}/textures/${node.data.kind}/${registryId}.${ext}`
+            zip.file(`${topFolder}/${texPath}`, base64Data, { base64: true })
+          }
+        } catch {
+          // 贴图解析失败时跳过
+        }
+      }
+    }
+
     const zipBuffer = await zip.generateAsync({
       type: 'nodebuffer',
       compression: 'DEFLATE',
