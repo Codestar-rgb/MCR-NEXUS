@@ -88,6 +88,8 @@ export function createFlowNode(kind: string, position: XYPosition): FlowNode {
 
   const id = makeId(def.kind)
   const props = createDefaultProperties(kind as NodeKind)
+  // 从 store 获取当前工作区 ID，确保新节点属于当前工作区
+  const activeWorkspaceId = (useCanvasStore as any).getState?.()?.activeWorkspaceId ?? null
 
   return {
     id,
@@ -98,6 +100,7 @@ export function createFlowNode(kind: string, position: XYPosition): FlowNode {
       title: def.label,
       properties: props,
       isCollapsed: false,
+      subGraphId: activeWorkspaceId,
       // 同时把 properties 展开到 data 顶层，兼容老卡片组件
       ...props,
     },
