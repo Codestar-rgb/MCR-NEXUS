@@ -24,6 +24,7 @@ import { useWorkspaceStore as useWsStore } from '@/stores/workspace-store'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useCanvasStore } from '@/stores/canvas'
 import { WORKSPACE_TEMPLATES } from '@/lib/workspace-templates'
+import { useI18n } from '@/hooks/use-i18n'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -43,6 +44,7 @@ export function WorkspacePanel({ className }: { className?: string }) {
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
   const { workspaces, activeWorkspaceId, loadWorkspaces, createWorkspace, setActive, isLoading } = useWsStore()
   const [templateDialogOpen, setTemplateDialogOpen] = React.useState(false)
+  const { t } = useI18n()
 
   /* 工作区卡片拖拽排序 */
   const [draggedId, setDraggedId] = React.useState<string | null>(null)
@@ -116,7 +118,7 @@ export function WorkspacePanel({ className }: { className?: string }) {
       {/* 标题栏 */}
       <div className="flex items-center justify-between px-4 py-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          工作区
+          {t('workspace.title')}
         </h3>
         <button
           onClick={() => setTemplateDialogOpen(true)}
@@ -159,7 +161,7 @@ export function WorkspacePanel({ className }: { className?: string }) {
             {workspaces.length === 0 && (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <Box className="h-6 w-6 text-muted-foreground/30" />
-                <p className="text-[11px] text-muted-foreground">点击 + 创建工作区</p>
+                <p className="text-[11px] text-muted-foreground">{t('workspace.empty')}</p>
               </div>
             )}
           </div>
@@ -169,7 +171,7 @@ export function WorkspacePanel({ className }: { className?: string }) {
       {/* 底部信息 */}
       <div className="border-t border-border/20 px-4 py-2">
         <p className="text-[9px] text-muted-foreground/40">
-          {workspaces.length} 个工作区 · 右键管理
+          {workspaces.length} {t('workspace.count')}
         </p>
       </div>
 

@@ -10,6 +10,7 @@ import { WaterOrb } from '@/components/water-orb'
 import { ThemeToggle } from '@/components/home/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { useWorkspaceStore } from '@/stores/workspace'
+import { useI18n } from '@/hooks/use-i18n'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
@@ -31,6 +32,7 @@ const LOADER_LABEL: Record<ModLoader, string> = {
 
 export function HomePageV9({ onCreate, onOpen, onImport }: HomePageV9Props) {
   const openSettings = useWorkspaceStore((s) => s.openSettings)
+  const { t } = useI18n()
 
   const { data: recentProjects } = useQuery<RecentProject[]>({
     queryKey: ['projects', 'recent'],
@@ -96,10 +98,10 @@ export function HomePageV9({ onCreate, onOpen, onImport }: HomePageV9Props) {
 
             {/* 标题 */}
             <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-foreground">
-              欢迎使用 NexCube
+              {t('home.welcome')}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Minecraft 模组开发 IDE · 节点可视化与代码双轨协同
+              {t('home.subtitle')} · {t('home.desc')}
             </p>
             <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground/50">
               <GitBranch className="h-3 w-3" />
@@ -116,21 +118,21 @@ export function HomePageV9({ onCreate, onOpen, onImport }: HomePageV9Props) {
           >
             <ActionButton
               icon={Plus}
-              title="新建项目"
-              desc="引导式创建模组项目"
+              title={t('home.create')}
+              desc={t('home.createDesc')}
               onClick={onCreate}
               primary
             />
             <ActionButton
               icon={FolderOpen}
-              title="打开项目"
-              desc="从本地目录打开"
+              title={t('home.open')}
+              desc={t('home.openDesc')}
               onClick={onImport}
             />
             <ActionButton
               icon={Download}
-              title="导入项目"
-              desc="从 GitHub / Gitee / ZIP 导入"
+              title={t('home.import')}
+              desc={t('home.importDesc')}
               onClick={onImport}
             />
           </motion.div>
@@ -148,7 +150,7 @@ export function HomePageV9({ onCreate, onOpen, onImport }: HomePageV9Props) {
             <div className="mb-3 flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                最近项目
+                {t('home.recent')}
               </h2>
             </div>
             <div className="relative">
