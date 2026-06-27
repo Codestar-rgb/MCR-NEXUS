@@ -42,12 +42,20 @@ export function StatusBar() {
       {/* 右侧：快捷键提示 */}
       <div className="flex items-center gap-3">
         <span className="flex items-center gap-1">
+          <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+C/V</kbd>
+          复制/粘贴
+        </span>
+        <span className="flex items-center gap-1">
+          <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+Z</kbd>
+          撤销
+        </span>
+        <span className="flex items-center gap-1">
           <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+P</kbd>
           搜索
         </span>
         <span className="flex items-center gap-1">
-          <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+/</kbd>
-          切换模式
+          <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">⇧+P</kbd>
+          命令
         </span>
         <span className="flex items-center gap-1">
           <kbd className="rounded border border-border/40 px-1 py-px font-mono text-[9px]">Ctrl+B</kbd>

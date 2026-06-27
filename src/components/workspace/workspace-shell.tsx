@@ -44,6 +44,7 @@ import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { CommandPalette } from '@/components/workspace/command-palette'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
 import { useCanvasStore } from '@/stores/canvas'
+import { useClipboardStore } from '@/stores/clipboard'
 import { toast } from 'sonner'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
@@ -102,7 +103,15 @@ export function WorkspaceShell() {
   const setMode = useWorkspaceStore((s) => s.setMode)
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+      const target = e.target as HTMLElement
+      // 输入框内不触发快捷键
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+      if (target.closest('.monaco-editor')) return
+
+      const ctrl = e.ctrlKey || e.metaKey
+
+      // Ctrl+P / Ctrl+Shift+P
+      if (ctrl && e.key === 'p') {
         if (e.shiftKey) {
           e.preventDefault()
           setCommandOpen((v) => !v)
@@ -110,6 +119,63 @@ export function WorkspaceShell() {
           e.preventDefault()
           setSearchOpen((v) => !v)
         }
+        return
+      }
+
+      // Ctrl+C: 复制选中节点
+      if (ctrl && e.key === 'c' && !e.shiftKey) {
+        const canvasState = useCanvasStore.getState()
+        const selected = canvasState.nodes.filter((n) =>
+          canvasState.selectedNodeIds.includes(n.id),
+        )
+        if (selected.length > 0) {
+          const { copy, pushUndo } = useClipboardStore.getState()
+          copy(selected)
+          toast.success(`已复制 ${selected.length} 个节点`)
+        }
+        return
+      }
+
+      // Ctrl+V: 粘贴节点
+      if (ctrl && e.key === 'v' && !e.shiftKey) {
+        const { paste, hasClipboard, pushUndo } = useClipboardStore.getState()
+        if (!hasClipboard()) return
+        const canvasState = useCanvasStore.getState()
+        pushUndo(canvasState.nodes, canvasState.edges, '粘贴节点')
+        const pasted = paste()
+        if (pasted.length > 0) {
+          pasted.forEach((n) => canvasState.addNode(n))
+          toast.success(`已粘贴 ${pasted.length} 个节点`)
+        }
+        return
+      }
+
+      // Ctrl+Z: 撤销
+      if (ctrl && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        const { undo, canUndo } = useClipboardStore.getState()
+        if (!canUndo()) return
+        const entry = undo()
+        if (entry) {
+          const canvasState = useCanvasStore.getState()
+          canvasState.loadFromProject(entry.nodes, entry.edges)
+          toast.info(`撤销：${entry.description}`)
+        }
+        return
+      }
+
+      // Ctrl+Shift+Z / Ctrl+Y: 重做
+      if ((ctrl && e.key === 'z' && e.shiftKey) || (ctrl && e.key === 'y')) {
+        e.preventDefault()
+        const { redo, canRedo } = useClipboardStore.getState()
+        if (!canRedo()) return
+        const entry = redo()
+        if (entry) {
+          const canvasState = useCanvasStore.getState()
+          canvasState.loadFromProject(entry.nodes, entry.edges)
+          toast.info(`重做：${entry.description}`)
+        }
+        return
       }
     }
     window.addEventListener('keydown', handler)
