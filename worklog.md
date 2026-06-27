@@ -2114,3 +2114,66 @@ Stage Summary:
 - 老手：DeferredRegister + EventBusSubscriber 符合 Forge 1.20.1 最佳实践
 - 技术债：0 TODO, 0 无条件 console.log
 - 已推送 GitHub（be9ff31）
+
+---
+Task ID: R9 (P0+P1 代码生成质量提升)
+Agent: main (Z.ai Code)
+Task: 修复编译问题 + 装备/武器 Tier 系统 + 贴图打包 + 语言文件 + 创造物品栏
+
+Work Log:
+P0 修复编译问题：
+- 实体类：createMobAttributes()（原 createLivingAttributes API 错误）
+  构造函数用 EntityType<? extends Mob>（类型安全）
+- 实体属性注册：event.put(type, supplier.build())（原 if 检查错误）
+- EntityType.Builder.build()（原 build(name) 已弃用）
+- ModBlocks：用自定义 Block 子类（原 generic Block 忽略了自定义类）
+- 移除未使用的 BlockState import
+
+P1-a 装备/武器自定义 Item 类 + Tier 系统：
+- 装备：ArmorMaterial 接口实现（匿名类，7 个方法）
+  getDefenseForType/getDurabilityForType/getEnchantmentValue/
+  getEquipSound/getRepairIngredient/getName/getToughness/getKnockbackResistance
+- 武器：Tier 接口实现（6 个方法）
+  getUses/getSpeed/getAttackDamageBonus/getLevel/getEnchantmentValue/getRepairIngredient
+- ModItems：weapon/equipment 用自定义类（原 plain Item 占位）
+- FoodProperties import 条件添加到 ModItems
+
+P1-b 贴图打包进 ZIP：
+- 从 node.properties.texture 提取 base64 贴图
+- 写入 assets/<modId>/textures/<kind>/<registryId>.png
+- 支持 PNG/JPEG
+
+P1-c 语言文件生成：
+- generateLangFile 生成 en_us.json + zh_cn.json
+- item/block/entity/effect 条目按节点类型
+- itemGroup.<modId> 条目用于创造标签页
+
+P1-d mods.toml 依赖声明：
+- forge 依赖 [47,)
+- minecraft 依赖 [1.20.1,1.21)
+
+P2-a 创造模式物品栏（CreativeModeTab）：
+- generateCreativeTabFile：DeferredRegister<CreativeModeTab>
+- displayItems 接受所有模组物品 + 方块物品
+- 主类注册 ModCreativeTabs.REGISTER
+
+Agent Browser 验收：
+- 代码视图显示 15 个生成文件：
+  ExampleModMod.java（主类）
+  TestemptyGolemEntity.java + NewEntityEntity.java（实体类）
+  TestemptyBlockBlock.java（方块类）
+  TestemptyGemItem.java（物品类）
+  魔法技能.java + NewSpell.java（插件 spell 节点）
+  ModItems.java + ModBlocks.java + ModEntities.java（注册中心）
+  ModCreativeTabs.java（创造物品栏）
+  mods.toml（模组声明+依赖）
+  en_us.json + zh_cn.json（语言文件）
+- 主类有真实 DeferredRegister.register(bus) 调用（非注释）
+- Lint: 0 errors / 0 warnings
+
+Stage Summary:
+- 6 项 P0+P1+P2 改进全部完成 ✅
+- 导出的 mod 从"能编译"提升到"符合 Forge 1.20.1 最佳实践"
+- 装备/武器有完整 Tier/ArmorMaterial 接口实现（非占位）
+- 贴图、语言文件、创造物品栏全部生成
+- 已推送 GitHub（a3de726）
