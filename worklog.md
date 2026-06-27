@@ -1917,3 +1917,69 @@ Stage Summary:
   * 组 parentId 持久化
 - 节点编辑流程端到端验证通过 ✅
 - 已推送 GitHub（65e12d0）
+
+---
+Task ID: R6 (UX 体验优化第 6 轮 — 5 大核心改进)
+Agent: main (Z.ai Code)
+Task: 以产品经理视角修复 UX 审计发现的 5 大核心问题
+
+Work Log:
+- 子代理 UX 审计（911aaeb8）发现 5 大问题：
+  1. EdgeToolbar 7 个按钮全是 "功能开发中" toast（3 个功能已存在！）
+  2. 空画布无引导（新用户看到死画布）
+  3. 节点创建只能右键（不可发现）
+  4. 不兼容连接静默拒绝（无反馈）
+  5. Ctrl+D 快捷键是谎言 + 设置面板 5 个假快捷键
+
+#1 EdgeToolbar 全面修复：
+- 搜索 → toggleSearch（与 Ctrl+P 共享状态）
+- 添加节点 → 分类弹出面板（17 种节点类型，核心/高级/逻辑分组）
+- 缩放适应 → window CustomEvent → canvas fitView
+- 放大/缩小 → window CustomEvent → canvas zoomIn/zoomOut
+- 工程信息 → toggleRightPanel
+- 任务提示 → toggleBell（与 TopDashboard 共享）
+- 事件总线模式：EdgeToolbar 在 ReactFlowProvider 外，通过 window event 通信
+
+#3 节点创建可发现性：
+- EdgeToolbar "添加节点" 弹出面板：17 种节点按分类网格展示
+- CommandPalette onCreateNode 实际创建节点（原来是 toast 死路）
+- 空画布覆盖层：3 个快捷创建按钮（实体/方块/物品）+ 快捷键提示
+- EmptyCanvasOverlay 组件：虚线边框 + 品牌色图标 + 引导文案
+
+#4 不兼容连接反馈：
+- onConnectStart 记录源节点 + handle
+- onConnectEnd 检测落点节点，判断是否被拒绝
+- toast.warning 显示具体原因："无法连接：X(Y) 不兼容 A(B)"
+- 空白处/同节点释放不提示（避免噪音）
+
+#5 Ctrl+D 克隆快捷键 + 快捷键面板修复：
+- Ctrl+D 实际克隆选中节点（原来未绑定但菜单显示快捷键）
+- cloneNodeById 返回克隆节点（原来 void）
+- 右键菜单拆分：复制（Ctrl+C → 剪贴板）+ 克隆（Ctrl+D → 就地复制）
+- ShortcutsPanel：删除 2 个假快捷键（format/findReplace），添加 5 个真实快捷键
+- StatusBar：添加 Ctrl+D "克隆" 提示
+
+状态管理重构：
+- workspace store 添加 searchOpen/bellOpen 状态 + toggle actions
+- workspace-shell: 使用 store search 状态（原 local useState）
+- top-dashboard: 使用 store bell 状态（原 local useState）
+- 实现跨组件共享：EdgeToolbar 可控制 TopDashboard 的弹窗
+
+Agent Browser 验收：
+- 添加节点弹出面板正常显示 17 种节点 ✅
+- 点击"武器"创建武器节点 + 属性面板显示 ✅
+- 空画布覆盖层显示"开始你的模组构建" + 3 快捷按钮 ✅
+- 快捷创建实体节点正常 ✅
+- Ctrl+D 克隆节点（实体 → 实体 副本）✅
+- 缩放适应按钮无错误 ✅
+- 搜索按钮打开 GlobalSearch ✅
+- Lint: 0 errors / 0 warnings ✅
+
+Stage Summary:
+- 5 大 UX 问题全部修复 ✅
+- EdgeToolbar 从 7 个死按钮变为全部可用
+- 节点创建从"仅右键"变为 3 种入口（工具栏弹出/空画布快捷/命令面板）
+- 空画布从死画布变为引导式 onboarding
+- 连接反馈从静默拒绝变为具体原因提示
+- 快捷键从谎言变为全部真实绑定
+- 已推送 GitHub（57809a7）
