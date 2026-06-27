@@ -63,7 +63,7 @@ interface ToolCheckState {
 }
 
 interface CheckRowProps {
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   title: string
   state: ToolCheckState
   /** 仅在缺失或可选安装时显示的修复按钮文案 */
@@ -537,7 +537,7 @@ function InfoCard({
   label,
   value,
 }: {
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   label: string
   value: string
 }) {

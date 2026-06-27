@@ -25,7 +25,7 @@ import {
 import { PORT_TYPES, type PortDataType } from '@/lib/node-system'
 import { cn } from '@/lib/utils'
 
-interface PortHandleProps extends Omit<HandleProps, 'position'> {
+interface PortHandleProps extends Omit<HandleProps, 'position' | 'type'> {
   /** 端口数据类型，决定 Handle 颜色 */
   dataType: PortDataType
   /** 端口位置（Left=输入 / Right=输出） */

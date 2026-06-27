@@ -208,7 +208,7 @@ export function CanvasContextMenu() {
       return
     }
     // 触发封装对话框（FunctionEncapsulator 监听此 counter）
-    useCanvasStore.getState().requestEncapsulatorDialog()
+    useCanvasStore.getState().openEncapsulatorDialog()
     closeContextMenu()
   }
 

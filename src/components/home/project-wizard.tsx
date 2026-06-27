@@ -335,6 +335,7 @@ export function ProjectWizard({ open, onOpenChange, onCreated }: ProjectWizardPr
               form={form}
               setForm={setForm}
               onNameChange={handleNameChange}
+              onModIdChange={handleModIdChange}
               onIconUpload={handleIconUpload}
               fileInputRef={fileInputRef}
             />
@@ -412,11 +413,12 @@ export function ProjectWizard({ open, onOpenChange, onCreated }: ProjectWizardPr
 /* ------------------------------------------------------------------ */
 
 function StepBasicInfo({
-  form, setForm, onNameChange, onIconUpload, fileInputRef,
+  form, setForm, onNameChange, onModIdChange, onIconUpload, fileInputRef,
 }: {
   form: WizardForm
   setForm: React.Dispatch<React.SetStateAction<WizardForm>>
   onNameChange: (v: string) => void
+  onModIdChange: (v: string) => void
   onIconUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
 }) {
@@ -493,7 +495,7 @@ function StepBasicInfo({
             <Input
               id="mod-id"
               value={form.modId}
-              onChange={(e) => handleModIdChange(e.target.value)}
+              onChange={(e) => onModIdChange(e.target.value)}
               placeholder="example_mod"
               className={cn('h-9 font-mono', !modIdValid && form.modId && 'border-destructive/60 focus-visible:ring-destructive/30')}
             />

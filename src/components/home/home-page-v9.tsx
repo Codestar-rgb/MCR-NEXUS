@@ -192,7 +192,7 @@ function ActionButton({
   onClick,
   primary = false,
 }: {
-  icon: React.ElementType
+  icon: React.ComponentType<{ className?: string }>
   title: string
   desc: string
   onClick: () => void

@@ -99,12 +99,12 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
       const { WORKSPACE_TEMPLATES } = await import('@/lib/workspace-templates')
       const template = WORKSPACE_TEMPLATES.find((t) => t.id === templateId)
       if (template && template.nodes.length > 0) {
-        const createdNodes = []
+        const createdNodes: Array<{ id: string }> = []
         for (const tn of template.nodes) {
           const node = await db.node.create({
             data: {
               project: { connect: { id } },
-              subGraphId: workspace.id,
+              subGraph: { connect: { id: workspace.id } },
               type: tn.type,
               title: tn.title,
               positionX: tn.positionX,
@@ -124,8 +124,8 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
             await db.connection.create({
               data: {
                 project: { connect: { id } },
-                sourceNodeId: source.id,
-                targetNodeId: target.id,
+                source: { connect: { id: source.id } },
+                target: { connect: { id: target.id } },
                 sourcePort: te.sourcePort,
                 targetPort: te.targetPort,
                 dataType: te.dataType,

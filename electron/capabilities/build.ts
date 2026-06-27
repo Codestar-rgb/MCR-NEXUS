@@ -37,7 +37,7 @@ export async function runGradle(
   if (options.daemon === false) args.push('--no-daemon')
   if (options.args) args.push(...options.args)
 
-  const env: Record<string, string | undefined> = { ...process.env }
+  const env: NodeJS.ProcessEnv = { ...process.env }
   if (options.jvmArgs && options.jvmArgs.length > 0) {
     env.JAVA_TOOL_OPTIONS = options.jvmArgs.map((a) => (a.startsWith('-') ? a : '-' + a)).join(' ')
   }
@@ -48,23 +48,27 @@ export async function runGradle(
     shell: isWin,
   })
 
-  currentProcess.stdout?.on('data', (chunk: Buffer) => {
+  const proc = currentProcess
+  if (!proc) {
+    throw new Error('Failed to spawn Gradle process')
+  }
+  proc.stdout?.on('data', (chunk: Buffer) => {
     onOutput(chunk.toString('utf-8'))
   })
-  currentProcess.stderr?.on('data', (chunk: Buffer) => {
+  proc.stderr?.on('data', (chunk: Buffer) => {
     onOutput(chunk.toString('utf-8'))
   })
-  currentProcess.on('exit', (code) => {
+  proc.on('exit', (code) => {
     currentProcess = null
     onComplete(code ?? 1)
   })
-  currentProcess.on('error', (err) => {
+  proc.on('error', (err) => {
     onOutput(`Error: ${err.message}\n`)
     currentProcess = null
     onComplete(1)
   })
 
-  return { pid: currentProcess.pid ?? -1 }
+  return { pid: proc.pid ?? -1 }
 }
 
 export async function stopGradle(): Promise<void> {

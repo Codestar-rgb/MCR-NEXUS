@@ -137,20 +137,17 @@ export function FunctionEncapsulator() {
   const encapsulateToFunction = useCanvasStore(
     (s) => s.encapsulateToFunction,
   )
-  const encapsulatorRequestCount = useCanvasStore(
-    (s) => s.encapsulatorRequestCount,
+  const encapsulatorDialogOpen = useCanvasStore(
+    (s) => s.encapsulatorDialogOpen,
   )
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [functionName, setFunctionName] = useState('myFunction')
   const [color, setColor] = useState<string>('cyan')
 
-  /* 监听右键菜单的"封装为函数节点"触发 */
-  const lastRequestCount = useRef(0)
+  /* 监听封装对话框打开 */
   useEffect(() => {
-    if (encapsulatorRequestCount === 0) return
-    if (encapsulatorRequestCount === lastRequestCount.current) return
-    lastRequestCount.current = encapsulatorRequestCount
+    if (!encapsulatorDialogOpen) return
     // 仅当选中节点 ≥ 2 时才打开
     const ids =
       selectedNodeIds.length >= 2
@@ -160,15 +157,15 @@ export function FunctionEncapsulator() {
           : []
     if (ids.length < 2) {
       toast.warning('请先选择至少 2 个节点')
+      useCanvasStore.getState().closeEncapsulatorDialog()
       return
     }
-    // 用微任务避免 effect 内同步 setState
     queueMicrotask(() => {
       setFunctionName(`func_${ids.length}`)
       setColor('cyan')
       setDialogOpen(true)
     })
-  }, [encapsulatorRequestCount, selectedNodeIds, groupingSelection])
+  }, [encapsulatorDialogOpen, selectedNodeIds, groupingSelection])
 
   /* 有效的选中节点 ID 列表（selectedNodeIds 优先，否则用 groupingSelection） */
   const effectiveIds = useMemo(() => {

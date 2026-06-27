@@ -80,7 +80,7 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       const entity = await tx.node.create({
         data: {
           project: { connect: { id } },
-          subGraphId: workspace.id,
+          subGraph: { connect: { id: workspace.id } },
           type: 'entity',
           title: String(entityProps.name),
           positionX: 560,
@@ -95,7 +95,7 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       const block = await tx.node.create({
         data: {
           project: { connect: { id } },
-          subGraphId: workspace.id,
+          subGraph: { connect: { id: workspace.id } },
           type: 'block',
           title: String(blockProps.name),
           positionX: 300,
@@ -110,7 +110,7 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       const item = await tx.node.create({
         data: {
           project: { connect: { id } },
-          subGraphId: workspace.id,
+          subGraph: { connect: { id: workspace.id } },
           type: 'item',
           title: String(itemProps.name),
           positionX: 60,
@@ -126,8 +126,8 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       const conn1 = await tx.connection.create({
         data: {
           project: { connect: { id } },
-          sourceNodeId: item.id,
-          targetNodeId: block.id,
+          source: { connect: { id: item.id } },
+          target: { connect: { id: block.id } },
           sourcePort: 'item_out',
           targetPort: 'trigger',
           dataType: 'itemstack',
@@ -138,8 +138,8 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       const conn2 = await tx.connection.create({
         data: {
           project: { connect: { id } },
-          sourceNodeId: block.id,
-          targetNodeId: entity.id,
+          source: { connect: { id: block.id } },
+          target: { connect: { id: entity.id } },
           sourcePort: 'block_out',
           targetPort: 'trigger',
           dataType: 'itemstack',
