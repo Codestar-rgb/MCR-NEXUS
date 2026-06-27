@@ -22,6 +22,7 @@ import * as LucideIcons from 'lucide-react'
 import { getNodeTypeDefinition } from '@/lib/node-system'
 import type { FlowNodeData } from '@/lib/node-system'
 import { useDebugStore } from '@/stores/debug-store'
+import { useBuildStatusStore } from '@/stores/build-status'
 import { cn } from '@/lib/utils'
 import { PortHandle } from './port-handle'
 import { COLOR_CLASSES } from './color-classes'
@@ -68,6 +69,10 @@ function BaseNodeCardImpl({
     executingNodeId === id &&
     (debugStatus === 'running' || debugStatus === 'paused')
 
+  // 构建状态
+  const buildStatus = useBuildStatusStore((s) => s.nodeStatuses[id] ?? 'idle')
+  const isDebugNode = useBuildStatusStore((s) => s.debugPath[s.debugIndex] === id)
+
   const def = getNodeTypeDefinition(data.kind)
   if (!def) return null
 
@@ -79,6 +84,13 @@ function BaseNodeCardImpl({
   const c = getColorClasses(def.color)
   const properties = (data.properties ?? {}) as Record<string, unknown>
 
+  // 构建状态颜色
+  const buildRingClass =
+    buildStatus === 'compiling' ? 'ring-2 ring-amber-400/50' :
+    buildStatus === 'success' ? 'ring-2 ring-emerald-400/40' :
+    buildStatus === 'failed' ? 'ring-2 ring-rose-400/50' : ''
+  const debugRingClass = isDebugNode ? 'ring-2 ring-cyan-400/60 shadow-glow' : ''
+
   return (
     <div
       className={cn(
@@ -87,25 +99,41 @@ function BaseNodeCardImpl({
         selected
           ? cn(c.borderStrong, 'ring-2', c.ring)
           : 'hover:border-opacity-70',
+        buildRingClass,
+        debugRingClass,
         isExecuting && 'nexcube-debug-executing',
         className,
       )}
       style={{ minWidth: def.defaultSize.width }}
     >
-      {/* Task 6-C：选中时 ring 脉冲动画（绝对定位，避免影响布局） */}
+      {/* 选中时 ring 脉冲动画 */}
       {selected && (
         <motion.span
           aria-hidden
           className={cn('pointer-events-none absolute inset-0 rounded-xl ring-2', c.ring)}
           initial={{ opacity: 0.6, scale: 1 }}
           animate={{ opacity: [0.6, 0.2, 0.6], scale: [1, 1.015, 1] }}
-          transition={{
-            duration: 2.4,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
           style={{ willChange: 'transform, opacity' }}
         />
+      )}
+
+      {/* 构建状态指示器（右上角小圆点） */}
+      {buildStatus !== 'idle' && (
+        <div
+          className="absolute right-2 top-2 z-10 flex items-center gap-1"
+          aria-label={`构建状态: ${buildStatus}`}
+        >
+          {buildStatus === 'compiling' && (
+            <div className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+          )}
+          {buildStatus === 'success' && (
+            <div className="h-2 w-2 rounded-full bg-emerald-400" />
+          )}
+          {buildStatus === 'failed' && (
+            <div className="h-2 w-2 rounded-full bg-rose-400" />
+          )}
+        </div>
       )}
       {/* 顶部 header */}
       <div

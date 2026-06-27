@@ -61,6 +61,8 @@ import {
 } from '@/components/ui/tooltip'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useBuildStore, type BuildTask } from '@/stores/build'
+import { useBuildStatusStore } from '@/stores/build-status'
+import { useCanvasStore } from '@/stores/canvas'
 import { simulateBuild, isBuildFailed } from '@/lib/build/gradle-simulator'
 import { executeFixAction } from '@/lib/build/fix-actions'
 import { parseGradleLog } from '@/lib/capabilities/log-parser'
@@ -303,6 +305,14 @@ export function TerminalPanel() {
       setCardsExpanded(false)
       cancelFlagRef.current = false
 
+      // 设置节点构建状态（所有当前工作区节点为 compiling）
+      const canvasState = useCanvasStore.getState()
+      const wsNodes = canvasState.nodes.filter(
+        (n) => n.data.subGraphId === canvasState.activeWorkspaceId,
+      )
+      const { startBuild: startNodeBuild } = useBuildStatusStore.getState()
+      startNodeBuild(wsNodes.map((n) => n.id))
+
       // 输出命令头
       writeLine(`$ ./gradlew ${task}`)
       writeLine('')
@@ -346,6 +356,19 @@ export function TerminalPanel() {
       setProgress(100)
       // 自动展开解析卡片（如果有）
       setCardsExpanded(cards.length > 0)
+
+      // 更新节点构建状态
+      useBuildStatusStore.getState().finishBuild(!failed)
+
+      // 构建失败时逐个标记失败节点（模拟）
+      if (failed && wsNodes.length > 0) {
+        // 随机标记 1-2 个节点为失败
+        const failCount = Math.min(Math.ceil(wsNodes.length * 0.3), 2)
+        for (let i = 0; i < failCount; i++) {
+          const node = wsNodes[Math.floor(Math.random() * wsNodes.length)]
+          useBuildStatusStore.getState().setNodeStatus(node.id, 'failed')
+        }
+      }
 
       // 持久化到 DB
       try {
