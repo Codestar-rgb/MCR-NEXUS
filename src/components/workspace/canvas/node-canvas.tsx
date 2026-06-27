@@ -51,6 +51,7 @@ import { CanvasContextMenu } from '@/components/workspace/canvas/canvas-context-
 import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
 import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
 import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
+import { RecommendationBubble } from '@/components/workspace/canvas/recommendation-bubble'
 import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
 import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
 import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
@@ -110,6 +111,31 @@ function NodeCanvasInner() {
   const setContextMenu = useCanvasStore((s) => s.setContextMenu)
   const closeContextMenu = useCanvasStore((s) => s.closeContextMenu)
   const selectNode = useCanvasStore((s) => s.selectNode)
+
+  /* AI 推荐气泡：追踪最后创建的节点 */
+  const prevNodeCountRef = React.useRef(nodes.length)
+  const [lastCreated, setLastCreated] = React.useState<{
+    id: string | null
+    kind: string | null
+    name: string | null
+    position: { x: number; y: number } | null
+  }>({ id: null, kind: null, name: null, position: null })
+
+  React.useEffect(() => {
+    if (nodes.length > prevNodeCountRef.current) {
+      // 新增了节点，找最新的
+      const newest = nodes[nodes.length - 1]
+      if (newest) {
+        setLastCreated({
+          id: newest.id,
+          kind: newest.data.kind,
+          name: newest.data.title,
+          position: newest.position,
+        })
+      }
+    }
+    prevNodeCountRef.current = nodes.length
+  }, [nodes])
   const isInitialized = useCanvasStore((s) => s.isInitialized)
   const activeWorkspaceId = useCanvasStore((s) => s.activeWorkspaceId)
   const openFunctionDetail = useCanvasStore((s) => s.openFunctionDetail)
@@ -410,6 +436,14 @@ function NodeCanvasInner() {
 
       {/* 顶部居中工具栏（浮动，玻璃拟态） */}
       <CanvasToolbar />
+
+      {/* AI 推荐气泡（右上角，创建节点后弹出） */}
+      <RecommendationBubble
+        lastCreatedNodeId={lastCreated.id}
+        lastCreatedNodeKind={lastCreated.kind}
+        lastCreatedNodeName={lastCreated.name}
+        lastCreatedNodePosition={lastCreated.position}
+      />
 
       {/* 性能指示器（右下角，FPS + 模式提示，精致玻璃拟态） */}
       <div className="pointer-events-none absolute bottom-3 right-3 z-20 flex items-center gap-2">
