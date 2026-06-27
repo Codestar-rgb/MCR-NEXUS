@@ -1140,6 +1140,30 @@ function generateItemAdvancement(modId: string, node: FlowNode): GeneratedFile {
   }
 }
 
+/**
+ * 生成物品标签文件（tags/items/<modId>.json）
+ *
+ * 将所有模组物品归入一个标签 `#<modId>:items`，
+ * 便于其他 mod 引用或数据包扩展。
+ */
+function generateItemTagsFile(modId: string, nodes: FlowNode[]): GeneratedFile {
+  const itemRefs = nodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    return `${modId}:${registryId}`
+  })
+
+  const content = JSON.stringify({
+    replace: false,
+    values: itemRefs,
+  }, null, 2)
+
+  return {
+    filePath: `src/main/resources/data/${modId}/tags/items/${modId}_items.json`,
+    content,
+    language: 'json',
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* 主入口                                                              */
 /* ------------------------------------------------------------------ */
@@ -1269,6 +1293,11 @@ export function generateProjectCode(
   )
   for (const item of itemNodes) {
     files.push(generateItemAdvancement(modId, item))
+  }
+
+  // 9. 物品/方块标签（tags）— 便于其他 mod 引用
+  if (itemNodes.length > 0) {
+    files.push(generateItemTagsFile(modId, itemNodes))
   }
 
   return {

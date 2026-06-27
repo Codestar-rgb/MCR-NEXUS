@@ -19,6 +19,9 @@ import type { NodeTypes } from '@xyflow/react'
 import { EntityNodeCard } from './entity-node-card'
 import { BlockNodeCard } from './block-node-card'
 import { ItemNodeCard } from './item-node-card'
+import { EquipmentNodeCard } from './equipment-node-card'
+import { WeaponNodeCard } from './weapon-node-card'
+import { FoodNodeCard } from './food-node-card'
 import { GroupNodeCard } from './group-node-card'
 import { BlackboxNodeCard } from './blackbox-node-card'
 import { GenericNodeCard } from './generic-node-card'
@@ -30,10 +33,10 @@ export const nodeTypes = {
   entity: EntityNodeCard,
   block: BlockNodeCard,
   item: ItemNodeCard,
-  // 阶段 8 新增核心节点（用 GenericNodeCard，基于 BaseNodeCard）
-  equipment: GenericNodeCard,
-  weapon: GenericNodeCard,
-  food: GenericNodeCard,
+  // 阶段 8 新增核心节点（专用卡片）
+  equipment: EquipmentNodeCard,
+  weapon: WeaponNodeCard,
+  food: FoodNodeCard,
   biome: GenericNodeCard,
   structure: GenericNodeCard,
   dimension: GenericNodeCard,
