@@ -41,6 +41,10 @@ import { WorkspacePanel } from '@/components/workspace/workspace-panel'
 import { GlobalSearch } from '@/components/workspace/global-search'
 import { StatusBar } from '@/components/workspace/status-bar'
 import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
+import { CommandPalette } from '@/components/workspace/command-palette'
+import { autoLayout, type LayoutType } from '@/lib/auto-layout'
+import { useCanvasStore } from '@/stores/canvas'
+import { toast } from 'sonner'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
@@ -90,17 +94,47 @@ export function WorkspaceShell() {
   /* 全局搜索（Ctrl+P） */
   const [searchOpen, setSearchOpen] = React.useState(false)
 
+  /* 命令面板（Ctrl+Shift+P） */
+  const [commandOpen, setCommandOpen] = React.useState(false)
+  const openSettings = useWorkspaceStore((s) => s.openSettings)
+
   /* 代码预览面板（仅节点模式显示） */
   const setMode = useWorkspaceStore((s) => s.setMode)
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-        e.preventDefault()
-        setSearchOpen((v) => !v)
+        if (e.shiftKey) {
+          e.preventDefault()
+          setCommandOpen((v) => !v)
+        } else {
+          e.preventDefault()
+          setSearchOpen((v) => !v)
+        }
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
+  }, [])
+
+  /* 自动布局 */
+  const handleAutoLayout = React.useCallback((type: LayoutType) => {
+    const state = useCanvasStore.getState()
+    const activeWs = state.activeWorkspaceId
+    const wsNodes = state.nodes.filter((n) => n.data.subGraphId === activeWs)
+    const wsEdges = state.edges.filter((e) => {
+      const s = state.nodes.find((n) => n.id === e.source)
+      const t = state.nodes.find((n) => n.id === e.target)
+      return s?.data.subGraphId === activeWs && t?.data.subGraphId === activeWs
+    })
+    if (wsNodes.length === 0) {
+      toast.warning('当前工作区没有节点')
+      return
+    }
+    const positions = autoLayout(wsNodes, wsEdges, type)
+    positions.forEach((pos) => {
+      state.updateNode(pos.id, { position: { x: pos.x, y: pos.y } })
+    })
+    toast.success(`已按${type === 'grid' ? '网格' : type === 'spiral' ? '螺旋' : '树形'}排列 ${positions.length} 个节点`)
   }, [])
 
   const breakpoint = useBreakpoint()
@@ -309,6 +343,17 @@ export function WorkspaceShell() {
 
       {/* 全局搜索（Ctrl+P） */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+      {/* 命令面板（Ctrl+Shift+P） */}
+      <CommandPalette
+        open={commandOpen}
+        onClose={() => setCommandOpen(false)}
+        onCreateNode={() => toast.info('请在画布上右键创建节点')}
+        onAutoLayout={handleAutoLayout}
+        onSave={() => toast.success('项目已保存（自动同步）')}
+        onExport={() => toast.info('请在终端区点击导出')}
+        onOpenSettings={openSettings}
+      />
     </TooltipProvider>
   )
 }
