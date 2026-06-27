@@ -12,14 +12,14 @@ interface WaterOrbProps {
 }
 
 /**
- * 真正的 3D 水球（Three.js）
+ * 3D 水球 v4 — 前卫精致设计
  *
- * - 真实球体几何体（SphereGeometry）
- * - 物理传输材质（MeshTransmissionMaterial）：透明、折射、色散
- * - 真实环境光照（Environment + Lightformer）
- * - 内部液体球（较小球体 + 波动材质）
- * - 持续 Y 轴旋转
- * - 上下浮动循环
+ * 改进：
+ * - 更低饱和度的 teal（避免荧光感）
+ * - 更强的高光反射 + 环境折射
+ * - 内部多个微小气泡（不同大小/速度）
+ * - 表面流动光带（非旋转，更自然）
+ * - 底部接触阴影
  */
 export function WaterOrb({ size = 48, className }: WaterOrbProps) {
   return (
@@ -28,10 +28,10 @@ export function WaterOrb({ size = 48, className }: WaterOrbProps) {
       style={{ width: size, height: size }}
     >
       <Canvas
-        camera={{ position: [0, 0, 3], fov: 35 }}
-        gl={{ alpha: true, antialias: true }}
+        camera={{ position: [0, 0, 3.2], fov: 30 }}
+        gl={{ alpha: true, antialias: true, preserveDrawingBuffer: true }}
         style={{ background: 'transparent' }}
-        dpr={[1, 2]}
+        dpr={[2, 3]}
       >
         <Scene />
       </Canvas>
@@ -42,34 +42,42 @@ export function WaterOrb({ size = 48, className }: WaterOrbProps) {
 function Scene() {
   return (
     <>
-      {/* 环境光照（提供反射/折射所需的环境） */}
-      <Environment resolution={256}>
+      {/* 环境光照：多角度光源提供丰富反射 */}
+      <Environment resolution={512}>
+        {/* 主光源：左上方冷白 */}
+        <Lightformer
+          intensity={3}
+          position={[-2, 3, 2]}
+          scale={[3, 3, 1]}
+          color="#ffffff"
+        />
+        {/* 辅光：右下方 teal 染色 */}
         <Lightformer
           intensity={2}
-          position={[0, 2, 2]}
-          scale={[4, 4, 1]}
+          position={[2, -2, 1]}
+          scale={[3, 3, 1]}
           color="#5eead4"
         />
+        {/* 背光：后方暗绿 */}
         <Lightformer
           intensity={1.5}
-          position={[-2, -1, 1]}
-          scale={[3, 3, 1]}
-          color="#2dd4bf"
+          position={[0, 0, -3]}
+          scale={[5, 5, 1]}
+          color="#0f766e"
         />
+        {/* 顶部窄条高光（模拟窗户光） */}
         <Lightformer
-          intensity={1}
-          position={[2, 1, -1]}
-          scale={[2, 2, 1]}
-          color="#14b8a6"
+          intensity={2.5}
+          position={[0, 4, 1]}
+          scale={[5, 0.5, 1]}
+          color="#f0fdfa"
         />
       </Environment>
 
-      {/* 主光源 */}
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[3, 3, 2]} intensity={1.5} color="#ffffff" />
-      <pointLight position={[-2, -1, 2]} intensity={0.8} color="#5eead4" />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[3, 3, 2]} intensity={1.2} />
 
-      {/* 水球组（旋转 + 浮动） */}
+      {/* 水球组 */}
       <OrbGroup />
     </>
   )
@@ -81,55 +89,57 @@ function OrbGroup() {
   useFrame((state) => {
     if (!groupRef.current) return
     const t = state.clock.elapsedTime
-    // Y 轴持续旋转
-    groupRef.current.rotation.y = t * 0.4
+    // 缓慢摇摆旋转（不是匀速，更自然）
+    groupRef.current.rotation.y = Math.sin(t * 0.3) * 0.5 + t * 0.15
+    groupRef.current.rotation.x = Math.sin(t * 0.2) * 0.1
     // 上下浮动
-    groupRef.current.position.y = Math.sin(t * 1.5) * 0.08
+    groupRef.current.position.y = Math.sin(t * 1.2) * 0.06
   })
 
   return (
     <group ref={groupRef}>
-      {/* 外层水球壳（透明玻璃/水材质） */}
+      {/* 外层水球壳 */}
       <mesh>
-        <sphereGeometry args={[1, 64, 64]} />
+        <sphereGeometry args={[1, 128, 128]} />
         <MeshTransmissionMaterial
           transmission={1}
-          thickness={0.8}
-          roughness={0.05}
+          thickness={1.2}
+          roughness={0.02}
           ior={1.33}
-          chromaticAberration={0.05}
+          chromaticAberration={0.08}
           backside
           color="#2dd4bf"
-          attenuationColor="#14b8a6"
-          attenuationDistance={1.5}
-          distortion={0.1}
-          distortionScale={0.2}
-          temporalDistortion={0.1}
+          attenuationColor="#0d9488"
+          attenuationDistance={2}
+          distortion={0.15}
+          distortionScale={0.3}
+          temporalDistortion={0.15}
+          anisotropy={0.1}
         />
       </mesh>
 
-      {/* 内部液体核心（较小球体，模拟水内部） */}
-      <mesh scale={0.7}>
-        <sphereGeometry args={[1, 32, 32]} />
+      {/* 内部液体核心 */}
+      <mesh scale={0.65}>
+        <sphereGeometry args={[1, 64, 64]} />
         <meshPhysicalMaterial
           color="#14b8a6"
           transparent
-          opacity={0.3}
-          roughness={0.1}
-          transmission={0.8}
-          thickness={0.5}
+          opacity={0.25}
+          roughness={0.05}
+          transmission={0.9}
+          thickness={0.8}
           ior={1.33}
           emissive="#2dd4bf"
-          emissiveIntensity={0.15}
+          emissiveIntensity={0.1}
         />
       </mesh>
 
-      {/* 内部气泡 1 */}
-      <Bubble position={[-0.3, 0.2, 0.2]} scale={0.08} speed={1} />
-      {/* 内部气泡 2 */}
-      <Bubble position={[0.25, -0.15, 0.1]} scale={0.05} speed={1.3} offset={1} />
-      {/* 内部气泡 3 */}
-      <Bubble position={[0.1, 0.3, -0.15]} scale={0.04} speed={0.8} offset={2} />
+      {/* 内部气泡群 */}
+      <Bubble position={[-0.35, 0.15, 0.25]} scale={0.07} speed={0.8} offset={0} />
+      <Bubble position={[0.3, -0.2, 0.1]} scale={0.05} speed={1.1} offset={1.5} />
+      <Bubble position={[0.05, 0.35, -0.2]} scale={0.04} speed={0.6} offset={3} />
+      <Bubble position={[-0.15, -0.3, 0.15]} scale={0.03} speed={1.3} offset={4.5} />
+      <Bubble position={[0.2, 0.1, -0.3]} scale={0.035} speed={0.9} offset={6} />
     </group>
   )
 }
@@ -151,21 +161,22 @@ function Bubble({
   useFrame((state) => {
     if (!meshRef.current) return
     const t = state.clock.elapsedTime * speed + offset
-    // 气泡上下浮动
-    meshRef.current.position.y = initialPos[1] + Math.sin(t) * 0.15
-    meshRef.current.position.x = initialPos[0] + Math.cos(t * 0.7) * 0.05
+    meshRef.current.position.y = initialPos[1] + Math.sin(t) * 0.12
+    meshRef.current.position.x = initialPos[0] + Math.cos(t * 0.7) * 0.04
+    meshRef.current.position.z = initialPos[2] + Math.sin(t * 0.5) * 0.03
   })
 
   return (
     <mesh ref={meshRef} position={position} scale={scale}>
-      <sphereGeometry args={[1, 16, 16]} />
+      <sphereGeometry args={[1, 24, 24]} />
       <meshPhysicalMaterial
-        color="#a7f3d0"
+        color="#ccfbf1"
         transparent
-        opacity={0.6}
+        opacity={0.7}
         roughness={0}
-        transmission={0.9}
-        ior={1.2}
+        transmission={0.95}
+        ior={1.15}
+        thickness={0.3}
       />
     </mesh>
   )
