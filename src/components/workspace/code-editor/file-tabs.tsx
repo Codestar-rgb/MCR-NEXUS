@@ -40,6 +40,10 @@ export interface OpenFile {
   isDirty?: boolean
   /** 是否只读 */
   isReadOnly?: boolean
+  /** 文件内容 */
+  value?: string
+  /** 关联的节点 ID（双向联动） */
+  linkedNodeId?: string
 }
 
 export interface FileTabsProps {

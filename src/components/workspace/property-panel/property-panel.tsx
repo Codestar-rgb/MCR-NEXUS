@@ -12,6 +12,7 @@
  * - 底部：贴图纹理拖拽上传区（TextureField 已在 PropertyForm 内，此处保留快捷入口）
  */
 
+import * as React from 'react'
 import { useCallback, useMemo, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { MousePointerClick } from 'lucide-react'

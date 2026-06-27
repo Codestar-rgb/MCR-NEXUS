@@ -21,6 +21,7 @@ export type PortDataType =
   | 'number' // 数值
   | 'string' // 字符串
   | 'itemstack' // 物品堆
+  | 'any' // 万能类型
 
 /** 端口类型定义 */
 export interface PortTypeDefinition {
@@ -73,6 +74,14 @@ export const PORT_TYPES: Record<PortDataType, PortTypeDefinition> = {
     hex: '#8b5cf6',
     icon: 'Package',
     description: '物品堆叠引用',
+  },
+  any: {
+    type: 'any',
+    label: '任意',
+    color: 'slate',
+    hex: '#94a3b8',
+    icon: 'Circle',
+    description: '任意类型',
   },
 }
 
