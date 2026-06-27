@@ -52,6 +52,7 @@ import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
 import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
 import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
 import { RecommendationBubble } from '@/components/workspace/canvas/recommendation-bubble'
+import { AlignmentLines } from '@/components/workspace/canvas/alignment-lines'
 import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
 import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
 import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
@@ -433,6 +434,9 @@ function NodeCanvasInner() {
       </ReactFlow>
       </motion.div>
       </AnimatePresence>
+
+      {/* 节点对齐辅助线（拖拽时显示） */}
+      <AlignmentLines />
 
       {/* 顶部居中工具栏（浮动，玻璃拟态） */}
       <CanvasToolbar />
