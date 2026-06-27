@@ -1983,3 +1983,66 @@ Stage Summary:
 - 连接反馈从静默拒绝变为具体原因提示
 - 快捷键从谎言变为全部真实绑定
 - 已推送 GitHub（57809a7）
+
+---
+Task ID: R7 (产品改进第 7 轮 — 7 大核心改进)
+Agent: main (Z.ai Code)
+Task: 以产品经理视角全面审计 + 执行 7 项改进
+
+Work Log:
+- 子代理全面产品审计（ad5f0eb1）发现 10 大问题，按优先级分 3 批次
+
+A2: Error Boundary（防崩溃）
+- app/error.tsx：路由级，重试+返回主页+错误详情（stack trace）
+- app/global-error.tsx：根级，内联 HTML（不依赖 React）
+- 验证：CodePreviewPanel 崩溃时 error boundary 正常捕获，用户可恢复
+
+A3: 激活插件系统（从死代码变为可用）
+- plugins/index.ts 初始化模块 + PluginInit 客户端组件
+- layout.tsx 挂载 PluginInit
+- getNodeTypeDefinition/getCreatableNodeTypes/getNodeTypesByCategory 合并插件类型
+- getTemplateById 检查插件模板
+- code-generator.ts default case 调用 getCustomCodeGenerator
+- node-factory.ts createDefaultProperties 使用 getNodeTypeDefinition
+- nodeTypes 注册表添加 spell → GenericNodeCard
+- magic-system 插件加载并在设置→插件面板显示（1 节点/1 模板/1 codegen）
+
+B1: 修复代码编辑器两个 bug
+- snippets provider 死代码：completionProviderRegistered 赋值后才检查 → 永远 false
+  修复：使用独立 snippetsProviderRegistered 标志
+- scroll-to-node 事件无监听者：Monaco handleMount 添加 window event listener
+  滚动到 class 声明行 + 高亮
+- CodePreviewPanel filePath undefined 防护
+
+B2: 终端命令接入真实数据
+- nodes list/count/info 从 canvas store 实时读取（原硬编码 3 个节点）
+- nodes info <id|name|registryId> 显示完整节点详情+属性
+- 新增 edges list/count 命令
+- 帮助文本更新
+
+A1: 统一代码生成管线
+- 导出 API 合并骨架文件 + 节点 Java 文件（code-generator.ts 支持 11 种+插件）
+- 预览=导出一致性：equipment/weapon/food/biome/structure/dimension/potion
+  不再被静默丢弃
+- GET（预览）+ POST（下载）都使用合并管线
+
+B3: 构建失败节点精准归因
+- 替换随机 1-2 节点失败为日志文件路径映射
+- 解析错误日志的 .java 文件路径 → 通过 className 映射到节点
+- 无文件匹配时 fallback 到第一个节点
+
+Agent Browser 验收：
+- 插件面板显示"魔法系统扩展" 1 节点/1 模板/1 codegen ✅
+- 添加节点弹出面板包含"魔法技能"（spell）✅
+- 创建 spell 节点成功（3→4 节点，无崩溃）✅
+- Error boundary 捕获 CodePreviewPanel 崩溃，用户可重试 ✅
+- Lint: 0 errors / 0 warnings ✅
+
+Stage Summary:
+- 7 项改进全部完成 ✅
+- 产品从"脚手架"向"可扩展架构"演进
+- 插件系统从死代码变为实际可用（spell 节点可创建+编辑+生成代码）
+- 代码生成管线统一（预览=导出）
+- 应用崩溃不再白屏（Error Boundary）
+- 终端从演示道具变为实用工具
+- 已推送 GitHub（95c4e4a）
