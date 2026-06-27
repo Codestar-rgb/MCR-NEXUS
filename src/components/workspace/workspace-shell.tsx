@@ -40,6 +40,7 @@ import { TopDashboard } from '@/components/workspace/top-dashboard'
 import { WorkspacePanel } from '@/components/workspace/workspace-panel'
 import { GlobalSearch } from '@/components/workspace/global-search'
 import { StatusBar } from '@/components/workspace/status-bar'
+import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
@@ -88,6 +89,9 @@ export function WorkspaceShell() {
 
   /* 全局搜索（Ctrl+P） */
   const [searchOpen, setSearchOpen] = React.useState(false)
+
+  /* 代码预览面板（仅节点模式显示） */
+  const setMode = useWorkspaceStore((s) => s.setMode)
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
@@ -189,8 +193,16 @@ export function WorkspaceShell() {
                         transition={{ duration: 0.15 }}
                         className="absolute inset-0"
                       >
-                        {/* Task 1-D 节点画布占位（React Flow v12 + 浮动工程卡 + 任务通知） */}
-                        <NodeCanvasPlaceholder />
+                        {/* 节点画布 + 代码预览侧栏 */}
+                        <div className="flex h-full">
+                          <div className="min-w-0 flex-1">
+                            <NodeCanvasPlaceholder />
+                          </div>
+                          {/* 实时代码预览（仅桌面端） */}
+                          {breakpoint !== 'mobile' && (
+                            <CodePreviewPanel onExpand={() => setMode('code')} />
+                          )}
+                        </div>
                       </motion.div>
                     ) : (
                       <motion.div
