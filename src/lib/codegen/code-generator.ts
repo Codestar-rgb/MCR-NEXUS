@@ -279,6 +279,234 @@ ${code}
 }
 
 /**
+ * 生成装备类（ArmorItem）
+ */
+function generateEquipmentFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const className = toClassName(String(p.registryId ?? 'new_armor'))
+  const slot = p.equipmentSlot === 'head' ? 'HEAD' : p.equipmentSlot === 'chest' ? 'CHEST' : p.equipmentSlot === 'legs' ? 'LEGS' : 'FEET'
+
+  const content = `package com.example.mod.item;
+
+import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+
+/**
+ * ${p.name ?? 'Custom Armor'} - 由 NexCube 自动生成
+ * 装备槽: ${p.equipmentSlot}
+ * 护甲值: ${p.armorValue}
+ * 韧性: ${p.armorToughness}
+ */
+public class ${className} extends ArmorItem {
+    public ${className}() {
+        super(new ArmorMaterial(
+            ${p.armorValue}F,              // protection
+            ${p.armorToughness}F,          // toughness
+            ${p.knockbackResistance}F,     // knockback resistance
+            SoundEvents.ARMOR_EQUIP_DIAMOND,
+            ${p.enchantability},            // enchantability
+            () -> new ItemStack(net.minecraft.world.item.Items.DIAMOND), // repair material
+            () -> "${p.registryId}"         // name
+        ), ArmorItem.Type.${slot}, new Properties()
+            .durability(${p.durability})
+            .rarity(Rarity.EPIC)
+        );
+    }
+}
+`
+  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成武器类（SwordItem / AxeItem）
+ */
+function generateWeaponFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const className = toClassName(String(p.registryId ?? 'new_weapon'))
+  const tier = p.weaponType === 'bow' ? 'Tiers.WOOD' : p.weaponType === 'axe' ? 'Tiers.DIAMOND' : 'Tiers.DIAMOND'
+
+  const content = `package com.example.mod.item;
+
+import net.minecraft.world.item.SwordItem;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.world.item.Rarity;
+
+/**
+ * ${p.name ?? 'Custom Weapon'} - 由 NexCube 自动生成
+ * 类型: ${p.weaponType}
+ * 攻击伤害: ${p.attackDamage}
+ * 攻击速度: ${p.attackSpeed}
+ */
+public class ${className} extends SwordItem {
+    public ${className}() {
+        super(${tier}, ${p.attackDamage}, ${p.attackSpeed}F, new Properties()
+            .durability(${p.durability})
+            .rarity(Rarity.RARE)
+            .enchantable(${p.enchantability})
+        );
+    }
+}
+`
+  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成食物类（Item with FoodProperties）
+ */
+function generateFoodFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const className = toClassName(String(p.registryId ?? 'new_food'))
+
+  const foodProps = p.isFood
+    ? `.food(new net.minecraft.world.food.FoodProperties.Builder()
+            .nutrition(${p.nutrition})
+            .saturationMod(${p.saturation}F)
+            ${p.isMeat ? '.meat()' : p.fastFood ? '.fast()' : ''}
+            .build())`
+    : ''
+
+  const content = `package com.example.mod.item;
+
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
+
+/**
+ * ${p.name ?? 'Custom Food'} - 由 NexCube 自动生成
+ * 饱食度: ${p.nutrition}
+ * 饱和度: ${p.saturation}
+ */
+public class ${className} extends Item {
+    public ${className}() {
+        super(new Properties()
+            .stacksTo(${p.maxStackSize})
+            .rarity(Rarity.${String(p.rarity ?? 'common').toUpperCase()})
+            ${foodProps}
+        );
+    }
+}
+`
+  return { filePath: `src/main/java/com/example/mod/item/${className}.java`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成群系数据包文件（biome.json）
+ */
+function generateBiomeFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const id = String(p.registryId ?? 'new_biome')
+
+  const content = JSON.stringify({
+    type: 'minecraft:biome',
+    id,
+    name: p.name ?? id,
+    temperature: p.temperature ?? 0.5,
+    downfall: p.downfall ?? 0.5,
+    precipitation: p.precipitation ?? 'rain',
+    category: p.category ?? 'plains',
+    depth: p.depth ?? 0.125,
+    scale: p.scale ?? 0.05,
+    effects: {
+      water_color: parseInt(String(p.waterColor ?? '3F76E4'), 16),
+      water_fog_color: parseInt(String(p.waterFogColor ?? '050533'), 16),
+      foliage_color: parseInt(String(p.foliageColor ?? '48B518'), 16),
+      grass_color: parseInt(String(p.grassColor ?? '5A7D31'), 16),
+    },
+  }, null, 2)
+
+  return { filePath: `src/main/resources/data/${id}/biome/${id}.json`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成结构数据包文件（structure.json）
+ */
+function generateStructureFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const id = String(p.registryId ?? 'new_structure')
+
+  const content = JSON.stringify({
+    type: 'minecraft:structure',
+    id,
+    name: p.name ?? id,
+    structure_type: p.structureType ?? 'village',
+    biomes: String(p.biomeList ?? 'minecraft:plains').split(',').map((s: string) => s.trim()),
+    spawn_chance: p.spawnChance ?? 0.01,
+    min_distance: p.minDistance ?? 32,
+    max_distance: p.maxDistance ?? 128,
+  }, null, 2)
+
+  return { filePath: `src/main/resources/data/${id}/structure/${id}.json`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成维度类型文件（dimension_type.json）
+ */
+function generateDimensionFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const id = String(p.registryId ?? 'new_dimension')
+
+  const content = JSON.stringify({
+    type: 'minecraft:dimension_type',
+    id,
+    name: p.name ?? id,
+    has_skylight: p.hasSkyLight ?? true,
+    has_ceiling: p.hasCeiling ?? false,
+    ultrawarm: p.ultrawarm ?? false,
+    natural: p.natural ?? true,
+    coordinate_scale: p.coordinateScale ?? 1.0,
+    height: p.height ?? 384,
+    min_y: p.minY ?? -64,
+    bed_works: p.bedWorks ?? true,
+    piglin_safe: p.piglinSafe ?? false,
+    respawn_anchor_works: p.respawnAnchorWorks ?? false,
+    has_raids: p.hasRaids ?? true,
+    monster_spawn_light_level: 7,
+    monster_spawn_block_light_limit: 0,
+    gravity: p.gravity ?? 0.08,
+    environment: p.environment ?? 'normal',
+  }, null, 2)
+
+  return { filePath: `src/main/resources/data/${id}/dimension_type/${id}.json`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成药水效果类（MobEffect）
+ */
+function generatePotionFile(node: FlowNode): GeneratedFile | null {
+  const p = node.data.properties ?? {}
+  const className = toClassName(String(p.registryId ?? 'new_effect'))
+
+  const content = `package com.example.mod.effect;
+
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+
+/**
+ * ${p.name ?? 'Custom Effect'} - 由 NexCube 自动生成
+ * 效果类型: ${p.effectType}
+ * 持续时间: ${p.duration} tick
+ * 等级: ${p.amplifier}
+ */
+public class ${className} extends MobEffect {
+    public ${className}() {
+        super(${p.isBeneficial ? 'MobEffectCategory.BENEFICIAL' : 'MobEffectCategory.HARMFUL'},
+              ${parseInt(String(p.color ?? '820AC'), 16)});
+    }
+
+    @Override
+    public boolean isDurationEffectTick(int duration, int amplifier) {
+        return duration > 0;
+    }
+}
+`
+  return { filePath: `src/main/java/com/example/mod/effect/${className}.java`, content, linkedNodeId: node.id }
+}
+
+/**
  * 生成主 Mod 类（@Mod 注解，注册入口）
  */
 function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
@@ -286,7 +514,6 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   const registryLines: string[] = []
 
   for (const node of nodes) {
-    if (node.data.subGraphId) continue
     const kind = node.data.kind
     const registryId = getStr(node, 'registryId', node.id)
     const className = toClassName(registryId)
@@ -300,6 +527,27 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
     } else if (kind === 'item') {
       registryLines.push(`        // 物品：${node.data.title} (${node.id})`)
       registryLines.push(`        // REGISTER_ITEM(${className}Item, "${registryId}");`)
+    } else if (kind === 'equipment') {
+      registryLines.push(`        // 装备：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
+    } else if (kind === 'weapon') {
+      registryLines.push(`        // 武器：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
+    } else if (kind === 'food') {
+      registryLines.push(`        // 食物：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
+    } else if (kind === 'biome') {
+      registryLines.push(`        // 群系：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_BIOME(${registryId});`)
+    } else if (kind === 'structure') {
+      registryLines.push(`        // 结构：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_STRUCTURE(${registryId});`)
+    } else if (kind === 'dimension') {
+      registryLines.push(`        // 维度：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_DIMENSION(${registryId});`)
+    } else if (kind === 'potion') {
+      registryLines.push(`        // 药水效果：${node.data.title} (${node.id})`)
+      registryLines.push(`        // REGISTER_EFFECT(${className}, "${registryId}");`)
     }
   }
 
@@ -310,7 +558,7 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * NexCube 自动生成的主 Mod 类
  * mod_id: ${modId}
- * 节点数量: ${nodes.filter((n) => !n.data.subGraphId).length}
+ * 节点数量: ${nodes.length}
  */
 @Mod("${modId}")
 public class ${modClassName} {
@@ -377,8 +625,8 @@ export function generateProjectCode(
 
   // 2. 每个主画布节点 → 一个 Java 文件
   for (const node of nodes) {
-    // 跳过子图节点（属于函数节点内部）
-    if (node.data.subGraphId) continue
+    // 跳过子节点逻辑节点（属于行为逻辑编辑器，不生成顶层文件）
+    // 但工作区节点（type='workspace' 的 subGraphId）应该生成
 
     let file: GeneratedFile | null = null
     switch (node.data.kind) {
@@ -390,6 +638,27 @@ export function generateProjectCode(
         break
       case 'item':
         file = generateItemFile(node)
+        break
+      case 'equipment':
+        file = generateEquipmentFile(node)
+        break
+      case 'weapon':
+        file = generateWeaponFile(node)
+        break
+      case 'food':
+        file = generateFoodFile(node)
+        break
+      case 'biome':
+        file = generateBiomeFile(node)
+        break
+      case 'structure':
+        file = generateStructureFile(node)
+        break
+      case 'dimension':
+        file = generateDimensionFile(node)
+        break
+      case 'potion':
+        file = generatePotionFile(node)
         break
       case 'blackbox':
         file = generateBlackboxFile(node)

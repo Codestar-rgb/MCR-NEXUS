@@ -332,7 +332,7 @@ function NodeCanvasInner() {
         onPaneContextMenu={onPaneContextMenu}
         onNodeDragStop={onNodeDragStop}
         nodesDraggable={perfConfig.nodesDraggable}
-        onlyRenderVisibleElements={false}
+        onlyRenderVisibleElements={nodes.length > 100}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         minZoom={0.05}
