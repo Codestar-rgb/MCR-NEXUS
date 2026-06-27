@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { HomePageV4 } from '@/components/home/home-page-v4'
+import { HomePageV5 } from '@/components/home/home-page-v5'
 import { ProjectWizard } from '@/components/home/project-wizard'
 import { ImportDialog } from '@/components/home/import-dialog'
 import { WorkspaceShell } from '@/components/workspace/workspace-shell'
@@ -58,7 +58,7 @@ export default function Home() {
 
   return (
     <>
-      <HomePageV4 onCreate={handleCreate} onOpen={handleOpen} onImport={handleImport} />
+      <HomePageV5 onCreate={handleCreate} onOpen={handleOpen} onImport={handleImport} />
       <ProjectWizard
         open={wizardOpen}
         onOpenChange={setWizardOpen}
