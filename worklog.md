@@ -2221,3 +2221,39 @@ Stage Summary:
 - 导出后有完整构建指引，用户知道下一步该做什么
 - 13 种节点类型全部有正确 codegen（11 内置 + spell + recipe）
 - 已推送 GitHub（1edd7f7）
+
+---
+Task ID: R11 (配方可视化 + 数据包 + 搜索增强)
+Agent: main (Z.ai Code)
+Task: 配方节点可视化预览 + 战利品表/进度生成 + 搜索增强
+
+Work Log:
+R1: 配方节点可视化预览
+- 新建 RecipeNodeCard 专用卡片（替代 GenericNodeCard）
+- 3 种可视化模式：
+  * Crafting：3x3 合成网格 + 箭头 + 产物（带数量）
+  * Smelting/Blasting/Smoking：输入 → 火焰图标 → 产物 + XP/时间
+  * Stonecutting：输入 → 剪刀图标 → 产物
+- 折叠摘要显示 CookingPot 图标 + 产物 + recipeType
+- 属性面板 TYPE_LABEL/TYPE_COLOR 添加 recipe
+
+R3: 数据包生成器（loot_tables + advancements）
+- generateBlockLootTable：方块掉落自身（dropCount 控制）
+  → data/<modId>/loot_tables/blocks/<id>.json
+- generateItemAdvancement：获取物品触发进度（toast 通知）
+  → data/<modId>/advancements/<id>.json
+  trigger: inventory_changed, show_toast: true
+- 自动为所有 block/item/equipment/weapon/food 节点生成
+
+R4: 搜索增强
+- 搜索范围扩展：title + kind + registryId + 属性值（字符串/数字）
+- 结果上限 8 → 50（避免静默截断）
+- 底部统计：显示"找到 N 个结果"或"显示 M / N 个结果"
+- 结果项显示 kind + registryId 副标题
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 配方节点从纯文字描述提升为 3 种可视化预览
+- 导出 ZIP 现在包含完整数据包：loot_tables + advancements
+- 搜索从"仅标题"提升为"全属性搜索"
+- 已推送 GitHub（db8a64d）
