@@ -22,6 +22,10 @@ import { ItemNodeCard } from './item-node-card'
 import { EquipmentNodeCard } from './equipment-node-card'
 import { WeaponNodeCard } from './weapon-node-card'
 import { FoodNodeCard } from './food-node-card'
+import { BiomeNodeCard } from './biome-node-card'
+import { StructureNodeCard } from './structure-node-card'
+import { DimensionNodeCard } from './dimension-node-card'
+import { PotionNodeCard } from './potion-node-card'
 import { GroupNodeCard } from './group-node-card'
 import { BlackboxNodeCard } from './blackbox-node-card'
 import { GenericNodeCard } from './generic-node-card'
@@ -37,10 +41,10 @@ export const nodeTypes = {
   equipment: EquipmentNodeCard,
   weapon: WeaponNodeCard,
   food: FoodNodeCard,
-  biome: GenericNodeCard,
-  structure: GenericNodeCard,
-  dimension: GenericNodeCard,
-  potion: GenericNodeCard,
+  biome: BiomeNodeCard,
+  structure: StructureNodeCard,
+  dimension: DimensionNodeCard,
+  potion: PotionNodeCard,
   // 高级节点
   group: GroupNodeCard,
   blackbox: BlackboxNodeCard,
