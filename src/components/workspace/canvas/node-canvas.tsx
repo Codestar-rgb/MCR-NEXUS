@@ -212,9 +212,14 @@ function NodeCanvasInner() {
       })
   }, [edges, nodes, activeWorkspaceId])
 
-  /* 修复 React Flow v12 edges 不渲染问题：
-   * 用 key 强制重建 ReactFlow 组件，确保 defaultNodes/defaultEdges 生效 */
-  const canvasKey = `${currentProjectId}-${activeWorkspaceId}-${isInitialized}-${rfNodes.length}`
+  /* 混合模式：defaultNodes/defaultEdges 初始化 + key 强制重建。
+   * key 包含所有节点的 isCollapsed 摘要，使折叠/展开时重建画布以反映新状态。
+   * 这是 React Flow v12 在受控模式下 edges 不渲染的已知问题的折中方案。 */
+  const collapseSignature = nodes
+    .filter((n) => n.data.subGraphId === activeWorkspaceId)
+    .map((n) => `${n.id}:${n.data.isCollapsed ? '1' : '0'}`)
+    .join('|')
+  const canvasKey = `${currentProjectId}-${activeWorkspaceId}-${isInitialized}-${rfNodes.length}-${collapseSignature}`
 
   /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
   const isValidConnection = useCallback<IsValidConnection<RFEdge>>(

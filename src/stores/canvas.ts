@@ -540,13 +540,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     }
 
     // 把选中节点记入 nodeExtras.parentId（React Flow v12 支持）
+    // 同时写入 data.parentId 以便持久化到 Prisma
     const nodeExtras = { ...get().nodeExtras }
-    for (const id of groupingSelection) {
-      nodeExtras[id] = { ...nodeExtras[id], parentId: groupId }
-    }
+    const updatedNodes = nodes.map((n) => {
+      if (!groupingSelection.includes(n.id)) return n
+      nodeExtras[n.id] = { ...nodeExtras[n.id], parentId: groupId }
+      return {
+        ...n,
+        data: { ...n.data, parentId: groupId },
+      }
+    })
 
     set({
-      nodes: [groupNode, ...nodes],
+      nodes: [groupNode, ...updatedNodes],
       nodeExtras,
       groupingSelection: [],
       selectedNodeIds: [groupId],
@@ -558,13 +564,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   ungroupNode: (groupId) =>
     set((s) => {
       const nodeExtras = { ...s.nodeExtras }
-      for (const id of Object.keys(nodeExtras)) {
-        if (nodeExtras[id]?.parentId === groupId) {
-          nodeExtras[id] = { ...nodeExtras[id], parentId: undefined }
-        }
-      }
+      const nodes = s.nodes.map((n) => {
+        if (n.data.parentId !== groupId) return n
+        nodeExtras[n.id] = { ...nodeExtras[n.id], parentId: undefined }
+        return { ...n, data: { ...n.data, parentId: null } }
+      })
       return {
-        nodes: s.nodes.filter((n) => n.id !== groupId),
+        nodes: nodes.filter((n) => n.id !== groupId),
         nodeExtras,
       }
     }),

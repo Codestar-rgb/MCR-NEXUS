@@ -32,18 +32,46 @@ const TYPE_LABEL: Record<string, string> = {
   entity: '实体属性',
   block: '方块属性',
   item: '物品属性',
+  equipment: '装备属性',
+  weapon: '武器属性',
+  food: '食物属性',
+  biome: '群系属性',
+  structure: '结构属性',
+  dimension: '维度属性',
+  potion: '药水属性',
   group: '节点组属性',
   blackbox: '黑盒代码',
   function: '函数节点',
+  logic_event: '事件节点',
+  logic_condition: '条件节点',
+  logic_loop: '循环节点',
+  logic_action: '动作节点',
+  logic_variable: '变量节点',
+  debug_log: '日志节点',
+  debug_breakpoint: '断点节点',
 }
 
 const TYPE_COLOR: Record<string, string> = {
   entity: 'text-rose-300',
   block: 'text-amber-300',
   item: 'text-teal-300',
+  equipment: 'text-orange-300',
+  weapon: 'text-red-300',
+  food: 'text-lime-300',
+  biome: 'text-emerald-300',
+  structure: 'text-stone-300',
+  dimension: 'text-purple-300',
+  potion: 'text-pink-300',
   group: 'text-slate-300',
   blackbox: 'text-zinc-300',
   function: 'text-cyan-300',
+  logic_event: 'text-amber-300',
+  logic_condition: 'text-cyan-300',
+  logic_loop: 'text-teal-300',
+  logic_action: 'text-violet-300',
+  logic_variable: 'text-emerald-300',
+  debug_log: 'text-sky-300',
+  debug_breakpoint: 'text-rose-300',
 }
 
 export function PropertyPanel() {
@@ -78,8 +106,9 @@ export function PropertyPanel() {
 
   const defaultTab = 'basic'
 
-  // 属性变更：立即更新 store + 闪烁反馈
-  const [flashKey, setFlashKey] = React.useState<string | null>(null)
+  // 属性变更：立即更新 store + 保存状态反馈
+  const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved'>('idle')
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handlePropertyChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNode) return
@@ -93,12 +122,23 @@ export function PropertyPanel() {
         })
         setSelectedNode(selectedNode.id, kind as 'entity' | 'block' | 'item' | null, String(value))
       }
-      // 触发闪烁反馈
-      setFlashKey(key)
-      setTimeout(() => setFlashKey(null), 400)
+      // 保存状态反馈：saving → saved → idle
+      setSaveState('saving')
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = setTimeout(() => {
+        setSaveState('saved')
+        saveTimerRef.current = setTimeout(() => setSaveState('idle'), 1200)
+      }, 600)
     },
     [selectedNode, updateNode, kind, setSelectedNode],
   )
+
+  // 卸载时清理定时器
+  React.useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [])
 
   return (
     <aside
@@ -107,7 +147,12 @@ export function PropertyPanel() {
       aria-label="右侧属性面板"
     >
       <header className="border-b border-border px-4 py-3">
-        <h2 className="truncate text-sm font-semibold text-foreground">{headerTitle}</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="truncate text-sm font-semibold text-foreground">{headerTitle}</h2>
+          {hasSelection && (
+            <SaveIndicator state={saveState} />
+          )}
+        </div>
         {!hasSelection && (
           <p className="mt-0.5 text-[11px] text-muted-foreground">{t('property.selectNode')}</p>
         )}
@@ -179,5 +224,35 @@ export function PropertyPanel() {
         )}
       </div>
     </aside>
+  )
+}
+
+/** 保存状态指示器 */
+function SaveIndicator({ state }: { state: 'idle' | 'saving' | 'saved' }) {
+  if (state === 'idle') return null
+  return (
+    <motion.span
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0 }}
+      className={cn(
+        'flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium',
+        state === 'saving'
+          ? 'bg-amber-500/10 text-amber-400'
+          : 'bg-emerald-500/10 text-emerald-400',
+      )}
+    >
+      {state === 'saving' ? (
+        <>
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+          保存中
+        </>
+      ) : (
+        <>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          已保存
+        </>
+      )}
+    </motion.span>
   )
 }

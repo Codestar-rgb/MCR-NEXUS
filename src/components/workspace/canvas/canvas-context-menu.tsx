@@ -46,6 +46,7 @@ import {
   useCanvasStore,
   createFlowNode,
 } from '@/stores/canvas'
+import { useWorkspaceStore } from '@/stores/workspace'
 import { cn } from '@/lib/utils'
 
 /** Tailwind 色名 → hex 映射（用于菜单中显示节点类型颜色点） */
@@ -163,10 +164,24 @@ export function CanvasContextMenu() {
     toast.success(`已删除 ${ids.length} 个节点`)
   }
 
-  /* 重命名（toast 提示阶段 3 接入） */
+  /* 重命名：选中节点并把焦点移到属性面板的名称字段 */
   const handleRename = () => {
+    if (!contextMenu.nodeId) {
+      closeContextMenu()
+      return
+    }
+    // 选中该节点 → 右侧属性面板自动显示，用户可在"名称"字段直接编辑
+    const node = useCanvasStore.getState().nodes.find((n) => n.id === contextMenu.nodeId)
+    if (node) {
+      useCanvasStore.getState().selectNode(contextMenu.nodeId)
+      useWorkspaceStore.getState().setSelectedNode(
+        contextMenu.nodeId,
+        node.data.kind,
+        node.data.title,
+      )
+    }
     closeContextMenu()
-    toast.info('重命名功能将在阶段 3 属性面板接入')
+    toast.success('已在属性面板选中"名称"字段，可直接编辑')
   }
 
   /* 折叠 / 展开 */

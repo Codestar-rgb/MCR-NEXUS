@@ -23,6 +23,7 @@ import { getNodeTypeDefinition } from '@/lib/node-system'
 import type { FlowNodeData } from '@/lib/node-system'
 import { useDebugStore } from '@/stores/debug-store'
 import { useBuildStatusStore } from '@/stores/build-status'
+import { useCanvasStore } from '@/stores/canvas'
 import { cn } from '@/lib/utils'
 import { PortHandle } from './port-handle'
 import { COLOR_CLASSES } from './color-classes'
@@ -71,6 +72,9 @@ function BaseNodeCardImpl({
 
   // 构建状态
   const buildStatus = useBuildStatusStore((s) => s.nodeStatuses[id] ?? 'idle')
+
+  // 折叠切换
+  const toggleNodeCollapsed = useCanvasStore((s) => s.toggleNodeCollapsed)
   const isDebugNode = useBuildStatusStore((s) => s.debugPath[s.debugIndex] === id)
 
   const def = getNodeTypeDefinition(data.kind)
@@ -181,8 +185,7 @@ function BaseNodeCardImpl({
             className="text-muted-foreground transition-colors hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation()
-              // 折叠状态由 store 控制；本组件只读取 data.isCollapsed
-              // TODO（Task 2-C 集成）：调用 store.toggleNodeCollapsed(data.id)
+              toggleNodeCollapsed(id)
             }}
             aria-label={data.isCollapsed ? '展开节点' : '折叠节点'}
           >
@@ -237,4 +240,14 @@ function BaseNodeCardImpl({
   )
 }
 
-export const BaseNodeCard = memo(BaseNodeCardImpl)
+export const BaseNodeCard = memo(BaseNodeCardImpl, (prev, next) => {
+  // 自定义比较：只在关键 props 变化时重新渲染
+  // 注意：必须检测 data 引用变化（toggleNodeCollapsed 会创建新 data 对象）
+  return (
+    prev.id === next.id &&
+    prev.selected === next.selected &&
+    prev.data === next.data &&
+    prev.width === next.width &&
+    prev.height === next.height
+  )
+})

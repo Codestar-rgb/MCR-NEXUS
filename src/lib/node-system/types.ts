@@ -25,6 +25,13 @@ export interface FlowNodeData {
    * 主画布渲染时会过滤掉 subGraphId 不为空的节点，子图编辑器只显示对应 subGraphId 的节点。
    */
   subGraphId?: string | null
+  /**
+   * 所属节点组 ID（用于 groupSelected 创建的节点组容器）。
+   * - 普通节点：parentId == null
+   * - 组内节点：parentId === 组节点 ID
+   * 持久化到 Prisma Node.parentId 列。
+   */
+  parentId?: string | null
   [key: string]: unknown
 }
 
@@ -90,6 +97,8 @@ export function prismaNodeToFlowNode(p: PrismaNodeShape): FlowNode {
       color: p.color ?? undefined,
       // 保留 subGraphId，主画布据此过滤子图节点
       subGraphId: p.subGraphId ?? null,
+      // 保留 parentId，用于节点组嵌套渲染
+      parentId: p.parentId ?? null,
     },
     width: p.width ?? undefined,
     height: p.height ?? undefined,
@@ -112,5 +121,7 @@ export function flowNodeToPrismaNode(f: FlowNode, projectId: string) {
     properties: JSON.stringify(f.data.properties ?? {}),
     // 写入 subGraphId（主画布节点为 null，子图节点为父节点 ID）
     subGraphId: f.data.subGraphId ?? null,
+    // 写入 parentId（普通节点为 null，组内节点为组节点 ID）
+    parentId: f.data.parentId ?? null,
   }
 }

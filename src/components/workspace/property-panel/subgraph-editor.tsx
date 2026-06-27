@@ -56,6 +56,7 @@ import { nodeTypes } from '@/components/workspace/canvas/nodes'
 import { TypedEdge } from '@/components/workspace/canvas/typed-edge'
 import { useCanvasStore } from '@/stores/canvas'
 import { useSubgraphStore } from '@/stores/subgraph'
+import { useWorkspaceStore } from '@/stores/workspace'
 import {
   getNodeTypeDefinition,
   getLogicNodeTypes,
@@ -322,6 +323,20 @@ function SubgraphEditorInner({
     setContextMenuState(null)
   }, [])
 
+  /* 点击节点 → 选中并在右侧属性面板显示编辑表单（修复 Issue E） */
+  const onNodeClick = useCallback(
+    (_e: React.MouseEvent, node: RFNode) => {
+      const kind = (node.data as { kind?: string } | undefined)?.kind ?? node.type ?? ''
+      const title = (node.data as { title?: string } | undefined)?.title ?? ''
+      // 选中节点（canvas store 同步 selected 状态）
+      useCanvasStore.getState().selectNode(node.id)
+      // 通知右侧属性面板显示该节点（覆盖父节点显示）
+      useWorkspaceStore.getState().setSelectedNode(node.id, kind, title)
+      setContextMenuState(null)
+    },
+    [],
+  )
+
   /* Esc / 外部点击 → 关闭菜单 */
   useEffect(() => {
     if (!contextMenu?.visible) return
@@ -468,6 +483,7 @@ function SubgraphEditorInner({
             onPaneContextMenu={onPaneContextMenu}
             onNodeContextMenu={onNodeContextMenu}
             onPaneClick={onPaneClick}
+            onNodeClick={onNodeClick}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             minZoom={0.2}
