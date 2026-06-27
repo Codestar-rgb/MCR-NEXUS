@@ -38,8 +38,40 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     if (!query.trim()) return []
     const q = query.toLowerCase()
     return nodes
-      .filter((n) => n.data.title.toLowerCase().includes(q))
-      .slice(0, 8)
+      .filter((n) => {
+        // 搜索标题
+        if (n.data.title.toLowerCase().includes(q)) return true
+        // 搜索节点类型
+        if (n.data.kind.toLowerCase().includes(q)) return true
+        // 搜索 registryId
+        const regId = String(n.data.properties?.registryId ?? '').toLowerCase()
+        if (regId.includes(q)) return true
+        // 搜索属性值（数字/字符串）
+        const props = n.data.properties ?? {}
+        for (const v of Object.values(props)) {
+          if (typeof v === 'string' && v.toLowerCase().includes(q)) return true
+          if (typeof v === 'number' && String(v).includes(q)) return true
+        }
+        return false
+      })
+      .slice(0, 50) // 提高上限到 50，避免静默截断
+  }, [query, nodes])
+
+  const totalCount = React.useMemo(() => {
+    if (!query.trim()) return 0
+    const q = query.toLowerCase()
+    return nodes.filter((n) => {
+      if (n.data.title.toLowerCase().includes(q)) return true
+      if (n.data.kind.toLowerCase().includes(q)) return true
+      const regId = String(n.data.properties?.registryId ?? '').toLowerCase()
+      if (regId.includes(q)) return true
+      const props = n.data.properties ?? {}
+      for (const v of Object.values(props)) {
+        if (typeof v === 'string' && v.toLowerCase().includes(q)) return true
+        if (typeof v === 'number' && String(v).includes(q)) return true
+      }
+      return false
+    }).length
   }, [query, nodes])
 
   const handleSelect = (nodeId: string, kind: string, title: string) => {
@@ -91,22 +123,44 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                   {query ? t('search.noResults') : t('search.empty')}
                 </div>
               ) : (
-                results.map((node) => (
-                  <button
-                    key={node.id}
-                    onClick={() => handleSelect(node.id, node.data.kind, node.data.title)}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent/40"
-                  >
-                    <NodeIcon kind={node.data.kind} />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-foreground">{node.data.title}</div>
-                      <div className="text-[10px] text-muted-foreground/60">{node.data.kind}</div>
-                    </div>
-                    <CornerDownLeft className="h-3 w-3 text-muted-foreground/30" />
-                  </button>
-                ))
+                results.map((node) => {
+                  const regId = String(node.data.properties?.registryId ?? '')
+                  return (
+                    <button
+                      key={node.id}
+                      onClick={() => handleSelect(node.id, node.data.kind, node.data.title)}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-accent/40"
+                    >
+                      <NodeIcon kind={node.data.kind} />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-sm font-medium text-foreground">
+                          {node.data.title}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60">
+                          <span className="font-mono">{node.data.kind}</span>
+                          {regId && (
+                            <>
+                              <span>·</span>
+                              <span className="truncate">{regId}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <CornerDownLeft className="h-3 w-3 shrink-0 text-muted-foreground/30" />
+                    </button>
+                  )
+                })
               )}
             </div>
+
+            {/* 底部统计 */}
+            {query && results.length > 0 && (
+              <div className="border-t border-border/30 px-4 py-1.5 text-[10px] text-muted-foreground/50">
+                {results.length === totalCount
+                  ? `找到 ${totalCount} 个结果`
+                  : `显示 ${results.length} / ${totalCount} 个结果`}
+              </div>
+            )}
           </motion.div>
         </>
       )}

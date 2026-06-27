@@ -1048,6 +1048,98 @@ ${itemRefs.join('\n')}
   }
 }
 
+/**
+ * 生成方块战利品表（loot_tables/blocks/<id>.json）
+ *
+ * 方块破坏后掉落自身（self-drop），1.20.1 标准 JSON 格式。
+ */
+function generateBlockLootTable(modId: string, node: FlowNode): GeneratedFile {
+  const registryId = getStr(node, 'registryId', node.id)
+  const dropCount = getNum(node, 'dropCount', 1)
+
+  const content = JSON.stringify({
+    type: 'minecraft:block',
+    pools: [
+      {
+        rolls: 1,
+        entries: [
+          {
+            type: 'minecraft:item',
+            name: `${modId}:${registryId}`,
+            functions: dropCount !== 1 ? [
+              {
+                function: 'minecraft:set_count',
+                count: dropCount,
+              },
+            ] : undefined,
+          },
+        ],
+        conditions: [
+          {
+            condition: 'minecraft:survives_explosion',
+          },
+        ],
+      },
+    ],
+  }, null, 2)
+
+  return {
+    filePath: `src/main/resources/data/${modId}/loot_tables/blocks/${registryId}.json`,
+    content,
+    linkedNodeId: node.id,
+    language: 'json',
+  }
+}
+
+/**
+ * 生成物品进度（advancements/<id>.json）
+ *
+ * 获取该物品时触发进度（toast 通知 + 解锁配方）。
+ */
+function generateItemAdvancement(modId: string, node: FlowNode): GeneratedFile {
+  const registryId = getStr(node, 'registryId', node.id)
+  const title = node.data.title
+  const kind = node.data.kind
+  const itemRef = kind === 'block' ? `${modId}:${registryId}` : `${modId}:${registryId}`
+
+  const content = JSON.stringify({
+    display: {
+      icon: {
+        item: itemRef,
+      },
+      title: {
+        translate: `itemGroup.${modId}.${registryId}`,
+        fallback: title,
+      },
+      description: `获得 ${title}`,
+      show_toast: true,
+      announce_to_chat: false,
+      hidden: false,
+    },
+    parent: 'minecraft:recipes/root',
+    criteria: {
+      get_item: {
+        trigger: 'minecraft:inventory_changed',
+        conditions: {
+          items: [
+            {
+              items: [itemRef],
+            },
+          ],
+        },
+      },
+    },
+    requirements: [['get_item']],
+  }, null, 2)
+
+  return {
+    filePath: `src/main/resources/data/${modId}/advancements/${registryId}.json`,
+    content,
+    linkedNodeId: node.id,
+    language: 'json',
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* 主入口                                                              */
 /* ------------------------------------------------------------------ */
@@ -1163,6 +1255,20 @@ export function generateProjectCode(
   )
   if (hasCreatables) {
     files.push(generateCreativeTabFile(modId, nodes))
+  }
+
+  // 7. 战利品表（方块掉落）
+  const blockNodes = nodes.filter((n) => n.data.kind === 'block')
+  for (const block of blockNodes) {
+    files.push(generateBlockLootTable(modId, block))
+  }
+
+  // 8. 进度（advancements）— 获取物品触发
+  const itemNodes = nodes.filter((n) =>
+    ['item', 'equipment', 'weapon', 'food', 'block'].includes(n.data.kind),
+  )
+  for (const item of itemNodes) {
+    files.push(generateItemAdvancement(modId, item))
   }
 
   return {

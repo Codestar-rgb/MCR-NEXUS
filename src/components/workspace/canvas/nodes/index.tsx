@@ -23,6 +23,7 @@ import { GroupNodeCard } from './group-node-card'
 import { BlackboxNodeCard } from './blackbox-node-card'
 import { GenericNodeCard } from './generic-node-card'
 import { LogicNodeCard } from './logic-node-card'
+import { RecipeNodeCard } from './recipe-node-card'
 
 export const nodeTypes = {
   // 核心节点（专用卡片）
@@ -43,7 +44,8 @@ export const nodeTypes = {
   function: GenericNodeCard,
   // 插件贡献的节点类型（用 GenericNodeCard 渲染）
   spell: GenericNodeCard,
-  recipe: GenericNodeCard,
+  // 配方节点（专用卡片，3x3 网格 / 熔炉预览）
+  recipe: RecipeNodeCard,
   // 逻辑子节点（专用紧凑卡片）
   logic_event: LogicNodeCard,
   logic_condition: LogicNodeCard,
