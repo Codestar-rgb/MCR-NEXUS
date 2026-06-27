@@ -450,83 +450,140 @@ public class ${className} extends Item {
 }
 
 /**
- * 生成群系数据包文件（biome.json）
+ * 生成群系 — Forge 1.20.1 数据包格式
+ *
+ * 生成两个文件：
+ *  1. data/<modId>/worldgen/biome/<id>.json — 群系数据（正确 1.20.1 格式）
+ *  2. Java 类占位（说明文档）
+ *
+ * 群系在 1.20.1 通过 datapack 注册，无需 Java 代码。
  */
 function generateBiomeFile(node: FlowNode): GeneratedFile | null {
-  const p = node.data.properties ?? {}
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
   const id = String(p.registryId ?? 'new_biome')
+  const temp = Number(p.temperature ?? 0.5)
+  const downfall = Number(p.downfall ?? 0.5)
+  const waterColor = parseInt(String(p.waterColor ?? '3F76E4').replace('#', ''), 16)
+  const waterFogColor = parseInt(String(p.waterFogColor ?? '050533').replace('#', ''), 16)
+  const foliageColor = parseInt(String(p.foliageColor ?? '48B518').replace('#', ''), 16)
+  const grassColor = parseInt(String(p.grassColor ?? '5A7D31').replace('#', ''), 16)
 
+  // Forge 1.20.1 群系 JSON 格式
   const content = JSON.stringify({
-    type: 'minecraft:biome',
-    id,
-    name: p.name ?? id,
-    temperature: p.temperature ?? 0.5,
-    downfall: p.downfall ?? 0.5,
+    temperature: temp,
+    downfall,
     precipitation: p.precipitation ?? 'rain',
-    category: p.category ?? 'plains',
-    depth: p.depth ?? 0.125,
-    scale: p.scale ?? 0.05,
+    temperature_modifier: 'none',
     effects: {
-      water_color: parseInt(String(p.waterColor ?? '3F76E4'), 16),
-      water_fog_color: parseInt(String(p.waterFogColor ?? '050533'), 16),
-      foliage_color: parseInt(String(p.foliageColor ?? '48B518'), 16),
-      grass_color: parseInt(String(p.grassColor ?? '5A7D31'), 16),
+      sky_color: 7907327,
+      water_color: waterColor,
+      water_fog_color: waterFogColor,
+      foliage_color: foliageColor,
+      grass_color: grassColor,
     },
+    spawners: {
+      monster: [],
+      creature: [],
+      ambient: [],
+      axolotls: [],
+      underground_water_creature: [],
+      water_creature: [],
+      water_ambient: [],
+      misc: [],
+    },
+    spawn_costs: {},
+    carvers: {
+      air: [],
+    },
+    features: [
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+    ],
   }, null, 2)
 
-  return { filePath: `src/main/resources/data/${id}/biome/${id}.json`, content, linkedNodeId: node.id }
+  return { filePath: `src/main/resources/data/example_mod/worldgen/biome/${id}.json`, content, linkedNodeId: node.id, language: 'json' }
 }
 
 /**
- * 生成结构数据包文件（structure.json）
+ * 生成结构 — Forge 1.20.1 数据包格式
+ *
+ * 生成结构配置 JSON（template/pool/biomes/step）。
+ * 结构在 1.20.1 通过 datapack 注册。
  */
 function generateStructureFile(node: FlowNode): GeneratedFile | null {
-  const p = node.data.properties ?? {}
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
   const id = String(p.registryId ?? 'new_structure')
+  const biomes = String(p.biomeList ?? 'minecraft:plains')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
 
+  // Forge 1.20.1 结构配置 JSON
   const content = JSON.stringify({
-    type: 'minecraft:structure',
-    id,
-    name: p.name ?? id,
-    structure_type: p.structureType ?? 'village',
-    biomes: String(p.biomeList ?? 'minecraft:plains').split(',').map((s: string) => s.trim()),
-    spawn_chance: p.spawnChance ?? 0.01,
-    min_distance: p.minDistance ?? 32,
-    max_distance: p.maxDistance ?? 128,
+    type: `example_mod:${id}`,
+    biomes,
+    step: 'surface_structures',
+    spawn_overrides: {},
+    terrain_adaptation: 'none',
+    // 结构集（控制生成间距）
+    spacing: Number(p.maxDistance ?? 128),
+    separation: Number(p.minDistance ?? 32),
+    salt: Math.floor(Math.random() * 1000000),
   }, null, 2)
 
-  return { filePath: `src/main/resources/data/${id}/structure/${id}.json`, content, linkedNodeId: node.id }
+  return { filePath: `src/main/resources/data/example_mod/worldgen/structure/${id}.json`, content, linkedNodeId: node.id, language: 'json' }
 }
 
 /**
- * 生成维度类型文件（dimension_type.json）
+ * 生成维度 — Forge 1.20.1 数据包格式
+ *
+ * 生成 dimension_type JSON（维度类型定义）。
+ * 维度在 1.20.1 通过 datapack 注册。
  */
 function generateDimensionFile(node: FlowNode): GeneratedFile | null {
-  const p = node.data.properties ?? {}
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
   const id = String(p.registryId ?? 'new_dimension')
+  const height = Number(p.height ?? 384)
+  const minY = Number(p.minY ?? -64)
+  const gravity = Number(p.gravity ?? 0.08)
 
+  // Forge 1.20.1 dimension_type JSON
   const content = JSON.stringify({
-    type: 'minecraft:dimension_type',
-    id,
-    name: p.name ?? id,
-    has_skylight: p.hasSkyLight ?? true,
-    has_ceiling: p.hasCeiling ?? false,
-    ultrawarm: p.ultrawarm ?? false,
-    natural: p.natural ?? true,
-    coordinate_scale: p.coordinateScale ?? 1.0,
-    height: p.height ?? 384,
-    min_y: p.minY ?? -64,
-    bed_works: p.bedWorks ?? true,
-    piglin_safe: p.piglinSafe ?? false,
-    respawn_anchor_works: p.respawnAnchorWorks ?? false,
-    has_raids: p.hasRaids ?? true,
-    monster_spawn_light_level: 7,
+    ultrawarm: Boolean(p.ultrawarm ?? false),
+    natural: Boolean(p.natural ?? true),
+    piglin_safe: Boolean(p.piglinSafe ?? false),
+    respawn_anchor_works: Boolean(p.respawnAnchorWorks ?? false),
+    bed_works: Boolean(p.bedWorks ?? true),
+    has_raids: Boolean(p.hasRaids ?? true),
+    has_skylight: Boolean(p.hasSkyLight ?? true),
+    has_ceiling: Boolean(p.hasCeiling ?? false),
+    coordinate_scale: Number(p.coordinateScale ?? 1.0),
+    effects: p.environment === 'nether' ? 'minecraft:the_nether' : p.environment === 'end' ? 'minecraft:the_end' : 'minecraft:overworld',
+    min_y: minY,
+    height,
+    logical_height: height,
+    infiniburn: p.environment === 'nether' ? '#minecraft:infiniburn_nether' : '#minecraft:infiniburn_overworld',
+    monster_spawn_light_level: {
+      type: 'minecraft:uniform',
+      value: {
+        min_inclusive: 0,
+        max_inclusive: 7,
+      },
+    },
     monster_spawn_block_light_limit: 0,
-    gravity: p.gravity ?? 0.08,
-    environment: p.environment ?? 'normal',
+    fixed_time: p.environment === 'nether' ? 18000 : undefined,
+    gravity,
   }, null, 2)
 
-  return { filePath: `src/main/resources/data/${id}/dimension_type/${id}.json`, content, linkedNodeId: node.id }
+  return { filePath: `src/main/resources/data/example_mod/dimension_type/${id}.json`, content, linkedNodeId: node.id, language: 'json' }
 }
 
 /**
@@ -561,6 +618,62 @@ public class ${className} extends MobEffect {
 }
 `
   return { filePath: `src/main/java/com/example/mod/effect/${className}.java`, content, linkedNodeId: node.id }
+}
+
+/**
+ * 生成配方 — Forge 1.20.1 数据包格式
+ *
+ * 根据 recipeType 生成不同的 JSON：
+ *  - crafting: 合成台配方（shaped/shapeless）
+ *  - smelting/blasting/smoking: 熔炉类配方
+ *  - stonecutting: 切石机配方
+ */
+function generateRecipeFile(node: FlowNode, modId: string): GeneratedFile | null {
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
+  const id = String(p.registryId ?? 'new_recipe')
+  const recipeType = String(p.recipeType ?? 'crafting')
+  const resultItem = String(p.resultItem ?? 'minecraft:diamond')
+  const resultCount = Number(p.resultCount ?? 1)
+  const ingredientA = String(p.ingredientA ?? 'minecraft:stick')
+  const ingredientB = String(p.ingredientB ?? 'minecraft:stick')
+  const ingredientC = String(p.ingredientC ?? '')
+  const cookingTime = Number(p.cookingTime ?? 200)
+  const experience = Number(p.experience ?? 0.1)
+
+  let content: string
+
+  if (recipeType === 'smelting' || recipeType === 'blasting' || recipeType === 'smoking') {
+    // 熔炉类配方
+    content = JSON.stringify({
+      type: `minecraft:${recipeType}`,
+      ingredient: { item: ingredientA },
+      result: { item: resultItem, count: resultCount },
+      experience,
+      cookingtime: cookingTime,
+    }, null, 2)
+  } else if (recipeType === 'stonecutting') {
+    // 切石机配方
+    content = JSON.stringify({
+      type: 'minecraft:stonecutting',
+      ingredient: { item: ingredientA },
+      result: { item: resultItem, count: resultCount },
+    }, null, 2)
+  } else {
+    // 合成台配方（shapeless 无序合成）
+    const ingredients = [ingredientA, ingredientB, ingredientC].filter(Boolean).map((item) => ({ item }))
+    content = JSON.stringify({
+      type: 'minecraft:crafting_shapeless',
+      ingredients,
+      result: { item: resultItem, count: resultCount },
+    }, null, 2)
+  }
+
+  return {
+    filePath: `src/main/resources/data/${modId}/recipes/${id}.json`,
+    content,
+    linkedNodeId: node.id,
+    language: 'json',
+  }
 }
 
 /**
@@ -992,6 +1105,9 @@ export function generateProjectCode(
         break
       case 'potion':
         file = generatePotionFile(node)
+        break
+      case 'recipe':
+        file = generateRecipeFile(node, modId)
         break
       case 'blackbox':
         file = generateBlackboxFile(node)

@@ -880,6 +880,50 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
       { key: 'hasIcon', label: '显示图标', type: 'boolean', defaultValue: true, group: '外观' },
     ],
   },
+
+  // === 配方节点 ===
+  recipe: {
+    kind: 'recipe',
+    label: '合成配方',
+    category: 'advanced',
+    color: 'orange',
+    icon: 'CookingPot',
+    description: '合成台/熔炉配方',
+    supportsSubLogic: false,
+    inputPorts: [
+      { id: 'ingredient_a', label: '材料 A', dataType: 'itemstack' },
+      { id: 'ingredient_b', label: '材料 B', dataType: 'itemstack' },
+      { id: 'ingredient_c', label: '材料 C', dataType: 'itemstack' },
+    ],
+    outputPorts: [
+      { id: 'result', label: '产物', dataType: 'itemstack' },
+    ],
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Recipe', group: '基础', placeholder: '显示名称' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_recipe', group: '基础', placeholder: '小写下划线' },
+      {
+        key: 'recipeType',
+        label: '配方类型',
+        type: 'select',
+        defaultValue: 'crafting',
+        group: '基础',
+        options: [
+          { label: '合成台 (Crafting)', value: 'crafting' },
+          { label: '熔炉 (Smelting)', value: 'smelting' },
+          { label: '高炉 (Blasting)', value: 'blasting' },
+          { label: '烟熏炉 (Smoking)', value: 'smoking' },
+          { label: '切石机 (Stonecutting)', value: 'stonecutting' },
+        ],
+      },
+      { key: 'resultItem', label: '产物 ID', type: 'string', defaultValue: 'minecraft:diamond', group: '产物', placeholder: '如 minecraft:diamond' },
+      { key: 'resultCount', label: '产物数量', type: 'number', defaultValue: 1, min: 1, max: 64, step: 1, group: '产物' },
+      { key: 'ingredientA', label: '材料 A', type: 'string', defaultValue: 'minecraft:stick', group: '材料', placeholder: '物品 ID' },
+      { key: 'ingredientB', label: '材料 B', type: 'string', defaultValue: 'minecraft:stick', group: '材料', placeholder: '物品 ID' },
+      { key: 'ingredientC', label: '材料 C', type: 'string', defaultValue: '', group: '材料', placeholder: '可选' },
+      { key: 'cookingTime', label: '烧制时间 (tick)', type: 'number', defaultValue: 200, min: 1, max: 2000, step: 1, group: '熔炉', description: 'tick' },
+      { key: 'experience', label: '经验值', type: 'number', defaultValue: 0.1, min: 0, max: 100, step: 0.1, group: '熔炉' },
+    ],
+  },
 }
 
 /** 获取节点类型定义（合并插件贡献的自定义类型） */

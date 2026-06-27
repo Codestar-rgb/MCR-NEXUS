@@ -29,6 +29,7 @@ import {
   Settings,
   AlertTriangle,
   RefreshCw,
+  Terminal,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -382,6 +383,7 @@ export function ExportDialog({
         {/* 完成提示 */}
         <AnimatePresence>
           {downloadUrl && !isExporting && (
+            <>
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -412,6 +414,40 @@ export function ExportDialog({
                 </Button>
               </a>
             </motion.div>
+
+            {/* 构建指引 */}
+            <div className="rounded-lg border border-border/40 bg-card/30 p-3 text-xs">
+              <div className="mb-2 flex items-center gap-1.5 font-medium text-foreground">
+                <Terminal className="h-3.5 w-3.5 text-primary" />
+                如何构建并运行
+              </div>
+              <ol className="space-y-1.5 text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-mono text-primary">1.</span>
+                  <span>解压 ZIP 到本地目录</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-mono text-primary">2.</span>
+                  <span>确保已安装 JDK 17（<code className="rounded bg-muted/40 px-1 font-mono text-[10px]">java -version</code>）</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-mono text-primary">3.</span>
+                  <span>运行 <code className="rounded bg-muted/40 px-1 font-mono text-[10px]">./gradlew build</code> 构建 JAR</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-mono text-primary">4.</span>
+                  <span>运行 <code className="rounded bg-muted/40 px-1 font-mono text-[10px]">./gradlew runClient</code> 启动游戏测试</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 font-mono text-primary">5.</span>
+                  <span>JAR 输出在 <code className="rounded bg-muted/40 px-1 font-mono text-[10px]">build/libs/</code>，复制到 Minecraft <code className="rounded bg-muted/40 px-1 font-mono text-[10px]">mods/</code> 目录</span>
+                </li>
+              </ol>
+              <div className="mt-2 rounded border border-amber-500/20 bg-amber-500/5 px-2 py-1.5 text-[10px] text-amber-300/80">
+                首次构建需下载 Gradle 和 Forge 依赖，可能耗时 5-15 分钟。后续构建会快很多。
+              </div>
+            </div>
+            </>
           )}
         </AnimatePresence>
 
