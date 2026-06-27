@@ -1846,3 +1846,74 @@ Stage Summary:
 - 卡片 hover 效果（上浮 + 边框 + 高光 + 阴影）
 - VLM 综合 7.5/10（从 4.5 提升 +3 分）
 - 已推送 GitHub
+
+---
+Task ID: R5 (UI 重设计第 5 轮 + 节点编辑系统修复)
+Agent: main (Z.ai Code)
+Task: 主页改回桌面分栏布局 + 修复节点编辑系统核心问题
+
+Work Log:
+- 用户反馈：居中营销式主页不适合桌面应用，要求改回左右分栏；节点编辑功能不完善
+- 子代理审计节点编辑系统（9136a7fc）：
+  * 属性面板其实是可编辑的（schema 驱动 7 种字段类型）
+  * 但有 9 个 gap 让它"感觉"是只读的
+  * 最高优先级：逻辑子节点无法编辑（subgraph-editor 缺 onNodeClick）
+  * 折叠按钮 no-op（用 data.id 而非 id prop）
+  * 重命名菜单是 stub
+  * 组 parentId 不持久化
+
+Sprint 1 — 主页 v11 桌面分栏布局：
+- 创建 home-page-v11.tsx：
+  * 左栏（55%）：欢迎语 + 3 操作行 + 6 模板卡片（紧凑网格）
+  * 右栏（45%）：最近项目列表 + 搜索 + 加载器徽章 + 状态栏
+  * 移除英雄区/特性条/版本徽章簇等营销内容
+  * VLM 专业度 8/10（从 4.5/10 提升）
+
+Sprint 2 — 节点编辑系统修复：
+- 2-a: 修复逻辑子节点编辑（Issue E）
+  * subgraph-editor.tsx 添加 onNodeClick handler
+  * 点击逻辑子节点 → selectNode + setSelectedNode → 右侧属性面板显示编辑表单
+  * 导入 useWorkspaceStore
+- 2-b: 修复折叠按钮 no-op
+  * base-node-card.tsx: data.id → id（React Flow v12 节点 id 是顶层 prop）
+  * 添加 useCanvasStore 导入 + toggleNodeCollapsed hook
+  * 自定义 memo 比较器（检测 data 引用变化）
+  * 修复 canvasKey：加入 collapseSignature（所有节点 isCollapsed 摘要）
+    → 折叠/展开时 canvasKey 变化 → ReactFlow 重建 → 新 defaultNodes 反映新状态
+    → 这是 React Flow v12 controlled edges 不渲染的折中方案
+  * 修复 rename stub：选中节点 + toast 提示（不再显示"将在阶段 3 接入"）
+- 2-c: 添加保存状态指示器
+  * property-panel.tsx: flashKey → saveState (idle/saving/saved)
+  * SaveIndicator 组件：amber "保存中" → emerald "已保存"
+  * 600ms 延迟后显示"已保存"，1200ms 后回到 idle
+- 2-d: 边线数据类型标签已正常工作（TypedEdge 组件）
+- 2-e: 持久化组 parentId（Issue C）
+  * FlowNodeData 添加 parentId 字段
+  * flowNodeToPrismaNode/prismaNodeToFlowNode 映射 parentId
+  * groupSelected: 同时写 nodeExtras.parentId 和 data.parentId
+  * ungroupNode: 清除 data.parentId
+
+- 扩展 TYPE_LABEL/TYPE_COLOR 映射覆盖全部 17 种节点类型
+  * 实体/方块/物品/装备/武器/食物/群系/结构/维度/药水
+  * 节点组/黑盒/函数
+  * 逻辑事件/条件/循环/动作/变量
+  * 调试日志/断点
+
+Agent Browser 验收：
+- 主页渲染：左栏欢迎+操作+模板 ✅ 右栏最近项目+搜索 ✅
+- 打开项目：工作区加载 3 节点 + 2 连线 ✅
+- 属性编辑：health 80→120→150 持久化跨 reload ✅
+- 折叠/展开：点击切换正常，isCollapsed 持久化 ✅
+- 边线渲染：2 条连线正常显示 ✅
+- Lint: 0 errors / 0 warnings ✅
+
+Stage Summary:
+- 主页从居中营销式改回桌面分栏布局 ✅（VLM 8/10）
+- 节点编辑系统 5 个核心问题全部修复 ✅
+  * 逻辑子节点可编辑
+  * 折叠按钮可用
+  * 重命名可用
+  * 保存状态反馈
+  * 组 parentId 持久化
+- 节点编辑流程端到端验证通过 ✅
+- 已推送 GitHub（65e12d0）
