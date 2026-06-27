@@ -12,6 +12,7 @@ import { Search, FileCode2, Boxes, Box, Package, CornerDownLeft } from 'lucide-r
 import { useCanvasStore } from '@/stores/canvas'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/hooks/use-i18n'
 
 interface GlobalSearchProps {
   open: boolean
@@ -22,6 +23,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const [query, setQuery] = React.useState('')
   const inputRef = React.useRef<HTMLInputElement>(null)
   const nodes = useCanvasStore((s) => s.nodes)
+  const { t } = useI18n()
   const selectNode = useCanvasStore((s) => s.selectNode)
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
 
@@ -74,7 +76,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                     handleSelect(results[0].id, results[0].data.kind, results[0].data.title)
                   }
                 }}
-                placeholder="搜索节点..."
+                placeholder={t('search.placeholder')}
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
               />
               <kbd className="rounded border border-border/40 px-1.5 py-0.5 text-[9px] text-muted-foreground/60">
@@ -86,7 +88,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             <div className="nexcube-scroll max-h-80 overflow-y-auto p-1">
               {results.length === 0 ? (
                 <div className="px-4 py-8 text-center text-xs text-muted-foreground/50">
-                  {query ? '未找到匹配的节点' : '输入关键词搜索节点'}
+                  {query ? t('search.noResults') : t('search.empty')}
                 </div>
               ) : (
                 results.map((node) => (

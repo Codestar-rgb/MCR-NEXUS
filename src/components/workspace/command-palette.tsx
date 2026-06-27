@@ -13,6 +13,7 @@ import {
   LayoutGrid, GitBranch, Save, Download, Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/hooks/use-i18n'
 
 interface Command {
   id: string
@@ -39,6 +40,7 @@ export function CommandPalette({
   const [query, setQuery] = React.useState('')
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const inputRef = React.useRef<HTMLInputElement>(null)
+  const { t } = useI18n()
 
   React.useEffect(() => {
     if (open) {
@@ -49,16 +51,16 @@ export function CommandPalette({
   }, [open])
 
   const commands: Command[] = React.useMemo(() => [
-    { id: 'create-entity', label: '创建实体节点', description: '添加一个新的实体节点', icon: Boxes, category: 'node', action: () => { onCreateNode('entity'); onClose() } },
-    { id: 'create-block', label: '创建方块节点', description: '添加一个新的方块节点', icon: Box, category: 'node', action: () => { onCreateNode('block'); onClose() } },
-    { id: 'create-item', label: '创建物品节点', description: '添加一个新的物品节点', icon: Package, category: 'node', action: () => { onCreateNode('item'); onClose() } },
-    { id: 'layout-grid', label: '自动排列：网格', description: '将所有节点排列为网格', icon: LayoutGrid, category: 'view', action: () => { onAutoLayout('grid'); onClose() } },
-    { id: 'layout-spiral', label: '自动排列：螺旋', description: '将所有节点排列为螺旋', icon: LayoutGrid, category: 'view', action: () => { onAutoLayout('spiral'); onClose() } },
-    { id: 'layout-tree', label: '自动排列：树形', description: '按连线关系分层排列', icon: GitBranch, category: 'view', action: () => { onAutoLayout('tree'); onClose() } },
-    { id: 'save', label: '保存项目', description: '手动触发保存', icon: Save, category: 'action', action: () => { onSave(); onClose() } },
-    { id: 'export', label: '导出 Mod ZIP', description: '导出为可构建的 Forge 项目', icon: Download, category: 'action', action: () => { onExport(); onClose() } },
-    { id: 'settings', label: '打开设置', description: '镜像源/主题/快捷键/插件/环境', icon: Settings, category: 'action', action: () => { onOpenSettings(); onClose() } },
-  ], [onCreateNode, onAutoLayout, onSave, onExport, onOpenSettings, onClose])
+    { id: 'create-entity', label: t('command.createEntity'), description: t('command.createEntityDesc'), icon: Boxes, category: 'node', action: () => { onCreateNode('entity'); onClose() } },
+    { id: 'create-block', label: t('command.createBlock'), description: t('command.createBlockDesc'), icon: Box, category: 'node', action: () => { onCreateNode('block'); onClose() } },
+    { id: 'create-item', label: t('command.createItem'), description: t('command.createItemDesc'), icon: Package, category: 'node', action: () => { onCreateNode('item'); onClose() } },
+    { id: 'layout-grid', label: t('command.layoutGrid'), description: t('command.layoutGridDesc'), icon: LayoutGrid, category: 'view', action: () => { onAutoLayout('grid'); onClose() } },
+    { id: 'layout-spiral', label: t('command.layoutSpiral'), description: t('command.layoutSpiralDesc'), icon: LayoutGrid, category: 'view', action: () => { onAutoLayout('spiral'); onClose() } },
+    { id: 'layout-tree', label: t('command.layoutTree'), description: t('command.layoutTreeDesc'), icon: GitBranch, category: 'view', action: () => { onAutoLayout('tree'); onClose() } },
+    { id: 'save', label: t('command.save'), description: t('command.saveDesc'), icon: Save, category: 'action', action: () => { onSave(); onClose() } },
+    { id: 'export', label: t('command.export'), description: t('command.exportDesc'), icon: Download, category: 'action', action: () => { onExport(); onClose() } },
+    { id: 'settings', label: t('command.settings'), description: t('command.settingsDesc'), icon: Settings, category: 'action', action: () => { onOpenSettings(); onClose() } },
+  ], [onCreateNode, onAutoLayout, onSave, onExport, onOpenSettings, onClose, t])
 
   const filtered = React.useMemo(() => {
     if (!query.trim()) return commands
@@ -113,7 +115,7 @@ export function CommandPalette({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="输入命令..."
+                placeholder={t('command.placeholder')}
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
               />
               <kbd className="rounded border border-border/40 px-1.5 py-0.5 text-[9px] text-muted-foreground/60">
@@ -125,7 +127,7 @@ export function CommandPalette({
             <div className="nexcube-scroll max-h-80 overflow-y-auto p-1">
               {filtered.length === 0 ? (
                 <div className="px-4 py-8 text-center text-xs text-muted-foreground/50">
-                  未找到匹配的命令
+                  {t('command.noResults')}
                 </div>
               ) : (
                 filtered.map((cmd, idx) => (
