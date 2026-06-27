@@ -120,7 +120,7 @@ export function useCanvasSync(projectId: string | null) {
     const state = useCanvasStore.getState()
     if (state.isInitialized) return // 已初始化（避免重复加载）
 
-    const flowNodes: FlowNode[] = data.nodes.map(prismaNodeToFlowNode)
+    const flowNodes: FlowNode[] = data.nodes.map((n) => prismaNodeToFlowNode(n as unknown as import('@/lib/node-system/types').PrismaNodeShape))
     const flowEdges: FlowEdge[] = data.connections.map(prismaConnectionToFlowEdge)
     loadFromProject(flowNodes, flowEdges)
 

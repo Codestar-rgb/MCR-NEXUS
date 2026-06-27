@@ -302,7 +302,7 @@ class ElectronFsCapability implements FsCapability {
 
 class ElectronBuildCapability implements BuildCapability {
   async runGradle(projectPath: string, task: string, options?: GradleOptions): Promise<BuildHandle> {
-    let ipcHandle: Awaited<ReturnType<NexcubeBuildIPC['runGradle']>>
+    let ipcHandle: Awaited<ReturnType<NexcubeBuildIPC['runGradle']>> | null = null
     try {
       ipcHandle = await ipc().build.runGradle(projectPath, task, options)
     } catch (err) {
@@ -518,7 +518,7 @@ class ElectronProcessCapability implements ProcessCapability {
     }
 
     return {
-      pid: ipcHandle?.pid ?? 0, // 0 表示尚未拿到（spawn 是同步的，pid 在 ready 后才有效）
+      pid: (ipcHandle as any)?.pid ?? 0, // 0 表示尚未拿到（spawn 是同步的，pid 在 ready 后才有效）
       stdout: stdoutIterator,
       stderr: stderrIterator,
       onExit: new Promise<number>((resolve) => {

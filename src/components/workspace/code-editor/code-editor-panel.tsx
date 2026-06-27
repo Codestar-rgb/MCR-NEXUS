@@ -75,7 +75,7 @@ export function CodeEditorPanel({ className }: CodeEditorPanelProps) {
         ),
       )
       // 触发代码→节点同步
-      syncCodeToNodes(activeFile, value)
+      syncCodeToNodes(activeFile?.path ?? "", value)
     },
     [activeFileId, activeFile, syncCodeToNodes],
   )
@@ -93,27 +93,15 @@ export function CodeEditorPanel({ className }: CodeEditorPanelProps) {
 
   return (
     <div className={`flex h-full flex-col bg-background ${className ?? ''}`}>
-      <CodeToolbar
-        activeFile={activeFile}
-        syncStatus={activeFile?.isDirty ? 'dirty' : 'synced'}
-        pendingSync={pendingSync}
-        syncResult={syncResult}
-        onSyncToNodes={() => activeFile && syncCodeToNodes(activeFile, activeFile.value)}
-        onConfirmSync={confirmSync}
-        onCancelSync={cancelSync}
-      />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <CodeToolbar {...({ activeFile: activeFile ?? null, syncStatus: activeFile?.isDirty ? 'dirty' : 'synced', pendingSync, syncResult, onSyncToNodes: () => activeFile && syncCodeToNodes(activeFile.path ?? '', activeFile.value ?? ''), onConfirmSync: confirmSync, onCancelSync: cancelSync } as any)} />
       {openFiles.length > 0 && (
-        <FileTabs
-          files={openFiles}
-          activeFileId={activeFileId}
-          onSelectFile={setActiveFileId}
-          onCloseFile={handleCloseFile}
-        />
+        <FileTabs {...({ files: openFiles, activeFileId, onSelectFile: setActiveFileId, onCloseFile: handleCloseFile } as any)} />
       )}
       <div className="min-h-0 flex-1">
         {activeFile ? (
           <CodeEditor
-            value={activeFile.value}
+            value={activeFile.value ?? ""}
             onChange={handleFileChange}
             className="h-full"
           />

@@ -113,7 +113,7 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 }
 
 function NodeIcon({ kind }: { kind: string }) {
-  const iconMap: Record<string, React.ElementType> = {
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     entity: Boxes,
     block: Box,
     item: Package,

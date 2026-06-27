@@ -288,7 +288,7 @@ function SubgraphEditorInner({
 
   /* 画布空白右键 → 弹出添加菜单 */
   const onPaneContextMenu = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | MouseEvent) => {
       e.preventDefault()
       const canvasPos = screenToFlowPosition({ x: e.clientX, y: e.clientY })
       setContextMenuState({

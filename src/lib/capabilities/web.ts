@@ -541,7 +541,7 @@ class WebBuildCapability implements BuildCapability {
   /**
    * 根据任务名返回模拟日志
    */
-  private getMockLog(task: string, projectPath: string, options?: GradleOptions[]): string[] {
+  private getMockLog(task: string, projectPath: string, options?: GradleOptions): string[] {
     const offline = options && (options as GradleOptions).offline
     const daemon = !options || (options as GradleOptions).daemon !== false
     const head = [

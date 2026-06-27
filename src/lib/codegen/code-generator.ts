@@ -47,7 +47,7 @@ export interface GeneratedFile {
   /** 文件内容 */
   content: string
   /** 语法高亮语言 */
-  language: GeneratedFileLanguage
+  language?: GeneratedFileLanguage
   /** 关联的画布节点 ID（用于双向联动） */
   linkedNodeId?: string
   /** 是否为只读文件（如 build.gradle 模板） */

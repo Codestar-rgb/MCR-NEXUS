@@ -222,7 +222,7 @@ function NodeCanvasInner() {
 
   /* 画布空白右键 → 弹出"创建节点 / 全选 / 清空"菜单 */
   const onPaneContextMenu = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | MouseEvent) => {
       e.preventDefault()
       const canvasPos = screenToFlowPosition({ x: e.clientX, y: e.clientY })
       setContextMenu({
@@ -280,7 +280,7 @@ function NodeCanvasInner() {
 
   /* 节点拖拽结束 → 触发持久化（Task 2-D 接入 API） */
   const onNodeDragStop = useCallback(
-    (_: React.MouseEvent, node: RFNode) => {
+    (_: React.MouseEvent | MouseEvent, node: RFNode) => {
       // TODO(Task 2-D)：调用 PATCH /api/projects/[id]/nodes/[nodeId] 持久化 position
       // 持久化由 useCanvasSync 的 interval 自动处理
     },
@@ -339,7 +339,7 @@ function NodeCanvasInner() {
         onPaneClick={onPaneClick}
         onNodeContextMenu={onNodeContextMenu}
         onPaneContextMenu={onPaneContextMenu}
-        onNodeDragStop={onNodeDragStop}
+        onNodeDragStop={onNodeDragStop as any}
         nodesDraggable={perfConfig.nodesDraggable}
         onlyRenderVisibleElements={nodes.length > 100}
         fitView
