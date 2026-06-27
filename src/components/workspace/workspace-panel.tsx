@@ -44,6 +44,41 @@ export function WorkspacePanel({ className }: { className?: string }) {
   const { workspaces, activeWorkspaceId, loadWorkspaces, createWorkspace, setActive, isLoading } = useWsStore()
   const [templateDialogOpen, setTemplateDialogOpen] = React.useState(false)
 
+  /* 工作区卡片拖拽排序 */
+  const [draggedId, setDraggedId] = React.useState<string | null>(null)
+  const [dragOverId, setDragOverId] = React.useState<string | null>(null)
+
+  const handleSortDragStart = (id: string) => setDraggedId(id)
+  const handleSortDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    if (id !== draggedId) setDragOverId(id)
+  }
+  const handleSortDrop = async (id: string) => {
+    if (!draggedId || draggedId === id || !currentProjectId) return
+    // 重新排序
+    const reordered = [...workspaces]
+    const fromIdx = reordered.findIndex((w) => w.id === draggedId)
+    const toIdx = reordered.findIndex((w) => w.id === id)
+    if (fromIdx === -1 || toIdx === -1) return
+    const [moved] = reordered.splice(fromIdx, 1)
+    reordered.splice(toIdx, 0, moved)
+    // 更新 sortOrder
+    for (let i = 0; i < reordered.length; i++) {
+      if (reordered[i].sortOrder !== i) {
+        try {
+          await fetch(`/api/projects/${currentProjectId}/workspaces/${reordered[i].id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sortOrder: i }),
+          })
+        } catch {}
+      }
+    }
+    await loadWorkspaces(currentProjectId)
+    setDraggedId(null)
+    setDragOverId(null)
+  }
+
   // 加载工作区
   React.useEffect(() => {
     if (currentProjectId) {
@@ -110,6 +145,12 @@ export function WorkspacePanel({ className }: { className?: string }) {
                   isActive={ws.id === activeWorkspaceId}
                   onClick={() => setActive(ws.id)}
                   projectId={currentProjectId}
+                  isDragging={draggedId === ws.id}
+                  isDragTarget={dragOverId === ws.id && draggedId !== ws.id}
+                  onSortDragStart={() => handleSortDragStart(ws.id)}
+                  onSortDragOver={(e) => handleSortDragOver(e, ws.id)}
+                  onSortDrop={() => handleSortDrop(ws.id)}
+                  onSortDragEnd={() => { setDraggedId(null); setDragOverId(null) }}
                 />
               ))}
             </AnimatePresence>
@@ -147,6 +188,12 @@ function WorkspaceCard({
   isActive,
   onClick,
   projectId,
+  isDragging,
+  isDragTarget,
+  onSortDragStart,
+  onSortDragOver,
+  onSortDrop,
+  onSortDragEnd,
 }: {
   workspace: {
     id: string
@@ -159,6 +206,12 @@ function WorkspaceCard({
   isActive: boolean
   onClick: () => void
   projectId: string | null
+  isDragging?: boolean
+  isDragTarget?: boolean
+  onSortDragStart?: () => void
+  onSortDragOver?: (e: React.DragEvent) => void
+  onSortDrop?: () => void
+  onSortDragEnd?: () => void
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [isDragOver, setIsDragOver] = React.useState(false)
@@ -212,23 +265,34 @@ function WorkspaceCard({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, delay: 0.03 }}
-      className="relative"
-      onDragOver={handleDragOver}
+    <div
+      className={cn(
+        'relative',
+        isDragging && 'opacity-40',
+        isDragTarget && 'translate-y-1',
+      )}
+      onDragOver={(e) => {
+        handleDragOver(e)
+        onSortDragOver?.(e)
+      }}
       onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDrop={(e) => {
+        handleDrop(e)
+        onSortDrop?.()
+      }}
     >
-      <motion.button
+      <button
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData('text/workspace-sort', workspace.id)
+          onSortDragStart?.()
+        }}
+        onDragEnd={onSortDragEnd}
         onClick={onClick}
         onContextMenu={(e) => {
           e.preventDefault()
           setMenuOpen(!menuOpen)
         }}
-        whileHover={{ x: 2 }}
-        whileTap={{ scale: 0.98 }}
         className={cn(
           'group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors duration-200',
           isActive
@@ -289,7 +353,7 @@ function WorkspaceCard({
         >
           <MoreVertical className="h-3.5 w-3.5" />
         </button>
-      </motion.button>
+      </button>
 
       {/* 右键菜单 */}
       {menuOpen && (
@@ -317,7 +381,7 @@ function WorkspaceCard({
           </motion.div>
         </>
       )}
-    </motion.div>
+    </div>
   )
 }
 
