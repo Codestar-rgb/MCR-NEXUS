@@ -508,57 +508,51 @@ public class ${className} extends MobEffect {
 
 /**
  * 生成主 Mod 类（@Mod 注解，注册入口）
+ *
+ * 使用 DeferredRegister 模式（Forge 1.20.1 推荐）：
+ *  - ModItems / ModBlocks / ModEntities 三个注册中心类
+ *  - 主类构造函数中 register(modEventBus)
+ *  - 实体属性通过 @Mod.EventBusSubscriber 注册
  */
 function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   const modClassName = toModClassName(modId)
-  const registryLines: string[] = []
+  const pkg = 'com.example.mod'
 
-  for (const node of nodes) {
-    const kind = node.data.kind
-    const registryId = getStr(node, 'registryId', node.id)
-    const className = toClassName(registryId)
+  // 分类节点
+  const entities = nodes.filter((n) => n.data.kind === 'entity')
+  const blocks = nodes.filter((n) => n.data.kind === 'block')
+  const items = nodes.filter((n) => ['item', 'equipment', 'weapon', 'food'].includes(n.data.kind))
+  const potions = nodes.filter((n) => n.data.kind === 'potion')
 
-    if (kind === 'entity') {
-      registryLines.push(`        // 实体：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_ENTITY(${className}Entity, "${registryId}");`)
-    } else if (kind === 'block') {
-      registryLines.push(`        // 方块：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_BLOCK(${className}Block, "${registryId}");`)
-    } else if (kind === 'item') {
-      registryLines.push(`        // 物品：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_ITEM(${className}Item, "${registryId}");`)
-    } else if (kind === 'equipment') {
-      registryLines.push(`        // 装备：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
-    } else if (kind === 'weapon') {
-      registryLines.push(`        // 武器：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
-    } else if (kind === 'food') {
-      registryLines.push(`        // 食物：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_ITEM(${className}, "${registryId}");`)
-    } else if (kind === 'biome') {
-      registryLines.push(`        // 群系：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_BIOME(${registryId});`)
-    } else if (kind === 'structure') {
-      registryLines.push(`        // 结构：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_STRUCTURE(${registryId});`)
-    } else if (kind === 'dimension') {
-      registryLines.push(`        // 维度：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_DIMENSION(${registryId});`)
-    } else if (kind === 'potion') {
-      registryLines.push(`        // 药水效果：${node.data.title} (${node.id})`)
-      registryLines.push(`        // REGISTER_EFFECT(${className}, "${registryId}");`)
-    }
-  }
+  const hasEntities = entities.length > 0
+  const hasBlocks = blocks.length > 0
+  const hasItems = items.length > 0
+  const hasPotions = potions.length > 0
 
-  const content = `package com.example.mod;
+  const imports: string[] = [
+    'import net.minecraftforge.eventbus.api.IEventBus;',
+    'import net.minecraftforge.fml.common.Mod;',
+    'import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;',
+  ]
+  if (hasItems) imports.push(`import ${pkg}.item.ModItems;`)
+  if (hasBlocks) imports.push(`import ${pkg}.block.ModBlocks;`)
+  if (hasEntities) imports.push(`import ${pkg}.entity.ModEntities;`)
+  if (hasPotions) imports.push(`import ${pkg}.effect.ModEffects;`)
 
-import net.minecraftforge.fml.common.Mod;
+  const registerCalls: string[] = []
+  if (hasItems) registerCalls.push('        ModItems.REGISTER.register(bus);')
+  if (hasBlocks) registerCalls.push('        ModBlocks.REGISTER.register(bus);')
+  if (hasEntities) registerCalls.push('        ModEntities.REGISTER.register(bus);')
+  if (hasPotions) registerCalls.push('        ModEffects.REGISTER.register(bus);')
+
+  const content = `package ${pkg};
+
+${imports.join('\n')}
 
 /**
  * NexCube 自动生成的主 Mod 类
  * mod_id: ${modId}
- * 节点数量: ${nodes.length}
+ * 节点数量: ${nodes.length}（实体 ${entities.length} · 方块 ${blocks.length} · 物品 ${items.length} · 药水 ${potions.length}）
  */
 @Mod("${modId}")
 public class ${modClassName} {
@@ -566,14 +560,176 @@ public class ${modClassName} {
     public static final String MOD_ID = "${modId}";
 
     public ${modClassName}() {
-        // 注册节点对应的游戏对象
-${registryLines.join('\n') || '        // (无节点)'}
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        // 注册 DeferredRegister
+${registerCalls.join('\n') || '        // (无节点)'}
     }
 }
 `
 
   return {
     filePath: `src/main/java/com/example/mod/${modClassName}.java`,
+    content,
+    language: 'java',
+  }
+}
+
+/** 生成 ModItems 注册中心（物品/装备/武器/食物） */
+function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile | null {
+  const itemNodes = nodes.filter((n) => ['item', 'equipment', 'weapon', 'food'].includes(n.data.kind))
+  if (itemNodes.length === 0) return null
+
+  const pkg = 'com.example.mod.item'
+  const entries = itemNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId)
+    const kind = n.data.kind
+    // 食物用 Food 接口；装备/武器用 Tier 接口；普通物品用 Item
+    if (kind === 'food') {
+      const nutrition = getNum(n, 'nutrition', 0)
+      const saturation = getNum(n, 'saturation', 0)
+      return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties().food(new FoodProperties.Builder().nutrition(${nutrition}).saturationMod(${saturation}F).build())));`
+    }
+    if (kind === 'weapon' || kind === 'equipment') {
+      return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties())); // ${className} 自定义类待接入`
+    }
+    return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties()));`
+  })
+
+  const content = `package ${pkg};
+
+import net.minecraft.world.item.Item;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import com.example.mod.${toModClassName(modId)};
+
+/**
+ * 物品注册中心（NexCube 自动生成）
+ * 包含 ${itemNodes.length} 个物品节点
+ */
+public class ModItems {
+
+    public static final DeferredRegister<Item> REGISTER =
+        DeferredRegister.create(ForgeRegistries.ITEMS, ${toModClassName(modId)}.MOD_ID);
+
+${entries.join('\n\n')}
+}
+`
+  return {
+    filePath: `src/main/java/com/example/mod/item/ModItems.java`,
+    content,
+    language: 'java',
+  }
+}
+
+/** 生成 ModBlocks 注册中心 + BlockItem 联动 */
+function generateModBlocksFile(modId: string, nodes: FlowNode[]): GeneratedFile | null {
+  const blockNodes = nodes.filter((n) => n.data.kind === 'block')
+  if (blockNodes.length === 0) return null
+
+  const pkg = 'com.example.mod.block'
+  const entries = blockNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId) + 'Block'
+    const hardness = getNum(n, 'hardness', 3)
+    const resistance = getNum(n, 'resistance', 6)
+    const lightLevel = getNum(n, 'lightLevel', 0)
+    return `    public static final RegistryObject<Block> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Block(BlockBehaviour.Properties.of()\n            .strength(${hardness}F, ${resistance}F)\n            .lightLevel(s -> ${lightLevel})));`
+  })
+
+  // BlockItem 联动注册
+  const itemEntries = blockNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    return `    public static final RegistryObject<Item> ${registryId.toUpperCase()}_ITEM =\n        ModItems.REGISTER.register("${registryId}", () -> new BlockItem(${registryId.toUpperCase()}.get(), new Item.Properties()));`
+  })
+
+  const content = `package ${pkg};
+
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import com.example.mod.item.ModItems;
+
+/**
+ * 方块注册中心（NexCube 自动生成）
+ * 包含 ${blockNodes.length} 个方块节点 + 对应 BlockItem
+ */
+public class ModBlocks {
+
+    public static final DeferredRegister<Block> REGISTER =
+        DeferredRegister.create(ForgeRegistries.BLOCKS, com.example.mod.${toModClassName(modId)}.MOD_ID);
+
+${entries.join('\n\n')}
+
+    // BlockItem 联动注册（让方块可以在创造模式物品栏获得）
+${itemEntries.join('\n\n')}
+}
+`
+  return {
+    filePath: `src/main/java/com/example/mod/block/ModBlocks.java`,
+    content,
+    language: 'java',
+  }
+}
+
+/** 生成 ModEntities 注册中心 + 实体属性注册 */
+function generateModEntitiesFile(modId: string, nodes: FlowNode[]): GeneratedFile | null {
+  const entityNodes = nodes.filter((n) => n.data.kind === 'entity')
+  if (entityNodes.length === 0) return null
+
+  const pkg = 'com.example.mod.entity'
+  const entries = entityNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId) + 'Entity'
+    return `    public static final RegistryObject<EntityType<${className}>> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> EntityType.Builder.of(${className}::new, MobCategory.CREATURE).sized(0.6f, 1.8f).build("${registryId}"));`
+  })
+
+  const attrLines = entityNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId) + 'Entity'
+    return `        if (event.getEntityType() == ${registryId.toUpperCase()}.get()) {\n            event.put(${className}.createAttributes().build());\n        }`
+  })
+
+  const content = `package ${pkg};
+
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import com.example.mod.${toModClassName(modId)};
+
+/**
+ * 实体注册中心（NexCube 自动生成）
+ * 包含 ${entityNodes.length} 个实体节点
+ */
+@Mod.EventBusSubscriber(modid = ${toModClassName(modId)}.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+public class ModEntities {
+
+    public static final DeferredRegister<EntityType<?>> REGISTER =
+        DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, ${toModClassName(modId)}.MOD_ID);
+
+${entries.join('\n\n')}
+
+    @SubscribeEvent
+    public static void registerAttributes(EntityAttributeCreationEvent event) {
+${attrLines.join('\n\n')}
+    }
+}
+`
+  return {
+    filePath: `src/main/java/com/example/mod/entity/ModEntities.java`,
     content,
     language: 'java',
   }
@@ -693,7 +849,15 @@ export function generateProjectCode(
     if (file) files.push(file)
   }
 
-  // 3. 资源文件
+  // 3. 注册中心类（DeferredRegister 模式，Forge 1.20.1 推荐）
+  const modItems = generateModItemsFile(modId, nodes)
+  if (modItems) files.push(modItems)
+  const modBlocks = generateModBlocksFile(modId, nodes)
+  if (modBlocks) files.push(modBlocks)
+  const modEntities = generateModEntitiesFile(modId, nodes)
+  if (modEntities) files.push(modEntities)
+
+  // 4. 资源文件
   files.push(generateModsToml(modId))
 
   return {

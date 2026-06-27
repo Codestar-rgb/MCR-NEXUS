@@ -42,6 +42,7 @@ import { GlobalSearch } from '@/components/workspace/global-search'
 import { StatusBar } from '@/components/workspace/status-bar'
 import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { CommandPalette } from '@/components/workspace/command-palette'
+import { OnboardingTour } from '@/components/workspace/onboarding-tour'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
 import { useCanvasStore, createFlowNode } from '@/stores/canvas'
 import { useClipboardStore } from '@/stores/clipboard'
@@ -458,6 +459,9 @@ export function WorkspaceShell() {
         onExport={() => toast.info('请在终端区点击导出')}
         onOpenSettings={openSettings}
       />
+
+      {/* 首次使用引导（localStorage 标记，不重复显示） */}
+      <OnboardingTour />
     </TooltipProvider>
   )
 }

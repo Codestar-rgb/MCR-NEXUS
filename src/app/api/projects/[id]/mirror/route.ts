@@ -24,7 +24,7 @@ export async function GET(
     if (!project) {
       return NextResponse.json({ error: 'project_not_found' }, { status: 404 })
     }
-    // TODO Task 5-B: 从 Project.mirrorId 字段读取
+    // 项目级镜像配置（后续扩展）
     return NextResponse.json({
       mirrorId: 'aliyun',
       mirror: PREDEFINED_MIRRORS[0],
@@ -62,7 +62,7 @@ export async function POST(
       return NextResponse.json({ error: 'project_not_found' }, { status: 404 })
     }
 
-    // TODO Task 5-B:
+    // 镜像源更新（后续扩展）
     //   1. 持久化 mirrorId 到 Project 表（需扩展 schema）
     //   2. 重写项目根目录下 settings.gradle 的 pluginManagement / dependencyResolutionManagement repositories 块
     //   3. 触发 Gradle refresh

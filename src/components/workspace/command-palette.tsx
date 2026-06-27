@@ -8,9 +8,10 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTheme } from 'next-themes'
 import {
   Search, CornerDownLeft, Boxes, Box, Package, Zap,
-  LayoutGrid, GitBranch, Save, Download, Settings,
+  LayoutGrid, GitBranch, Save, Download, Settings, MoonStar,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/hooks/use-i18n'
@@ -41,6 +42,7 @@ export function CommandPalette({
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const { t } = useI18n()
+  const { resolvedTheme, setTheme } = useTheme()
 
   React.useEffect(() => {
     if (open) {
@@ -60,7 +62,8 @@ export function CommandPalette({
     { id: 'save', label: t('command.save'), description: t('command.saveDesc'), icon: Save, category: 'action', action: () => { onSave(); onClose() } },
     { id: 'export', label: t('command.export'), description: t('command.exportDesc'), icon: Download, category: 'action', action: () => { onExport(); onClose() } },
     { id: 'settings', label: t('command.settings'), description: t('command.settingsDesc'), icon: Settings, category: 'action', action: () => { onOpenSettings(); onClose() } },
-  ], [onCreateNode, onAutoLayout, onSave, onExport, onOpenSettings, onClose, t])
+    { id: 'theme-toggle', label: '切换主题', description: `当前: ${resolvedTheme === 'dark' ? '深色' : '浅色'} → 切换到 ${resolvedTheme === 'dark' ? '浅色' : '深色'}`, icon: MoonStar, category: 'action', action: () => { setTheme(resolvedTheme === 'dark' ? 'light' : 'dark'); onClose() } },
+  ], [onCreateNode, onAutoLayout, onSave, onExport, onOpenSettings, onClose, t, resolvedTheme, setTheme])
 
   const filtered = React.useMemo(() => {
     if (!query.trim()) return commands

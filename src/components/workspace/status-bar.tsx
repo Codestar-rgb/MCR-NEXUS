@@ -10,7 +10,7 @@ import { useWorkspaceStore } from '@/stores/workspace'
 import { useCanvasStore } from '@/stores/canvas'
 import { useI18n } from '@/hooks/use-i18n'
 import { cn } from '@/lib/utils'
-import { Boxes, GitBranch, Zap } from 'lucide-react'
+import { Boxes, Zap } from 'lucide-react'
 
 export function StatusBar() {
   const mode = useWorkspaceStore((s) => s.mode)
@@ -22,11 +22,6 @@ export function StatusBar() {
     <footer className="flex h-6 shrink-0 items-center justify-between border-t border-border/30 bg-sidebar/20 px-3 text-[10px] text-muted-foreground/60">
       {/* 左侧：状态信息 */}
       <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1">
-          <GitBranch className="h-3 w-3" />
-          main
-        </span>
-        <span className="text-muted-foreground/30">|</span>
         <span className="flex items-center gap-1">
           <Boxes className="h-3 w-3" />
           {nodes.length} {t('workspace.nodes')} · {edges.length} {t('workspace.edges')}

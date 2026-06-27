@@ -119,14 +119,20 @@ export function registerPlugin(plugin: NexCubePlugin): void {
       registerNodeType: (kind, def) => { customNodeTypes[kind] = def },
       registerTemplate: (t) => { customTemplates.push(t) },
       registerCodeGenerator: (kind, fn) => { customCodeGenerators[kind] = fn },
-      notify: (msg, type = 'info') => console.log(`[Plugin:${plugin.manifest.id}] ${type}: ${msg}`),
+      notify: (msg, type = 'info') => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Plugin:${plugin.manifest.id}] ${type}: ${msg}`)
+        }
+      },
       getProjectId: () => null, // 由运行时注入
       getWorkspaceId: () => null,
     }
     plugin.onActivate(ctx)
   }
 
-  console.log(`[Plugin] 已加载: ${plugin.manifest.name} v${plugin.manifest.version}`)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Plugin] 已加载: ${plugin.manifest.name} v${plugin.manifest.version}`)
+  }
 }
 
 /**
@@ -145,7 +151,9 @@ export function unregisterPlugin(pluginId: string): void {
   }
 
   registeredPlugins.splice(idx, 1)
-  console.log(`[Plugin] 已卸载: ${plugin.manifest.name}`)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Plugin] 已卸载: ${plugin.manifest.name}`)
+  }
 }
 
 /**

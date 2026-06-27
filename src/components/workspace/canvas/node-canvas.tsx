@@ -394,7 +394,7 @@ function NodeCanvasInner() {
   /* 节点拖拽结束 → 触发持久化（Task 2-D 接入 API） */
   const onNodeDragStop = useCallback(
     (_: React.MouseEvent | MouseEvent, node: RFNode) => {
-      // TODO(Task 2-D)：调用 PATCH /api/projects/[id]/nodes/[nodeId] 持久化 position
+      // 持久化由 useCanvasSync 的 interval 自动处理
       // 持久化由 useCanvasSync 的 interval 自动处理
     },
     [],
