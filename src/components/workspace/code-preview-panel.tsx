@@ -16,6 +16,7 @@ import { Code2, ChevronRight, ChevronLeft, FileCode2, Copy, Expand } from 'lucid
 import dynamic from 'next/dynamic'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useCanvasStore } from '@/stores/canvas'
+import { useI18n } from '@/hooks/use-i18n'
 import { generateProjectCode, type GeneratedFile } from '@/lib/codegen/code-generator'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -37,6 +38,7 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
   const selectedNodeId = useWorkspaceStore((s) => s.selectedNodeId)
   const nodes = useCanvasStore((s) => s.nodes)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
+  const { t } = useI18n()
   const [collapsed, setCollapsed] = React.useState(false)
   const [activeFile, setActiveFile] = React.useState<string | null>(null)
   const [files, setFiles] = React.useState<GeneratedFile[]>([])
@@ -138,7 +140,7 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
       <div className="flex items-center justify-between border-b border-border/20 px-3 py-2">
         <div className="flex items-center gap-2">
           <Code2 className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-semibold text-foreground">代码预览</span>
+          <span className="text-xs font-semibold text-foreground">{t('codePreview.title')}</span>
         </div>
         <div className="flex items-center gap-1">
           {/* 复制 */}
@@ -146,7 +148,7 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(activeFileData.content)
-                toast.success('代码已复制')
+                toast.success(t('codePreview.copied'))
               }}
               className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground/60 hover:bg-accent/40 hover:text-foreground"
               aria-label="复制代码"
@@ -239,10 +241,10 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
             <FileCode2 className="h-8 w-8 text-muted-foreground/30" />
             <div>
               <p className="text-xs text-muted-foreground">
-                {selectedNode ? '无生成代码' : '选中节点查看代码'}
+                {selectedNode ? t('codePreview.noCode') : t('codePreview.selectNode')}
               </p>
               <p className="mt-0.5 text-[10px] text-muted-foreground/50">
-                {selectedNode ? '该节点类型不支持代码生成' : '点击画布上的任意节点'}
+                {selectedNode ? t('codePreview.noCode') : t('codePreview.selectNode')}
               </p>
             </div>
           </div>

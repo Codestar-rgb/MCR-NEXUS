@@ -18,6 +18,7 @@ import { motion } from 'framer-motion'
 import { MousePointerClick } from 'lucide-react'
 import { useWorkspaceStore } from '@/stores/workspace'
 import { useCanvasStore } from '@/stores/canvas'
+import { useI18n } from '@/hooks/use-i18n'
 import { getNodeTypeDefinition } from '@/lib/node-system'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
@@ -53,6 +54,7 @@ export function PropertyPanel() {
 
   const nodes = useCanvasStore((s) => s.nodes)
   const updateNode = useCanvasStore((s) => s.updateNode)
+  const { t } = useI18n()
 
   const selectedNode = useMemo(
     () => (selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) ?? null : null),
@@ -72,7 +74,7 @@ export function PropertyPanel() {
 
   const headerTitle = hasSelection
     ? `${typeLabel} - ${selectedNodeName ?? selectedNode.data.title}`
-    : '属性面板'
+    : t('property.title')
 
   const defaultTab = 'basic'
 
@@ -107,7 +109,7 @@ export function PropertyPanel() {
       <header className="border-b border-border px-4 py-3">
         <h2 className="truncate text-sm font-semibold text-foreground">{headerTitle}</h2>
         {!hasSelection && (
-          <p className="mt-0.5 text-[11px] text-muted-foreground">点击节点查看属性</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{t('property.selectNode')}</p>
         )}
         {hasSelection && (
           <p className={cn('mt-0.5 text-[11px] font-medium', typeColor)}>
@@ -122,11 +124,11 @@ export function PropertyPanel() {
             <div className="border-b border-border px-3 pt-3">
               <TabsList className="bg-muted/50">
                 <TabsTrigger value="basic" className="text-xs">
-                  基础属性
+                  {t('property.basic')}
                 </TabsTrigger>
                 {supportsSubLogic && (
                   <TabsTrigger value="behavior" className="text-xs">
-                    行为逻辑
+                    {t('property.behavior')}
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -168,9 +170,9 @@ export function PropertyPanel() {
               <MousePointerClick className="h-7 w-7 text-muted-foreground/60" />
             </motion.div>
             <div>
-              <p className="text-xs font-medium text-foreground">选中节点开始编辑</p>
+              <p className="text-xs font-medium text-foreground">{t('property.selectNode')}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                在画布上点击任意节点，<br />其属性将在此处显示
+                {t('property.clickHint')}
               </p>
             </div>
           </div>
