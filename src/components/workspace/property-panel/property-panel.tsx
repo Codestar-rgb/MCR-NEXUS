@@ -75,24 +75,24 @@ export function PropertyPanel() {
 
   const defaultTab = 'basic'
 
-  // 属性变更：立即更新 store + debounce 持久化
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // 属性变更：立即更新 store + 闪烁反馈
+  const [flashKey, setFlashKey] = React.useState<string | null>(null)
   const handlePropertyChange = useCallback(
     (key: string, value: unknown) => {
       if (!selectedNode) return
       const newProperties = { ...selectedNode.data.properties, [key]: value }
-      // 立即更新 canvas store（UI 即时反馈）
       updateNode(selectedNode.id, {
         data: { ...selectedNode.data, properties: newProperties },
       })
-      // 如果改的是 name 字段，同步更新 title
       if (key === 'name') {
         updateNode(selectedNode.id, {
           data: { ...selectedNode.data, properties: newProperties, title: String(value) },
         })
         setSelectedNode(selectedNode.id, kind as 'entity' | 'block' | 'item' | null, String(value))
       }
-      // debounce 持久化由 useCanvasSync 的 interval 自动处理（检测 nodes 变化）
+      // 触发闪烁反馈
+      setFlashKey(key)
+      setTimeout(() => setFlashKey(null), 400)
     },
     [selectedNode, updateNode, kind, setSelectedNode],
   )

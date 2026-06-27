@@ -25,6 +25,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -314,8 +315,16 @@ function NodeCanvasInner() {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
-      <ReactFlow
+      <AnimatePresence mode="wait">
+      <motion.div
         key={canvasKey}
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -30 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0"
+      >
+      <ReactFlow
         defaultNodes={rfNodes}
         defaultEdges={rfEdges}
         nodeTypes={stableNodeTypes}
@@ -384,6 +393,8 @@ function NodeCanvasInner() {
           </div>
         </Panel>
       </ReactFlow>
+      </motion.div>
+      </AnimatePresence>
 
       {/* 顶部居中工具栏（浮动，玻璃拟态） */}
       <CanvasToolbar />

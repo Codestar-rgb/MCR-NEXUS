@@ -184,15 +184,22 @@ function WorkspaceCard({
   }
 
   return (
-    <div className="relative">
-      <button
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: 0.03 }}
+      className="relative"
+    >
+      <motion.button
         onClick={onClick}
         onContextMenu={(e) => {
           e.preventDefault()
           setMenuOpen(!menuOpen)
         }}
+        whileHover={{ x: 2 }}
+        whileTap={{ scale: 0.98 }}
         className={cn(
-          'group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200',
+          'group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors duration-200',
           isActive
             ? 'border-primary/30 bg-primary/5 shadow-sm'
             : 'border-border/30 bg-card/20 hover:border-border/50 hover:bg-card/40',
@@ -250,7 +257,7 @@ function WorkspaceCard({
         >
           <MoreVertical className="h-3.5 w-3.5" />
         </button>
-      </button>
+      </motion.button>
 
       {/* 右键菜单 */}
       {menuOpen && (
@@ -278,7 +285,7 @@ function WorkspaceCard({
           </motion.div>
         </>
       )}
-    </div>
+    </motion.div>
   )
 }
 
