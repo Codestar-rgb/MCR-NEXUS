@@ -2257,3 +2257,40 @@ Stage Summary:
 - 导出 ZIP 现在包含完整数据包：loot_tables + advancements
 - 搜索从"仅标题"提升为"全属性搜索"
 - 已推送 GitHub（db8a64d）
+
+---
+Task ID: R12 (装备/武器/食物专用卡片 + 标签生成器)
+Agent: main (Z.ai Code)
+Task: 3 个专用节点卡片 + 物品标签 JSON 生成
+
+Work Log:
+S1: 装备节点专用卡片
+- EquipmentNodeCard：护甲值/韧性/击退抗性/耐久/附魔值/修复材料
+- 槽位徽章：⛑头盔/🛡胸甲/👖护腿/👢靴子（emoji + 中文）
+- 主题色：orange
+- 摘要：{slot} · 护甲 {value} · 耐久 {durability}
+
+S2: 武器节点专用卡片
+- WeaponNodeCard：攻击伤害/攻速/攻击距离/耐久/附魔值/修复材料
+- 武器类型徽章：⚔剑/🪓斧/🏹弓/🎯弩/🔱三叉戟
+- 主题色：red
+- 摘要：{type} · DMG {damage} · 耐久 {durability}
+
+S3: 食物节点专用卡片
+- FoodNodeCard：营养值/饱和度/最大堆叠/稀有度
+- 3 个属性芯片：🥩肉食/⚡快餐/🍎无限食（开/关视觉状态）
+- 主题色：lime
+- 摘要：营养 {n} · 饱和 {s} · {rarity}
+
+S4: 物品标签生成器
+- generateItemTagsFile：tags/items/<modId>_items.json
+- 所有模组物品归入 #<modId>:items 标签
+- 便于其他 mod/数据包引用
+- 有物品/方块时自动生成
+
+Stage Summary:
+- 4 项改进完成 ✅
+- 装备/武器/食物从 GenericNodeCard 提升为专用卡片
+  - 7/13 节点类型有专用卡片（entity/block/item/equipment/weapon/food/recipe）
+- 导出 ZIP 现包含物品标签文件
+- 已推送 GitHub（22af810）
