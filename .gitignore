@@ -70,3 +70,5 @@ server.log
 /mini-services/*/node_modules/
 /mini-services/*/*.logtool-results/
 tool-results/
+screenshot-*.png
+vlm-*.json
