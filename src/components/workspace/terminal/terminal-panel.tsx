@@ -67,7 +67,7 @@ import { simulateBuild, isBuildFailed } from '@/lib/build/gradle-simulator'
 import { executeFixAction } from '@/lib/build/fix-actions'
 import { parseGradleLog } from '@/lib/capabilities/log-parser'
 import type { ParsedLogCard } from '@/lib/capabilities/types'
-import { BuildHistoryPanel } from './build-history-panel'
+import { BuildTimeline } from '@/components/workspace/build-timeline'
 import { LogCardsPanel } from './log-cards-panel'
 import { cn } from '@/lib/utils'
 
@@ -238,7 +238,7 @@ export function TerminalPanel() {
   const [tabsUi, setTabsUi] = React.useState<TabState[]>(INITIAL_TABS)
   /** 构建进度（0-100） */
   const [progress, setProgress] = React.useState(0)
-  /** 构建历史 Sheet 开合 */
+  /** 构建历史显示开关 */
   const [historyOpen, setHistoryOpen] = React.useState(false)
   /** 解析卡片是否展开（在 build tab 显示） */
   const [cardsExpanded, setCardsExpanded] = React.useState(false)
@@ -1101,12 +1101,21 @@ export function TerminalPanel() {
         />
       )}
 
-      {/* ---------- 构建历史 Sheet ---------- */}
-      <BuildHistoryPanel
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-        projectId={currentProjectId}
-      />
+      {/* ---------- 构建历史时间线（内嵌面板） ---------- */}
+      {historyOpen && (
+        <div className="absolute inset-0 z-30 bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b border-border/30 px-3 py-2">
+            <span className="text-xs font-semibold text-foreground">构建历史</span>
+            <button
+              onClick={() => setHistoryOpen(false)}
+              className="text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              关闭 ✕
+            </button>
+          </div>
+          <BuildTimeline projectId={currentProjectId} className="h-full" />
+        </div>
+      )}
     </div>
   )
 }

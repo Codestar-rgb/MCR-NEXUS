@@ -24,6 +24,7 @@
  *  - nodeExtras（parentId / dragging 等 React Flow 附加字段）合并到渲染节点上
  */
 
+import * as React from 'react'
 import { useCallback, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -117,7 +118,18 @@ function NodeCanvasInner() {
 
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setCenter } = useReactFlow()
+
+  /* 节点选中时自动定位到画布中心 */
+  const selectedNodeId = useCanvasStore((s) => s.selectedNodeIds[0] ?? null)
+  React.useEffect(() => {
+    if (!selectedNodeId) return
+    const node = nodes.find((n) => n.id === selectedNodeId)
+    if (!node) return
+    const x = node.position.x + (node.width ?? 120)
+    const y = node.position.y + (node.height ?? 100)
+    setCenter(x, y, { zoom: 1.2, duration: 300 })
+  }, [selectedNodeId, nodes, setCenter])
 
   /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
   useCanvasSync(currentProjectId)
