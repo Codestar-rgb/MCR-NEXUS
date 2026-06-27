@@ -39,6 +39,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { TopDashboard } from '@/components/workspace/top-dashboard'
 import { WorkspacePanel } from '@/components/workspace/workspace-panel'
 import { GlobalSearch } from '@/components/workspace/global-search'
+import { StatusBar } from '@/components/workspace/status-bar'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
@@ -290,6 +291,9 @@ export function WorkspaceShell() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* 底部状态栏 */}
+      <StatusBar />
 
       {/* 全局搜索（Ctrl+P） */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />

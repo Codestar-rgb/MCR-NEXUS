@@ -264,6 +264,42 @@ export function CodeEditor({
 
       completionProviderRegistered = true
     }
+
+    // 3. 注册 Java 代码片段补全
+    if (!completionProviderRegistered) {
+      const snippets: Array<{ label: string; insertText: string; detail: string }> = [
+        { label: 'psvm', detail: 'public static void main', insertText: 'public static void main(String[] args) {\n\t$0\n}' },
+        { label: 'sout', detail: 'System.out.println', insertText: 'System.out.println($0);' },
+        { label: 'mod', detail: '@Mod annotation', insertText: '@Mod("${1:modid}")\npublic class ${2:ClassName} {\n\t$0\n}' },
+        { label: 'register', detail: 'DeferredRegister', insertText: "public static final DeferredRegister<Item> ITEMS =\n\tDeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);" },
+        { label: 'event', detail: 'SubscribeEvent', insertText: '@SubscribeEvent\npublic void onEvent(${1:Event} event) {\n\t$0\n}' },
+        { label: 'try', detail: 'try-catch', insertText: 'try {\n\t$0\n} catch (Exception e) {\n\te.printStackTrace();\n}' },
+        { label: 'for', detail: 'for loop', insertText: 'for (int i = 0; i < ${1:count}; i++) {\n\t$0\n}' },
+        { label: 'if', detail: 'if statement', insertText: 'if ($1) {\n\t$0\n}' },
+      ]
+      monaco.languages.registerCompletionItemProvider('java', {
+        triggerCharacters: [''],
+        provideCompletionItems: (model, position) => {
+          const word = model.getWordUntilPosition(position)
+          const range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word.startColumn,
+            endColumn: word.endColumn,
+          }
+          return {
+            suggestions: snippets.map((s) => ({
+              label: s.label,
+              kind: monaco.languages.CompletionItemKind.Snippet,
+              insertText: s.insertText,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              detail: s.detail,
+              range,
+            })),
+          }
+        },
+      })
+    }
   }, [])
 
   /* ---------------------------------------------------------------- */

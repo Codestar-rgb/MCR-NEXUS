@@ -28,6 +28,7 @@
  */
 
 import * as React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import {
@@ -150,13 +151,23 @@ export function SettingsDialog({ open, onOpenChange, defaultTab = 'mirror' }: Se
             })}
           </nav>
 
-          {/* 右侧内容 */}
+          {/* 右侧内容（带切换动画） */}
           <div className="min-h-0 flex-1 overflow-y-auto p-6">
-            {tab === 'mirror' && <MirrorPanel />}
-            {tab === 'theme' && <ThemePanel />}
-            {tab === 'shortcuts' && <ShortcutsPanelEditable />}
-            {tab === 'plugins' && <AdaptersPanel />}
-            {tab === 'env' && <EnvironmentPanel />}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
+                transition={{ duration: 0.15 }}
+              >
+                {tab === 'mirror' && <MirrorPanel />}
+                {tab === 'theme' && <ThemePanel />}
+                {tab === 'shortcuts' && <ShortcutsPanelEditable />}
+                {tab === 'plugins' && <AdaptersPanel />}
+                {tab === 'env' && <EnvironmentPanel />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </DialogContent>
