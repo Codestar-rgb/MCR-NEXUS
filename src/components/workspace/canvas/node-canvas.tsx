@@ -115,7 +115,7 @@ function NodeCanvasInner() {
 
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
-  const { screenToFlowPosition, setEdges: setRFEdges, setNodes: setRFNodes } = useReactFlow()
+  const { screenToFlowPosition } = useReactFlow()
 
   /* 阶段 2-D：从项目持久化加载节点 + debounce 同步 */
   useCanvasSync(currentProjectId)
@@ -168,13 +168,9 @@ function NodeCanvasInner() {
       })
   }, [edges, nodes])
 
-  /* 阶段修复：store 加载后同步到 ReactFlow 内部 store（解决 controlled edges 不渲染问题） */
-  useEffect(() => {
-    if (isInitialized) {
-      setRFNodes(rfNodes)
-      setRFEdges(rfEdges)
-    }
-  }, [isInitialized, rfNodes, rfEdges, setRFNodes, setRFEdges])
+  /* 修复 React Flow v12 edges 不渲染问题：
+   * 用 key 强制重建 ReactFlow 组件，确保 defaultNodes/defaultEdges 生效 */
+  const canvasKey = `${currentProjectId}-${isInitialized}-${rfNodes.length}`
 
   /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
   const isValidConnection = useCallback<IsValidConnection<RFEdge>>(
@@ -281,9 +277,7 @@ function NodeCanvasInner() {
   const onNodeDragStop = useCallback(
     (_: React.MouseEvent, node: RFNode) => {
       // TODO(Task 2-D)：调用 PATCH /api/projects/[id]/nodes/[nodeId] 持久化 position
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[NodeCanvas] onNodeDragStop', node.id, node.position)
-      }
+      // 持久化由 useCanvasSync 的 interval 自动处理
     },
     [],
   )
@@ -317,9 +311,9 @@ function NodeCanvasInner() {
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
       <ReactFlow
-        key={`canvas-${currentProjectId}-${isInitialized}`}
-        nodes={rfNodes}
-        edges={rfEdges}
+        key={canvasKey}
+        defaultNodes={rfNodes}
+        defaultEdges={rfEdges}
         nodeTypes={stableNodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}

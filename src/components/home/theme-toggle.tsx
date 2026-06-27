@@ -17,7 +17,7 @@ export function ThemeToggle() {
 
   React.useEffect(() => setMounted(true), [])
 
-  const isDark = resolvedTheme === 'dark'
+  const isDark = mounted ? resolvedTheme === 'dark' : true // SSR 默认深色
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -30,7 +30,6 @@ export function ThemeToggle() {
             onClick={() => setTheme(isDark ? 'light' : 'dark')}
             className="h-9 w-9 text-muted-foreground hover:text-foreground"
           >
-            {/* 渲染前显示与默认深色一致的图标，避免水合闪烁 */}
             {mounted && !isDark ? (
               <Moon className="h-[18px] w-[18px]" />
             ) : (

@@ -1752,3 +1752,51 @@ Stage Summary:
 - VLM 综合 7.6/10（从"丑陋"到"接近 Cursor/Linear"）
 - 已推送 GitHub
 - UI 重设计 3 轮全部完成
+
+---
+Task ID: T-1 (用户级测试 + 修复 + 分类栏改造)
+Agent: main (Z.ai Code)
+Task: 用户级完整测试 + 修复连线/编辑/hydration + 删除文件树改分类栏
+
+Work Log:
+- 用户级测试发现的问题：
+  1. 节点连线不渲染（store 有 2 edges 但 DOM 0）
+  2. Hydration 错误阻止工作区加载（ThemeToggle SSR/CSR 不一致）
+  3. 工程文件树栏不实用（用户要求改为分类卡片栏）
+  4. 端口兼容性不足（itemstack→boolean 不兼容导致无法连线）
+- 修复 1：Hydration 错误
+  * ThemeToggle: isDark 用 mounted guard（SSR 默认深色）
+  * layout.tsx: body 添加 suppressHydrationWarning
+- 修复 2：节点连线不渲染
+  * 根因：React Flow v12 controlled mode 异步加载 edges 不渲染
+  * 方案：defaultNodes/defaultEdges + key 强制重建
+  * key = `${currentProjectId}-${isInitialized}-${rfNodes.length}`
+  * 节点加载后 key 变化 → ReactFlow 重建 → edges 正确渲染
+- 修复 3：端口兼容性
+  * isPortCompatible 添加 entity/itemstack → boolean（存在即触发）
+  * 添加 any → boolean（万能触发）
+- 修复 4：端口渲染
+  * 移除 BaseNodeCard 中包裹 Handle 的 div（可能拦截鼠标事件）
+  * PortHandle 直接渲染，标签定位 left-3/right-3
+- 新功能：左侧分类卡片栏
+  * 创建 category-panel.tsx 替代 file-tree
+  * 10 种分类（实体/方块/物品/装备/武器/食物/群系/结构/维度/药水）
+  * 每个分类显示节点数量 + 可折叠展开
+  * 搜索框 + 点击节点选中
+  * WorkspaceShell 中替换 FileTreePanel
+- Agent Browser 验收：
+  * 3 节点 + 2 连线 + 6 端口全部渲染 ✅
+  * 分类栏显示"节点分类" + "实体 1" + "方块 1" ✅
+  * 点击节点 → 属性面板显示"实体属性" ✅
+  * 无 Application error ✅
+- VLM 评估：分类栏 8/10、画布 7/10、连线 6/10、专业度 8/10，综合 7.25/10
+- 清理测试数据
+- 提交并推送 GitHub
+
+Stage Summary:
+- 连线渲染问题彻底修复 ✅
+- Hydration 错误修复 ✅
+- 端口兼容性增强 ✅
+- 工程文件树 → 分类卡片栏 ✅
+- 10 种节点分类 + 搜索 + 折叠
+- 已推送 GitHub
