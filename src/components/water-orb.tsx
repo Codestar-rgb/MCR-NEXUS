@@ -21,19 +21,38 @@ interface WaterOrbProps {
  * - 深青色调（低饱和度，避免刺眼）
  */
 export function WaterOrb({ size = 48, className }: WaterOrbProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = React.useState(true)
+
+  // 视口外暂停渲染
+  React.useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.1 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div
+      ref={containerRef}
       className={cn('relative', className)}
       style={{ width: size, height: size }}
     >
-      <Canvas
-        camera={{ position: [0, 0, 3.5], fov: 28 }}
-        gl={{ alpha: true, antialias: true }}
-        style={{ background: 'transparent' }}
-        dpr={[2, 3]}
-      >
-        <Scene />
-      </Canvas>
+      {visible && (
+        <Canvas
+          camera={{ position: [0, 0, 3.5], fov: 28 }}
+          gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
+          style={{ background: 'transparent' }}
+          dpr={[1, 2]}
+          frameloop={visible ? 'always' : 'never'}
+        >
+          <Scene />
+        </Canvas>
+      )}
     </div>
   )
 }
