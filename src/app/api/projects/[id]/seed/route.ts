@@ -40,6 +40,19 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
     // 3 个种子节点的定义：基于注册表的默认 properties，并稍作定制
     const modId = project.modId ?? 'example_mod'
 
+    // 先创建一个默认工作区
+    const workspace = await db.subGraph.create({
+      data: {
+        project: { connect: { id } },
+        parentNodeId: null,
+        name: '主工作区',
+        type: 'workspace',
+        color: 'teal',
+        icon: 'Box',
+        sortOrder: 0,
+      },
+    })
+
     const entityProps = createDefaultProperties('entity')
     entityProps.name = `${project.modId ?? 'Ruby'} Golem`
     entityProps.registryId = `${modId}_golem`
@@ -66,7 +79,8 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
     const created = await db.$transaction(async (tx) => {
       const entity = await tx.node.create({
         data: {
-          projectId: id,
+          project: { connect: { id } },
+          subGraphId: workspace.id,
           type: 'entity',
           title: String(entityProps.name),
           positionX: 560,
@@ -80,7 +94,8 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
 
       const block = await tx.node.create({
         data: {
-          projectId: id,
+          project: { connect: { id } },
+          subGraphId: workspace.id,
           type: 'block',
           title: String(blockProps.name),
           positionX: 300,
@@ -94,7 +109,8 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
 
       const item = await tx.node.create({
         data: {
-          projectId: id,
+          project: { connect: { id } },
+          subGraphId: workspace.id,
           type: 'item',
           title: String(itemProps.name),
           positionX: 60,
@@ -109,7 +125,7 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       // 连线 1: item.item_out → block.trigger （物品产出关联到方块）
       const conn1 = await tx.connection.create({
         data: {
-          projectId: id,
+          project: { connect: { id } },
           sourceNodeId: item.id,
           targetNodeId: block.id,
           sourcePort: 'item_out',
@@ -121,7 +137,7 @@ export async function POST(_req: NextRequest, { params }: RouteCtx) {
       // 连线 2: block.block_out → entity.trigger （方块作为实体生成条件）
       const conn2 = await tx.connection.create({
         data: {
-          projectId: id,
+          project: { connect: { id } },
           sourceNodeId: block.id,
           targetNodeId: entity.id,
           sourcePort: 'block_out',

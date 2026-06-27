@@ -164,9 +164,12 @@ model Adapter {
 model SubGraph {
   id           String   @id @default(cuid())
   projectId    String
-  parentNodeId String // 所属的父节点 ID
+  parentNodeId String? // 所属的父节点 ID（工作区类型可为 null）
   name         String // 子图名称，如 "Entity Behavior"
-  type         String // "behavior" | "function" | "event"
+  type         String // "workspace" | "behavior" | "function" | "event"
+  color        String? // 工作区颜色标识
+  icon         String? // 工作区图标
+  sortOrder    Int      @default(0) // 排序
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

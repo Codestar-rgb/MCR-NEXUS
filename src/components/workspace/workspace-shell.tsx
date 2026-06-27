@@ -37,7 +37,7 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { TopDashboard } from '@/components/workspace/top-dashboard'
-import { CategoryCardPanel } from '@/components/workspace/category-panel'
+import { WorkspacePanel } from '@/components/workspace/workspace-panel'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
@@ -155,7 +155,7 @@ export function WorkspaceShell() {
                       className="shrink-0 overflow-hidden border-r border-border bg-sidebar/30"
                       aria-label="工程文件树"
                     >
-                      <CategoryCardPanel className="h-full border-0" />
+                      <WorkspacePanel className="h-full border-0" />
                     </motion.aside>
                   ) : null}
                 </AnimatePresence>
@@ -251,7 +251,7 @@ export function WorkspaceShell() {
               <SheetTitle>工程文件树</SheetTitle>
               <SheetDescription>项目文件与目录结构</SheetDescription>
             </SheetHeader>
-            <CategoryCardPanel className="h-full border-0" />
+            <WorkspacePanel className="h-full border-0" />
           </SheetContent>
         </Sheet>
 

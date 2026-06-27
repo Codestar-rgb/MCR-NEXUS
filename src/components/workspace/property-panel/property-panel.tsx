@@ -73,7 +73,7 @@ export function PropertyPanel() {
     ? `${typeLabel} - ${selectedNodeName ?? selectedNode.data.title}`
     : '属性面板'
 
-  const defaultTab = supportsSubLogic ? 'behavior' : 'basic'
+  const defaultTab = 'basic'
 
   // 属性变更：立即更新 store + debounce 持久化
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

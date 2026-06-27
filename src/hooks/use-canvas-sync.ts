@@ -124,6 +124,11 @@ export function useCanvasSync(projectId: string | null) {
     const flowEdges: FlowEdge[] = data.connections.map(prismaConnectionToFlowEdge)
     loadFromProject(flowNodes, flowEdges)
 
+    // 加载工作区列表（会自动设置 activeWorkspaceId）
+    import('@/stores/workspace-store').then(({ useWorkspaceStore }) => {
+      useWorkspaceStore.getState().loadWorkspaces(projectId)
+    })
+
     // 初始化 lastSynced 快照（避免紧接着触发一次全量 upsert）
     setLastSynced(projectId, { nodes: flowNodes, edges: flowEdges })
   }, [data, projectId, loadFromProject])

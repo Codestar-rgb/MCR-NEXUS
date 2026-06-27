@@ -177,6 +177,8 @@ export interface CanvasState {
 
   /* 选中 */
   selectedNodeIds: string[]
+  /** 当前激活的工作区 ID（用于过滤画布节点） */
+  activeWorkspaceId: string | null
   selectedEdgeIds: string[]
 
   /* 右键菜单 */
@@ -207,6 +209,8 @@ export interface CanvasState {
 
   /* ----- Actions: 选中 ----- */
   selectNode: (id: string | null) => void
+  /** 切换当前工作区（影响画布节点过滤） */
+  setActiveWorkspace: (id: string | null) => void
   toggleNodeSelection: (id: string) => void
   setSelectedNodes: (ids: string[]) => void
   setSelectedEdges: (ids: string[]) => void
@@ -254,6 +258,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   edgeExtras: {},
   isInitialized: false,
   selectedNodeIds: [],
+  activeWorkspaceId: null,
   selectedEdgeIds: [],
   contextMenu: null,
   groupingSelection: [],
@@ -460,6 +465,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   selectNode: (id) =>
     set({ selectedNodeIds: id ? [id] : [], selectedEdgeIds: [] }),
+
+  setActiveWorkspace: (id) =>
+    set({ activeWorkspaceId: id, selectedNodeIds: [], selectedEdgeIds: [] }),
 
   toggleNodeSelection: (id) =>
     set((s) => ({

@@ -52,7 +52,7 @@ import { TaskNotifications } from '@/components/workspace/canvas/task-notificati
 import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
 import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
 import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
-import { DevOnlyPerformanceTestPanel } from '@/components/workspace/canvas/performance-test-panel'
+// 性能压测面板已移除（对用户无意义）
 import {
   useCanvasStore,
   getNodeColorHex,
@@ -109,6 +109,7 @@ function NodeCanvasInner() {
   const closeContextMenu = useCanvasStore((s) => s.closeContextMenu)
   const selectNode = useCanvasStore((s) => s.selectNode)
   const isInitialized = useCanvasStore((s) => s.isInitialized)
+  const activeWorkspaceId = useCanvasStore((s) => s.activeWorkspaceId)
   const openFunctionDetail = useCanvasStore((s) => s.openFunctionDetail)
   const closeFunctionDetail = useCanvasStore((s) => s.closeFunctionDetail)
   const openedFunctionNodeId = useCanvasStore((s) => s.openedFunctionNodeId)
@@ -126,7 +127,10 @@ function NodeCanvasInner() {
    */
   const rfNodes = useMemo<RFNode[]>(() => {
     return nodes
-      .filter((n) => !n.data.subGraphId)
+      .filter((n) => {
+        // 按工作区过滤：只显示当前激活工作区的节点
+        return n.data.subGraphId === activeWorkspaceId
+      })
       .map((n) => {
         const extra = nodeExtras[n.id] ?? {}
         return {
@@ -140,7 +144,7 @@ function NodeCanvasInner() {
           ...extra,
         } as RFNode
       })
-  }, [nodes, nodeExtras])
+  }, [nodes, nodeExtras, activeWorkspaceId])
 
   /* 把 store 中的 FlowEdge[] 转为 RFEdge[]。
    * 主画布只渲染两端节点都在主画布上的连线（两端 subGraphId 都为空）；
@@ -152,8 +156,8 @@ function NodeCanvasInner() {
       .filter((e) => {
         const s = nodeById.get(e.source)
         const t = nodeById.get(e.target)
-        // 两端节点必须存在且都不属于任何子图
-        return !!s && !!t && !s.data.subGraphId && !t.data.subGraphId
+        // 两端节点必须存在且都属于当前工作区
+        return !!s && !!t && s.data.subGraphId === activeWorkspaceId && t.data.subGraphId === activeWorkspaceId
       })
       .map((e) => {
         return {
@@ -166,11 +170,11 @@ function NodeCanvasInner() {
           data: e.data,
         } as RFEdge
       })
-  }, [edges, nodes])
+  }, [edges, nodes, activeWorkspaceId])
 
   /* 修复 React Flow v12 edges 不渲染问题：
    * 用 key 强制重建 ReactFlow 组件，确保 defaultNodes/defaultEdges 生效 */
-  const canvasKey = `${currentProjectId}-${isInitialized}-${rfNodes.length}`
+  const canvasKey = `${currentProjectId}-${activeWorkspaceId}-${isInitialized}-${rfNodes.length}`
 
   /* 端口类型校验：禁止不兼容类型连线 + 禁止自连 */
   const isValidConnection = useCallback<IsValidConnection<RFEdge>>(
@@ -399,16 +403,6 @@ function NodeCanvasInner() {
             </span>
           )}
         </div>
-      </div>
-
-      {/* 性能压测面板（右下角，FPS 指示器上方；仅开发模式显示） */}
-      <div className="absolute bottom-12 right-3 z-20">
-        <DevOnlyPerformanceTestPanel
-          fps={fps}
-          tier={perfConfig.tier}
-          webglEnabled={webglEnabled}
-          onToggleWebGL={() => setWebglForced((v) => !v)}
-        />
       </div>
 
       {/* WebGL 模式提示（顶部居中，仅 WebGL 启用时显示） */}
