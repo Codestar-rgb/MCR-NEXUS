@@ -339,6 +339,8 @@ function NodeCanvasInner() {
         maxZoom={2.5}
         multiSelectionKeyCode={['Meta', 'Shift']}
         deleteKeyCode={['Backspace', 'Delete']}
+        snapToGrid
+        snapGrid={[20, 20]}
         proOptions={{ hideAttribution: true }}
         className="bg-background"
       >

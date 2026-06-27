@@ -144,6 +144,11 @@ const HELP_TEXT = [
   '  run          启动 Minecraft 客户端（mock）',
   '  nodes list   列出当前工程节点',
   '  echo <text>  回显文本',
+  '  ls           列出项目文件',
+  '  pwd          显示当前路径',
+  '  git status   显示 Git 状态',
+  '  git log      显示提交历史',
+  '  version      显示版本信息',
   '',
 ].join('\r\n')
 
@@ -443,6 +448,24 @@ export function TerminalPanel() {
           break
         case 'echo':
           writeLine(args.join(' '))
+          break
+        case 'pwd':
+          writeLine('/home/nexcube/workspace')
+          break
+        case 'ls':
+          writeLine('src/  build.gradle  gradle.properties  settings.gradle  gradlew  README.md')
+          break
+        case 'git':
+          if (args[0] === 'status') {
+            writeLine('On branch main\nNo commits yet\nnothing to commit')
+          } else if (args[0] === 'log') {
+            writeLine('commit 0000000 (HEAD -> main)\nAuthor: NexCube <dev@nexcube.io>\nDate: Today\n\n    Initial commit')
+          } else {
+            writeLine(`git ${args.join(' ')} - simulated`)
+          }
+          break
+        case 'version':
+          writeLine('NexCube v0.1.0 Alpha · MC 1.20.1 · Forge 47.3.7')
           break
         default:
           writeLine(
@@ -776,7 +799,7 @@ export function TerminalPanel() {
                   'group flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5',
                   'text-[11px] font-medium transition-colors',
                   active
-                    ? 'bg-emerald-500/15 text-emerald-300 shadow-[inset_0_0_0_1px_theme(colors.emerald.500/30)]'
+                    ? 'bg-primary/15 text-primary shadow-[inset_0_0_0_1px_theme(colors.emerald.500/30)]'
                     : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 )}
                 aria-pressed={active}
@@ -816,7 +839,7 @@ export function TerminalPanel() {
                 onClick={handleAddTab}
                 className={cn(
                   'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-                  'text-muted-foreground hover:bg-accent hover:text-emerald-300',
+                  'text-muted-foreground hover:bg-accent hover:text-primary',
                 )}
                 aria-label="新建终端标签"
               >
@@ -839,11 +862,11 @@ export function TerminalPanel() {
                 aria-label="构建 JAR"
                 className={cn(
                   'h-7 gap-1 rounded-md px-2 text-[11px] font-medium shadow-none',
-                  'border border-emerald-500/30 bg-emerald-500/15 text-emerald-300',
-                  'hover:bg-emerald-500/25 hover:text-emerald-200',
+                  'border border-primary/30 bg-primary/15 text-primary',
+                  'hover:bg-primary/25 hover:text-primary/80',
                   buildStatus === 'success' &&
                     !isBuilding &&
-                    'border-emerald-500/50',
+                    'border-primary/50',
                   buildStatus === 'failed' &&
                     !isBuilding &&
                     'border-rose-500/40 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20',
@@ -903,7 +926,7 @@ export function TerminalPanel() {
                 aria-label="构建历史"
                 className={cn(
                   'h-7 w-7 rounded-md p-0',
-                  'text-muted-foreground hover:bg-accent hover:text-emerald-300',
+                  'text-muted-foreground hover:bg-accent hover:text-primary',
                 )}
               >
                 <History className="h-3.5 w-3.5" />
@@ -998,7 +1021,7 @@ export function TerminalPanel() {
             className={cn(
               'flex h-7 shrink-0 items-center gap-2 border-b px-2 text-[11px]',
               buildStatus === 'success'
-                ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300'
+                ? 'border-emerald-500/20 bg-emerald-500/5 text-primary'
                 : 'border-rose-500/20 bg-rose-500/5 text-rose-300',
             )}
           >

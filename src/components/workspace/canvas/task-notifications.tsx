@@ -119,7 +119,7 @@ function NotificationBubble({ notification, onDismiss }: NotificationBubbleProps
 
   const handleAction = () => {
     // 阶段 1 占位：仅打印 action key
-    console.log('[NexCube] notification action:', notification.action?.onClick)
+    // notification action dispatched
     onDismiss(notification.id)
   }
 
@@ -433,7 +433,7 @@ function SyncNotifications() {
           actionLabel="查看详情"
           onAction={() => {
             // TODO(Task 4-D): 跳转到代码编辑器对应行
-            console.log('[Sync] blackbox blocks:', syncResult?.blackboxBlocks)
+            // blackbox blocks processed
           }}
           onDismiss={clearSync}
         />

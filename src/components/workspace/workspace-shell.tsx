@@ -38,6 +38,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import { TopDashboard } from '@/components/workspace/top-dashboard'
 import { WorkspacePanel } from '@/components/workspace/workspace-panel'
+import { GlobalSearch } from '@/components/workspace/global-search'
 import { NodeCanvasPlaceholder } from '@/components/workspace/canvas/node-canvas-placeholder'
 import { CodeEditorPanel } from '@/components/workspace/code-editor/code-editor-panel'
 import { PropertyPanel } from '@/components/workspace/property-panel/property-panel'
@@ -83,6 +84,19 @@ export function WorkspaceShell() {
   const terminalHeight = useWorkspaceStore((s) => s.terminalHeight)
   const setTerminalHeight = useWorkspaceStore((s) => s.setTerminalHeight)
   const toggleTerminal = useWorkspaceStore((s) => s.toggleTerminal)
+
+  /* 全局搜索（Ctrl+P） */
+  const [searchOpen, setSearchOpen] = React.useState(false)
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault()
+        setSearchOpen((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   const breakpoint = useBreakpoint()
   const isMobile = breakpoint === 'mobile'
@@ -276,6 +290,9 @@ export function WorkspaceShell() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* 全局搜索（Ctrl+P） */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </TooltipProvider>
   )
 }

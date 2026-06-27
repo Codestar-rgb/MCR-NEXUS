@@ -545,7 +545,7 @@ function NotificationDropdown({
                       type="button"
                       className="mt-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 hover:underline"
                       // TODO: Task 1-C 将根据 n.action.onClick 字符串查表分发
-                      onClick={() => console.log('[NexCube] notification action:', n.action?.onClick)}
+                      onClick={() => {}}
                     >
                       {n.action.label} →
                     </button>
