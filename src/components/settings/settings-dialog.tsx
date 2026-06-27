@@ -47,6 +47,7 @@ import { MirrorPanel } from '@/components/settings/mirror-panel'
 import { EnvironmentPanel } from '@/components/settings/environment-panel'
 import { AdaptersPanel } from '@/components/settings/adapters-panel'
 import { ShortcutsPanel as ShortcutsPanelEditable } from '@/components/settings/shortcuts-panel'
+import { useI18n } from '@/hooks/use-i18n'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -234,6 +235,49 @@ function ThemePanel() {
           />
         </div>
       </div>
+
+      {/* 语言切换 */}
+      <div className="rounded-lg border border-border bg-card/40 p-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">语言 / Language</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              界面显示语言
+            </p>
+          </div>
+          <LanguageSwitcher />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LanguageSwitcher() {
+  const { locale, setLocale } = useI18n()
+  return (
+    <div className="flex gap-1.5">
+      <button
+        onClick={() => setLocale('zh')}
+        className={cn(
+          'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+          locale === 'zh'
+            ? 'bg-primary/10 text-primary ring-1 ring-primary/20'
+            : 'text-muted-foreground hover:bg-accent/40',
+        )}
+      >
+        中文
+      </button>
+      <button
+        onClick={() => setLocale('en')}
+        className={cn(
+          'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+          locale === 'en'
+            ? 'bg-primary/10 text-primary ring-1 ring-primary/20'
+            : 'text-muted-foreground hover:bg-accent/40',
+        )}
+      >
+        English
+      </button>
     </div>
   )
 }
