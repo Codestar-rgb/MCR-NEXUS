@@ -57,10 +57,15 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
     [nodes, selectedNodeId],
   )
 
+  // 上一版本代码（用于 diff 高亮）
+  const prevContentRef = React.useRef<string>('')
+  const [changedLines, setChangedLines] = React.useState<Set<number>>(new Set())
+
   React.useEffect(() => {
     if (!selectedNode || !currentProjectId) {
       setFiles([])
       setActiveFile(null)
+      setChangedLines(new Set())
       return
     }
     // 只为选中的节点生成代码
@@ -71,7 +76,28 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
     setFiles(nodeFiles)
     // 默认选中第一个有 linkedNodeId 的文件
     const linked = nodeFiles.find((f) => f.linkedNodeId === selectedNode.id)
-    setActiveFile(linked?.filePath ?? nodeFiles[0]?.filePath ?? null)
+    const newActiveFile = linked?.filePath ?? nodeFiles[0]?.filePath ?? null
+    setActiveFile(newActiveFile)
+
+    // 计算 diff：对比新旧代码，找出变化的行
+    const newContent = linked?.content ?? nodeFiles[0]?.content ?? ''
+    if (prevContentRef.current && newContent) {
+      const oldLines = prevContentRef.current.split('\n')
+      const newLines = newContent.split('\n')
+      const changed = new Set<number>()
+      const maxLen = Math.max(oldLines.length, newLines.length)
+      for (let i = 0; i < maxLen; i++) {
+        if (oldLines[i] !== newLines[i]) {
+          changed.add(i + 1) // Monaco 行号从 1 开始
+        }
+      }
+      setChangedLines(changed)
+      // 3 秒后清除高亮
+      setTimeout(() => setChangedLines(new Set()), 3000)
+    } else {
+      setChangedLines(new Set())
+    }
+    prevContentRef.current = newContent
   }, [selectedNode, currentProjectId, modId, nodes])
 
   const activeFileData = files.find((f) => f.filePath === activeFile)
@@ -174,6 +200,26 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
             value={activeFileData.content}
             language="java"
             theme="nexcube-dark"
+            onMount={(editor, monaco) => {
+              // 用装饰器高亮变化的行
+              if (changedLines.size > 0) {
+                const decorations = editor.deltaDecorations(
+                  [],
+                  Array.from(changedLines).map((line) => ({
+                    range: new monaco.Range(line, 1, line, 1),
+                    options: {
+                      isWholeLine: true,
+                      className: 'code-changed-line',
+                      glyphMarginClassName: 'code-changed-glyph',
+                    },
+                  })),
+                )
+                // 3 秒后清除
+                setTimeout(() => {
+                  editor.deltaDecorations(decorations, [])
+                }, 3000)
+              }
+            }}
             options={{
               readOnly: true,
               fontSize: 11,

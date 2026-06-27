@@ -351,3 +351,22 @@
   background: var(--popover) !important;
   border: 1px solid var(--border) !important;
 }
+
+/* 代码预览：变化行高亮 */
+.code-changed-line {
+  background: rgba(45, 212, 191, 0.08) !important;
+  border-left: 2px solid rgba(45, 212, 191, 0.5);
+}
+.code-changed-glyph {
+  background: rgba(45, 212, 191, 0.6);
+  margin-left: 5px;
+  width: 3px !important;
+  border-radius: 2px;
+}
+@keyframes code-change-fade {
+  0% { background: rgba(45, 212, 191, 0.15); }
+  100% { background: rgba(45, 212, 191, 0.08); }
+}
+.code-changed-line {
+  animation: code-change-fade 3s ease-out;
+}
