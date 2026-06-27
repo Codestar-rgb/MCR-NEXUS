@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider, QueryProvider } from "@/components/providers";
 import { I18nProvider } from "@/hooks/use-i18n";
+import { PluginInit } from "@/components/plugin-init";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -60,6 +61,7 @@ export default function RootLayout({
         >
           <I18nProvider>
           <QueryProvider>
+            <PluginInit />
             {children}
             <Toaster />
             <SonnerToaster position="bottom-right" richColors closeButton />

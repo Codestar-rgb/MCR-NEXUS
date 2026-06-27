@@ -668,6 +668,25 @@ export function generateProjectCode(
         // 节点组 / 函数节点不生成独立文件，子节点会单独生成
         continue
       default:
+        // 尝试插件贡献的代码生成器
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { getCustomCodeGenerator } = require('@/lib/plugin-system')
+          const pluginGen = getCustomCodeGenerator(node.data.kind)
+          if (pluginGen) {
+            const code = pluginGen(node, modId)
+            const className = toClassName(String(node.data.properties?.registryId ?? node.data.title))
+            file = {
+              filePath: `src/main/java/com/example/mod/${className}.java`,
+              content: code,
+              nodeId: node.id,
+              kind: node.data.kind,
+            }
+            break
+          }
+        } catch {
+          // 插件系统未加载
+        }
         // 逻辑子节点 / 调试节点不生成顶层文件
         continue
     }

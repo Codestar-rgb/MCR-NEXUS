@@ -10,7 +10,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid'
-import { NODE_TYPE_REGISTRY, type NodeKind } from './node-types'
+import { NODE_TYPE_REGISTRY, getNodeTypeDefinition, type NodeKind } from './node-types'
 import type { NodeProperties } from './types'
 
 /**
@@ -20,7 +20,8 @@ import type { NodeProperties } from './types'
  * 因此参数放宽为 NodeKind | string（运行时若 kind 未注册返回空对象，不会抛错）。
  */
 export function createDefaultProperties(kind: NodeKind | string): NodeProperties {
-  const def = NODE_TYPE_REGISTRY[kind]
+  // 使用 getNodeTypeDefinition 以合并插件贡献的类型
+  const def = getNodeTypeDefinition(kind)
   if (!def) return {}
   const props: NodeProperties = {}
   for (const schema of def.propertiesSchema) {

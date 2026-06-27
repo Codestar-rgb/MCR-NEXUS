@@ -6,6 +6,8 @@ import {
   type CodegenNode,
   type CodegenOptions,
 } from '@/lib/codegen'
+import { generateProjectCode as generateNodeFiles } from '@/lib/codegen/code-generator'
+import type { FlowNode } from '@/lib/node-system'
 import { gitHistory } from '@/lib/git-history'
 
 /**
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
       includeGitignore: body.includeGitignore !== false,
     }
 
-    // 3) 转换节点 → CodegenNode
+    // 3) 转换节点 → CodegenNode（用于骨架文件生成）
     const codegenNodes: CodegenNode[] = dbNodes.map((n) => ({
       id: n.id,
       type: n.type,
@@ -80,8 +82,42 @@ export async function POST(req: NextRequest, { params }: RouteCtx) {
       sourceCode: n.sourceCode,
     }))
 
-    // 4) 生成所有文件
-    const files = generateProjectCode(project, codegenNodes, options)
+    // 4) 生成所有文件（骨架 + Java 源码）
+    // 4a) 骨架文件（build.gradle, mods.toml, gradlew, ...）+ 基础 Java（主类/注册中心）
+    const skeletonFiles = generateProjectCode(project, codegenNodes, options)
+    // 4b) 节点 Java 文件（使用 code-generator.ts，支持全部 11 种节点类型 + 插件）
+    const flowNodes: FlowNode[] = dbNodes.map((n) => {
+      let props: Record<string, unknown> = {}
+      try {
+        props = JSON.parse(n.properties || '{}')
+      } catch {
+        props = {}
+      }
+      return {
+        id: n.id,
+        type: n.type,
+        position: { x: n.positionX, y: n.positionY },
+        data: {
+          kind: n.type,
+          title: n.title,
+          properties: props,
+          isCollapsed: n.isCollapsed,
+          color: n.color ?? undefined,
+          subGraphId: n.subGraphId ?? null,
+          parentId: n.parentId ?? null,
+        },
+        width: n.width ?? undefined,
+        height: n.height ?? undefined,
+      }
+    })
+    const nodeBundle = generateNodeFiles(project.id, project.modId, flowNodes)
+
+    // 4c) 合并：骨架文件 + 节点 Java 文件（去重：节点文件覆盖 java-sources 的基础版本）
+    const nodeFilePaths = new Set(nodeBundle.files.map((f) => f.path))
+    const files = [
+      ...skeletonFiles.filter((f) => !nodeFilePaths.has(f.path)),
+      ...nodeBundle.files,
+    ]
 
     // 5) 打包 ZIP
     const zip = new JSZip()
@@ -160,11 +196,37 @@ export async function GET(_req: NextRequest, { params }: RouteCtx) {
       sourceCode: n.sourceCode,
     }))
 
-    const files = generateProjectCode(project, codegenNodes, {
+    // 合并骨架文件 + 节点 Java 文件（支持全部 11 种节点类型）
+    const skeletonFiles = generateProjectCode(project, codegenNodes, {
       includeGradleWrapper: true,
       includeReadme: true,
       includeGitignore: true,
     })
+    const flowNodes: FlowNode[] = dbNodes.map((n) => {
+      let props: Record<string, unknown> = {}
+      try {
+        props = JSON.parse(n.properties || '{}')
+      } catch {
+        props = {}
+      }
+      return {
+        id: n.id,
+        type: n.type,
+        position: { x: 0, y: 0 },
+        data: {
+          kind: n.type,
+          title: n.title,
+          properties: props,
+          isCollapsed: false,
+        },
+      }
+    })
+    const nodeBundle = generateNodeFiles(project.id, project.modId, flowNodes)
+    const nodeFilePaths = new Set(nodeBundle.files.map((f) => f.path))
+    const files = [
+      ...skeletonFiles.filter((f) => !nodeFilePaths.has(f.path)),
+      ...nodeBundle.files,
+    ]
 
     return NextResponse.json({
       projectId: project.id,

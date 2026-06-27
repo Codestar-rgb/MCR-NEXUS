@@ -151,7 +151,7 @@ export const magicPlugin: NexCubePlugin = {
   },
 }
 
-// 注册插件（取消注释以启用）
+// 注册插件（由 plugins/index.ts 在应用启动时统一加载）
 // registerPlugin(magicPlugin)
 
 export default magicPlugin

@@ -300,5 +300,16 @@ export const WORKSPACE_TEMPLATES: WorkspaceTemplate[] = [
 ]
 
 export function getTemplateById(id: string): WorkspaceTemplate | undefined {
-  return WORKSPACE_TEMPLATES.find((t) => t.id === id)
+  // 内置模板优先
+  const builtin = WORKSPACE_TEMPLATES.find((t) => t.id === id)
+  if (builtin) return builtin
+  // 插件贡献的模板
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCustomTemplates } = require('@/lib/plugin-system')
+    const custom = getCustomTemplates()
+    return custom.find((t) => t.id === id)
+  } catch {
+    return undefined
+  }
 }

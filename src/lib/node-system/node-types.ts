@@ -882,14 +882,33 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
   },
 }
 
-/** 获取节点类型定义 */
+/** 获取节点类型定义（合并插件贡献的自定义类型） */
 export function getNodeTypeDefinition(kind: string): NodeTypeDefinition | undefined {
-  return NODE_TYPE_REGISTRY[kind]
+  // 内置类型优先
+  const builtin = NODE_TYPE_REGISTRY[kind]
+  if (builtin) return builtin
+  // 插件贡献的类型
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCustomNodeTypes } = require('@/lib/plugin-system')
+    const custom = getCustomNodeTypes()
+    return custom[kind]
+  } catch {
+    return undefined
+  }
 }
 
 /** 获取所有可创建的节点类型（用于右键菜单，排除纯逻辑子节点） */
 export function getCreatableNodeTypes(): NodeTypeDefinition[] {
-  return Object.values(NODE_TYPE_REGISTRY).filter((t) => t.category !== 'logic')
+  const builtin = Object.values(NODE_TYPE_REGISTRY).filter((t) => t.category !== 'logic')
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCustomNodeTypes } = require('@/lib/plugin-system')
+    const custom = Object.values(getCustomNodeTypes()).filter((t) => t.category !== 'logic')
+    return [...builtin, ...custom]
+  } catch {
+    return builtin
+  }
 }
 
 /** 获取所有逻辑子节点类型（用于子图编辑器工具栏） */
@@ -897,7 +916,7 @@ export function getLogicNodeTypes(): NodeTypeDefinition[] {
   return Object.values(NODE_TYPE_REGISTRY).filter((t) => t.category === 'logic')
 }
 
-/** 按分类获取节点类型 */
+/** 按分类获取节点类型（合并插件贡献） */
 export function getNodeTypesByCategory(): Record<NodeCategory, NodeTypeDefinition[]> {
   const result: Record<NodeCategory, NodeTypeDefinition[]> = {
     core: [],
@@ -906,6 +925,17 @@ export function getNodeTypesByCategory(): Record<NodeCategory, NodeTypeDefinitio
   }
   for (const def of Object.values(NODE_TYPE_REGISTRY)) {
     result[def.category].push(def)
+  }
+  // 合并插件贡献（归入 advanced 分类）
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCustomNodeTypes } = require('@/lib/plugin-system')
+    const custom = getCustomNodeTypes()
+    for (const def of Object.values(custom)) {
+      result[def.category ?? 'advanced'].push(def)
+    }
+  } catch {
+    // 插件系统未加载时忽略
   }
   return result
 }

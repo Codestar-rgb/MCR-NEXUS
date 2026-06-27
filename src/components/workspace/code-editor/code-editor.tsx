@@ -17,7 +17,7 @@
  */
 
 import dynamic from 'next/dynamic'
-import { useCallback, useRef } from 'react'
+import React, { useCallback, useRef } from 'react'
 import type { editor } from 'monaco-editor'
 import {
   MC_API_DICTIONARY,
@@ -72,6 +72,7 @@ const THEME_NAME = 'nexcube-dark'
 
 /** 防止多次注册同一语言补全提供者（StrictMode 双调用） */
 let completionProviderRegistered = false
+let snippetsProviderRegistered = false
 /** 防止多次定义同一主题 */
 let themeDefined = false
 
@@ -266,7 +267,7 @@ export function CodeEditor({
     }
 
     // 3. 注册 Java 代码片段补全
-    if (!completionProviderRegistered) {
+    if (!snippetsProviderRegistered) {
       const snippets: Array<{ label: string; insertText: string; detail: string }> = [
         { label: 'psvm', detail: 'public static void main', insertText: 'public static void main(String[] args) {\n\t$0\n}' },
         { label: 'sout', detail: 'System.out.println', insertText: 'System.out.println($0);' },
@@ -299,6 +300,7 @@ export function CodeEditor({
           }
         },
       })
+      snippetsProviderRegistered = true
     }
   }, [])
 
@@ -322,9 +324,43 @@ export function CodeEditor({
         const ev = new CustomEvent('nexcube:editor-save')
         window.dispatchEvent(ev)
       })
+
+      // 监听 scroll-to-node 事件：滚动到节点对应的代码位置
+      const onScrollToNode = (e: Event) => {
+        const detail = (e as CustomEvent).detail as { nodeId?: string; filePath?: string }
+        if (!detail?.filePath) return
+        // 切换到目标文件（由父组件通过 filePath prop 控制，这里只滚动）
+        // 查找 class 声明行并滚动 + 高亮
+        const model = editor.getModel()
+        if (!model) return
+        const text = model.getValue()
+        const lines = text.split('\n')
+        // 尝试匹配 class 声明行
+        const classLineIdx = lines.findIndex((l) => /^\s*(public\s+)?class\s+\w+/i.test(l))
+        const targetLine = classLineIdx >= 0 ? classLineIdx + 1 : 1
+        editor.revealLineInCenter(targetLine)
+        editor.setPosition({ lineNumber: targetLine, column: 1 })
+        // 短暂高亮目标行
+        editor.deltaDecorations([], [
+          {
+            range: new _monaco.Range(targetLine, 1, targetLine, 1),
+            options: { className: 'code-changed-line', isWholeLine: true },
+          },
+        ])
+      }
+      window.addEventListener('nexcube:scroll-to-node', onScrollToNode)
+      // 清理函数存储在 ref 中，组件卸载时移除
+      cleanupScrollRef.current = () => window.removeEventListener('nexcube:scroll-to-node', onScrollToNode)
     },
     [onSelectionChange],
   )
+
+  const cleanupScrollRef = React.useRef<(() => void) | null>(null)
+  React.useEffect(() => {
+    return () => {
+      cleanupScrollRef.current?.()
+    }
+  }, [])
 
   /* ---------------------------------------------------------------- */
   /* 渲染                                                              */

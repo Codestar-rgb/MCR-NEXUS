@@ -41,6 +41,8 @@ export const nodeTypes = {
   group: GroupNodeCard,
   blackbox: BlackboxNodeCard,
   function: GenericNodeCard,
+  // 插件贡献的节点类型（用 GenericNodeCard 渲染）
+  spell: GenericNodeCard,
   // 逻辑子节点（专用紧凑卡片）
   logic_event: LogicNodeCard,
   logic_condition: LogicNodeCard,

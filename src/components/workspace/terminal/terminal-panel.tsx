@@ -67,6 +67,7 @@ import { simulateBuild, isBuildFailed } from '@/lib/build/gradle-simulator'
 import { executeFixAction } from '@/lib/build/fix-actions'
 import { parseGradleLog } from '@/lib/capabilities/log-parser'
 import type { ParsedLogCard } from '@/lib/capabilities/types'
+import { toClassName } from '@/lib/codegen/code-generator'
 import { BuildTimeline } from '@/components/workspace/build-timeline'
 import { LogCardsPanel } from './log-cards-panel'
 import { cn } from '@/lib/utils'
@@ -144,7 +145,11 @@ const HELP_TEXT = [
   '  clear        清空当前终端',
   '  build        执行 Gradle 构建（流式输出）',
   '  run          启动 Minecraft 客户端（mock）',
-  '  nodes list   列出当前工程节点',
+  '  nodes list   列出当前工作区节点',
+  '  nodes count  显示节点数量',
+  '  nodes info <id|name>  显示节点详情',
+  '  edges list   列出当前工作区连线',
+  '  edges count  显示连线数量',
   '  echo <text>  回显文本',
   '  ls           列出项目文件',
   '  pwd          显示当前路径',
@@ -154,13 +159,7 @@ const HELP_TEXT = [
   '',
 ].join('\r\n')
 
-const NODES_LIST = [
-  '当前工程节点（3 个）：',
-  '  \u2022 [entity] RubyGolem    nexcube:ruby_golem',
-  '  \u2022 [block]  RubyBlock    nexcube:ruby_block',
-  '  \u2022 [item]   Ruby         nexcube:ruby',
-  '',
-].join('\r\n')
+const NODES_LIST = '' // 已弃用：nodes 命令现在从 canvas store 实时读取
 
 /* ------------------------------------------------------------------ */
 /* 默认 tab 列表（模块级常量，便于 useState / Map 共享同一份引用）       */
@@ -360,13 +359,31 @@ export function TerminalPanel() {
       // 更新节点构建状态
       useBuildStatusStore.getState().finishBuild(!failed)
 
-      // 构建失败时逐个标记失败节点（模拟）
+      // 构建失败时精准标记失败节点（基于日志文件路径映射）
       if (failed && wsNodes.length > 0) {
-        // 随机标记 1-2 个节点为失败
-        const failCount = Math.min(Math.ceil(wsNodes.length * 0.3), 2)
-        for (let i = 0; i < failCount; i++) {
-          const node = wsNodes[Math.floor(Math.random() * wsNodes.length)]
-          useBuildStatusStore.getState().setNodeStatus(node.id, 'failed')
+        const finalText = finalOutput.join('\n')
+        // 从日志中提取错误文件路径（如 .../mod/RubyGolem.java:25）
+        const filePattern = /\/([\w/]+)\/(\w+)\.java/g
+        const errorFiles = new Set<string>()
+        let m: RegExpExecArray | null
+        while ((m = filePattern.exec(finalText)) !== null) {
+          errorFiles.add(m[2]) // 类名
+        }
+        // 将错误文件映射到节点
+        let markedCount = 0
+        for (const node of wsNodes) {
+          const regId = String(node.data.properties?.registryId ?? '')
+          const title = node.data.title ?? ''
+          // 类名 = registryId 驼峰化 或 title 驼峰化
+          const className = toClassName(regId || title)
+          if (errorFiles.has(className)) {
+            useBuildStatusStore.getState().setNodeStatus(node.id, 'failed')
+            markedCount++
+          }
+        }
+        // 如果日志无匹配文件（如非编译错误），标记第一个节点作为 fallback
+        if (markedCount === 0 && wsNodes.length > 0) {
+          useBuildStatusStore.getState().setNodeStatus(wsNodes[0].id, 'failed')
         }
       }
 
@@ -460,15 +477,82 @@ export function TerminalPanel() {
         case 'run':
           await runBuildTask('runClient')
           break
-        case 'nodes':
-          if (args[0] === 'list' || !args[0]) {
-            writeLine(NODES_LIST)
-          } else {
-            writeLine(
-              `unknown subcommand: nodes ${args[0]}. Try 'nodes list'.`,
+        case 'nodes': {
+          const canvasState = useCanvasStore.getState()
+          const wsNodes = canvasState.nodes.filter(
+            (n) => n.data.subGraphId === canvasState.activeWorkspaceId,
+          )
+          if (args[0] === 'count' || !args[0]) {
+            writeLine(`当前工作区节点数：${wsNodes.length}`)
+          } else if (args[0] === 'list') {
+            if (wsNodes.length === 0) {
+              writeLine('当前工作区没有节点')
+            } else {
+              writeLine(`当前工作区节点（${wsNodes.length} 个）：`)
+              wsNodes.forEach((n) => {
+                const regId = String(n.data.properties?.registryId ?? '—')
+                writeLine(`  \u2022 [${n.data.kind}] ${n.data.title.padEnd(14)} ${regId}`)
+              })
+            }
+          } else if (args[0] === 'info' && args[1]) {
+            const target = wsNodes.find(
+              (n) => n.id === args[1] ||
+                n.data.title === args[1] ||
+                String(n.data.properties?.registryId) === args[1],
             )
+            if (!target) {
+              writeLine(`未找到节点：${args[1]}`)
+            } else {
+              writeLine(`节点详情：`)
+              writeLine(`  ID:    ${target.id}`)
+              writeLine(`  类型:  ${target.data.kind}`)
+              writeLine(`  名称:  ${target.data.title}`)
+              writeLine(`  位置:  (${Math.round(target.position.x)}, ${Math.round(target.position.y)})`)
+              const props = target.data.properties ?? {}
+              const propKeys = Object.keys(props)
+              if (propKeys.length > 0) {
+                writeLine(`  属性（${propKeys.length} 个）：`)
+                propKeys.slice(0, 10).forEach((k) => {
+                  const v = props[k]
+                  const vStr = typeof v === 'object' ? JSON.stringify(v) : String(v)
+                  writeLine(`    ${k}: ${vStr.slice(0, 60)}`)
+                })
+                if (propKeys.length > 10) writeLine(`    ... 还有 ${propKeys.length - 10} 个`)
+              }
+            }
+          } else {
+            writeLine(`用法: nodes [list|count|info <id|name|registryId>]`)
           }
           break
+        }
+        case 'edges': {
+          const canvasState = useCanvasStore.getState()
+          const wsNodes = canvasState.nodes.filter(
+            (n) => n.data.subGraphId === canvasState.activeWorkspaceId,
+          )
+          const wsNodeIds = new Set(wsNodes.map((n) => n.id))
+          const wsEdges = canvasState.edges.filter(
+            (e) => wsNodeIds.has(e.source) && wsNodeIds.has(e.target),
+          )
+          if (args[0] === 'count' || !args[0]) {
+            writeLine(`当前工作区连线数：${wsEdges.length}`)
+          } else if (args[0] === 'list') {
+            if (wsEdges.length === 0) {
+              writeLine('当前工作区没有连线')
+            } else {
+              writeLine(`当前工作区连线（${wsEdges.length} 条）：`)
+              wsEdges.forEach((e) => {
+                const src = wsNodes.find((n) => n.id === e.source)
+                const tgt = wsNodes.find((n) => n.id === e.target)
+                const dt = e.data?.dataType ?? 'any'
+                writeLine(`  \u2022 ${src?.data.title ?? e.source} → ${tgt?.data.title ?? e.target}  [${dt}]`)
+              })
+            }
+          } else {
+            writeLine(`用法: edges [list|count]`)
+          }
+          break
+        }
         case 'echo':
           writeLine(args.join(' '))
           break

@@ -189,7 +189,7 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
                   : 'text-muted-foreground hover:bg-accent/30',
               )}
             >
-              {f.filePath.split('/').pop()}
+              {(f.filePath ?? '').split('/').pop() || 'unknown'}
             </button>
           ))}
         </div>

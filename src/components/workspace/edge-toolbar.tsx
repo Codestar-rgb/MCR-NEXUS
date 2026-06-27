@@ -252,7 +252,13 @@ const CATEGORY_LABEL: Record<NodeCategory, string> = {
 }
 
 function NodeCreationPopover({ onSelect }: { onSelect: (kind: string) => void }) {
-  const grouped = React.useMemo(() => getNodeTypesByCategory(), [])
+  // 插件在客户端 useEffect 中加载，popover 打开时重新计算以包含插件类型
+  const [tick, setTick] = React.useState(0)
+  React.useEffect(() => {
+    const id = setTimeout(() => setTick((t) => t + 1), 100)
+    return () => clearTimeout(id)
+  }, [])
+  const grouped = React.useMemo(() => getNodeTypesByCategory(), [tick])
 
   return (
     <div
