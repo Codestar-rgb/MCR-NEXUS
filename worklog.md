@@ -2317,3 +2317,41 @@ Stage Summary:
 - 配方网格编辑器完成 ✅
 - 全部 R1-R13 工作已恢复 ✅
 - 已推送 GitHub（d9d1c7b）
+
+---
+Task ID: R15 (批量编辑 + 模板保存)
+Agent: main (Z.ai Code)
+Task: 节点属性批量编辑 + 工作区模板自定义保存
+
+Work Log:
+R2: 节点属性批量编辑
+- BatchEditPanel 组件：选中 2+ 节点时替代单节点编辑
+  * 类型分布徽章（如"实体 ×3 · 方块 ×2"）
+  * 3 个操作按钮：克隆/分组/删除
+  * 共享属性编辑器（仅同类型节点）：
+    - 显示 6 个共享属性 + 当前值
+    - 点击值内联编辑 + 应用到所有节点
+    - 不一致值用 amber 高亮，显示"M/N 一致"
+    - 隐藏 name/registryId（每节点唯一）
+- PropertyPanel 集成：isMultiSelect 时显示 BatchEditPanel
+
+R3: 工作区模板自定义保存
+- API：GET/POST/DELETE /api/settings/templates
+  * 存储在 AppSetting 表（key: 'user_templates'）
+  * POST 保存节点+连线为可复用模板
+  * DELETE 按 id 删除
+- CanvasToolbar 添加"保存为模板"按钮（Save 图标）
+  * 弹出名称输入框
+  * 捕获当前工作区节点+连线
+  * 用 sourceIndex/targetIndex 格式保存边
+  * toast 确认 + 节点/连线数
+
+修复：
+- 安装缺失的 @react-three/fiber + @react-three/drei
+  （water-orb 3D 组件依赖）
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 多选节点可批量编辑属性/克隆/分组/删除
+- 用户可将当前画布保存为自定义模板
+- 已推送 GitHub（891905e）
