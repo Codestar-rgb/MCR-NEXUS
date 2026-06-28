@@ -3150,3 +3150,35 @@ Stage Summary:
 - 属性面板有滑入动画
 - 实体支持 3 个自定义属性
 - 已推送 GitHub（daa85b8）
+
+---
+Task ID: R40 (动画 + i18n + 性能)
+Agent: main (Z.ai Code)
+Task: 6 种新动画 + i18n v2 + 性能调优
+
+Work Log:
+R60: 6 种新 CSS 动画
+- nexcube-node-bounce-in：cubic-bezier 弹跳入场（0.3s）
+- nexcube-terminal-line：终端输出逐行淡入（0.15s）
+- nexcube-ripple：按钮按下波纹（0.5s）
+- nexcube-toast-slide：toast 滑入+缩放
+- nexcube-search-item：搜索结果逐条入场（0.15s）
+- BaseNodeCard 使用 bounce-in 动画
+
+R61: i18n v2 — 40 新翻译键
+- group.*(8) + hitbox.preset*Desc(4) + edge.*(4)
+- project.*(3) + recipe.*(8) + status.*(4)
+- 总计 176 → 216 翻译键
+
+R62: 性能调优
+- 性能层级调整：full(<300) / virtual(<1000) / aggregated(<5000)
+  原：full(<500) / virtual(<2000) / aggregated(<10000)
+- 虚拟渲染阈值：200 → 150 节点
+  更早启用虚拟渲染
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 6 种新动画（弹跳/终端/波纹/toast/搜索/脉冲）
+- i18n 从 176 键扩展到 216 键
+- 性能更早启用虚拟渲染
+- 已推送 GitHub（e69fff5）
