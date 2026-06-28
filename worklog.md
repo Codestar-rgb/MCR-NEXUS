@@ -2635,3 +2635,35 @@ Stage Summary:
 - 大画布性能优化（虚拟渲染 + memo 增强）
 - 新增 2 种节点类型（附魔 + 成就），总计 15 种
 - 已推送 GitHub（ba1dee6）
+
+---
+Task ID: R24 (附魔/成就代码生成 + 快捷键更新)
+Agent: main (Z.ai Code)
+Task: 附魔/成就节点代码生成 + 快捷键帮助补充
+
+Work Log:
+R23: 附魔/成就代码生成
+- generateEnchantmentFile：Java 类继承 Enchantment
+  * Rarity/EnchantmentCategory 从节点属性映射
+  * getMinLevel/getMaxLevel/getMinCost/getMaxCost
+  * isTreasureOnly/isCurse/isTradeable/isDiscoverable
+  * EquipmentSlot.MAINHAND + OFFHAND
+- generateAdvancementFile：advancements JSON
+  * 6 种触发类型 + 正确的 conditions：
+    inventory_changed/player_killed_entity/placed_block/
+    used_item/changed_dimension/recipe_crafted
+  * display: icon/title/description/frame/show_toast/announce/hidden
+  * translate keys 支持 i18n
+
+R25: 快捷键帮助补充
+- 新增：F1（帮助）、Ctrl+H（版本历史）
+- 新增：右键节点（复制/粘贴属性、对齐）
+- 新增：选中 2+ 节点（显示对齐工具栏）
+- 总计 25+ 快捷键
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 附魔节点生成完整 Enchantment Java 类（8 个方法覆盖）
+- 成就节点生成正确 advancements JSON（6 种触发类型）
+- 快捷键帮助文档更新至最新
+- 已推送 GitHub（7de3d03）
