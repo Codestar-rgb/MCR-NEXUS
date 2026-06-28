@@ -150,6 +150,8 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
       { key: 'customAttrName', label: '自定义属性名', type: 'string', defaultValue: '', group: '自定义属性', placeholder: '如 flight_speed' },
       { key: 'customAttrValue', label: '自定义属性值', type: 'number', defaultValue: 0, min: -1024, max: 1024, step: 0.1, group: '自定义属性' },
       { key: 'customAttrDesc', label: '属性描述', type: 'string', defaultValue: '', group: '自定义属性', placeholder: '玩家可见的属性说明' },
+      { key: 'customAttrName2', label: '自定义属性名 2', type: 'string', defaultValue: '', group: '自定义属性', placeholder: '如 magic_resistance' },
+      { key: 'customAttrValue2', label: '自定义属性值 2', type: 'number', defaultValue: 0, min: -1024, max: 1024, step: 0.1, group: '自定义属性' },
       // 掉落物配置
       { key: 'dropItemId', label: '掉落物品 ID', type: 'string', defaultValue: '', group: '掉落', placeholder: 'minecraft:diamond（留空掉落自身同名物品）' },
       { key: 'dropCount', label: '掉落数量', type: 'number', defaultValue: 1, min: 1, max: 64, step: 1, group: '掉落' },

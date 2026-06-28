@@ -1,43 +1,38 @@
 'use client'
 
 /**
- * 节点组卡片（React Flow Group 节点）
+ * 节点组卡片 v2 — 重新设计
  *
- * 特殊容器节点：
- *  - 大尺寸，半透明背景
- *  - 顶部可拖拽的标题栏（带颜色条）
- *  - 内部容纳其他节点
- *  - 可重命名（双击标题）
- *  - 可改色（颜色选择器）
- *
- * 不渲染输入/输出端口（容器型节点）。
+ * 改进：
+ *  - 更精致的视觉：渐变边框 + 半透明背景 + 颜色条
+ *  - 标题栏：可双击重命名 + 颜色切换 + 节点计数
+ *  - 内容区：空状态提示 + 子节点预览
+ *  - 选中态：品牌色 ring + 辉光
+ *  - 解散按钮：一键解散组
  */
 
 import { memo, useRef, useState, type KeyboardEvent } from 'react'
 import { type NodeProps, type Node } from '@xyflow/react'
-import { Group as GroupIcon, Check, X } from 'lucide-react'
+import { Group as GroupIcon, Check, X, Trash2, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import type { FlowNodeData } from '@/lib/node-system'
+import { useCanvasStore } from '@/stores/canvas'
 import { cn } from '@/lib/utils'
 
-/** 节点组可选颜色（与 COLOR_CLASSES 对齐） */
 const GROUP_COLORS = [
-  { id: 'rose', hex: '#f43f5e' },
-  { id: 'amber', hex: '#f59e0b' },
-  { id: 'teal', hex: '#14b8a6' },
-  { id: 'cyan', hex: '#06b6d4' },
-  { id: 'emerald', hex: '#10b981' },
-  { id: 'violet', hex: '#8b5cf6' },
-  { id: 'slate', hex: '#64748b' },
+  { id: 'rose', hex: '#f43f5e', name: '红' },
+  { id: 'amber', hex: '#f59e0b', name: '橙' },
+  { id: 'teal', hex: '#14b8a6', name: '青' },
+  { id: 'cyan', hex: '#06b6d4', name: '蓝' },
+  { id: 'emerald', hex: '#10b981', name: '绿' },
+  { id: 'violet', hex: '#8b5cf6', name: '紫' },
+  { id: 'slate', hex: '#64748b', name: '灰' },
 ] as const
 
 export type GroupNodeData = FlowNodeData & {
   kind?: 'group'
-  /** 组标题 */
   title?: string
-  /** 组颜色（tailwind 色名） */
   groupColor?: string
-  /** 备注 */
   groupNote?: string
 }
 
@@ -47,17 +42,23 @@ function str(v: unknown, fallback = ''): string {
   return typeof v === 'string' ? v : fallback
 }
 
-function GroupNodeCardImpl({ data, selected }: NodeProps<GroupNodeType>) {
+function GroupNodeCardImpl({ data, id, selected }: NodeProps<GroupNodeType>) {
   const title = str(data.title ?? data.properties?.title, '新建组')
   const colorId = str(data.groupColor ?? data.properties?.color, 'slate')
   const note = str(data.groupNote ?? data.properties?.note, '')
 
-  const colorMeta =
-    GROUP_COLORS.find((c) => c.id === colorId) ?? GROUP_COLORS[6]
+  const colorMeta = GROUP_COLORS.find((c) => c.id === colorId) ?? GROUP_COLORS[6]
 
   const [isEditing, setIsEditing] = useState(false)
   const [draftTitle, setDraftTitle] = useState(title)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const updateNode = useCanvasStore((s) => s.updateNode)
+  const ungroupNode = useCanvasStore((s) => s.ungroupNode)
+  const nodes = useCanvasStore((s) => s.nodes)
+
+  // 计算组内子节点数
+  const childCount = nodes.filter((n) => n.data.parentId === id).length
 
   function startEditing() {
     setDraftTitle(title)
@@ -67,9 +68,9 @@ function GroupNodeCardImpl({ data, selected }: NodeProps<GroupNodeType>) {
 
   function commitEdit() {
     setIsEditing(false)
-    // 本阶段仅本地展示；持久化由 store 完成（Task 2-C）
     if (draftTitle.trim() && draftTitle !== title) {
-      toast.success('组名已更新', { description: draftTitle })
+      updateNode(id, { data: { ...data, title: draftTitle.trim() } })
+      toast.success('组名已更新', { description: draftTitle.trim() })
     }
   }
 
@@ -79,57 +80,56 @@ function GroupNodeCardImpl({ data, selected }: NodeProps<GroupNodeType>) {
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      commitEdit()
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      cancelEdit()
-    }
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+    else if (e.key === 'Escape') { e.preventDefault(); cancelEdit() }
+  }
+
+  function changeColor(colorId: string) {
+    updateNode(id, { data: { ...data, properties: { ...data.properties, color: colorId } } })
+  }
+
+  function handleUngroup() {
+    ungroupNode(id)
+    toast.success('组已解散，节点已释放')
   }
 
   return (
     <div
       className={cn(
-        'relative rounded-xl border-2 bg-card/30 shadow-inner backdrop-blur-sm transition-all',
+        'group relative rounded-2xl border-2 backdrop-blur-sm transition-all',
         selected
-          ? 'border-zinc-300 ring-2 ring-zinc-300/40'
-          : 'border-zinc-500/30 hover:border-zinc-400/50',
+          ? 'shadow-floating ring-2 ring-primary/40'
+          : 'shadow-lg hover:shadow-xl',
       )}
       style={{
-        minWidth: 360,
-        minHeight: 220,
+        minWidth: 320,
+        minHeight: 200,
         width: '100%',
         height: '100%',
+        borderColor: `${colorMeta.hex}40`,
+        backgroundColor: `${colorMeta.hex}08`,
       }}
     >
-      {/* 颜色条 */}
+      {/* 顶部渐变条 */}
       <div
-        className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
-        style={{ backgroundColor: colorMeta.hex }}
+        className="absolute inset-x-0 top-0 h-1 rounded-t-2xl"
+        style={{ background: `linear-gradient(90deg, ${colorMeta.hex}, ${colorMeta.hex}40)` }}
         aria-hidden
       />
 
-      {/* 顶部标题栏（可拖拽区域由 React Flow 自动处理 className="nopan"） */}
+      {/* 标题栏 */}
       <div
-        className={cn(
-          'flex items-center gap-2 rounded-t-xl border-b px-3 py-2',
-          'border-zinc-500/20 bg-zinc-500/5',
-        )}
-        onDoubleClick={(e) => {
-          e.stopPropagation()
-          startEditing()
-        }}
+        className="flex items-center gap-2 rounded-t-2xl border-b px-3 py-2"
+        style={{ borderColor: `${colorMeta.hex}30`, backgroundColor: `${colorMeta.hex}0A` }}
+        onDoubleClick={(e) => { e.stopPropagation(); startEditing() }}
       >
-        <span
-          className="flex h-6 w-6 items-center justify-center rounded-md"
-          style={{
-            backgroundColor: `${colorMeta.hex}22`,
-            color: colorMeta.hex,
-          }}
+        {/* 图标 */}
+        <div
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md ring-1 ring-inset"
+          style={{ backgroundColor: `${colorMeta.hex}18`, color: colorMeta.hex }}
         >
           <GroupIcon className="h-3.5 w-3.5" />
-        </span>
+        </div>
 
         {isEditing ? (
           <div className="flex min-w-0 flex-1 items-center gap-1">
@@ -139,80 +139,74 @@ function GroupNodeCardImpl({ data, selected }: NodeProps<GroupNodeType>) {
               onChange={(e) => setDraftTitle(e.target.value)}
               onKeyDown={onKeyDown}
               onBlur={commitEdit}
-              // 阻止 React Flow 拖拽
               onMouseDown={(e) => e.stopPropagation()}
-              className="min-w-0 flex-1 rounded border border-zinc-500/40 bg-background px-1.5 py-0.5 text-sm text-foreground outline-none focus:border-zinc-400"
+              className="min-w-0 flex-1 rounded border border-border/40 bg-background px-1.5 py-0.5 text-sm text-foreground outline-none focus:border-primary/40"
               placeholder="输入组名..."
             />
-            <button
-              type="button"
-              onClick={commitEdit}
-              className="rounded p-0.5 text-emerald-400 hover:bg-emerald-500/10"
-              aria-label="确认"
-            >
+            <button onClick={commitEdit} className="rounded p-0.5 text-emerald-400 hover:bg-emerald-500/10">
               <Check className="h-3.5 w-3.5" />
             </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="rounded p-0.5 text-muted-foreground hover:bg-muted/40"
-              aria-label="取消"
-            >
+            <button onClick={cancelEdit} className="rounded p-0.5 text-muted-foreground hover:bg-muted/40">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
         ) : (
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <span className="truncate text-sm font-semibold text-foreground">
-                {title}
-              </span>
-              <span className="rounded bg-zinc-500/20 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-zinc-300">
-                Group
-              </span>
+              <span className="truncate text-sm font-semibold text-foreground">{title}</span>
+              {/* 子节点计数 */}
+              {childCount > 0 && (
+                <span
+                  className="flex items-center gap-0.5 rounded-full px-1.5 py-px text-[9px] font-bold"
+                  style={{ backgroundColor: `${colorMeta.hex}18`, color: colorMeta.hex }}
+                >
+                  <Layers className="h-2.5 w-2.5" />
+                  {childCount}
+                </span>
+              )}
             </div>
-            {note && (
-              <p className="truncate text-[10px] text-muted-foreground">
-                {note}
-              </p>
-            )}
+            {note && <p className="truncate text-[10px] text-muted-foreground">{note}</p>}
           </div>
         )}
 
         {/* 颜色选择器 */}
-        <div
-          className="flex items-center gap-1"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+        <div className="flex items-center gap-0.5" onMouseDown={(e) => e.stopPropagation()}>
           {GROUP_COLORS.map((c) => (
             <button
               key={c.id}
-              type="button"
-              onClick={() => {
-                // 本阶段仅 toast；持久化由 store 完成
-                toast.info(`颜色已切换（${c.id}）`, {
-                  description: '持久化待 Task 2-C 集成',
-                })
-              }}
+              onClick={() => changeColor(c.id)}
               className={cn(
-                'h-3 w-3 rounded-full ring-1 ring-background transition-transform hover:scale-125',
-                c.id === colorId && 'ring-2 ring-foreground/40',
+                'h-2.5 w-2.5 rounded-full transition-transform hover:scale-150',
+                c.id === colorId && 'ring-1 ring-foreground/40 ring-offset-1',
               )}
               style={{ backgroundColor: c.hex }}
-              aria-label={`切换为 ${c.id} 色`}
+              aria-label={`切换为${c.name}色`}
             />
           ))}
         </div>
+
+        {/* 解散按钮 */}
+        <button
+          onClick={handleUngroup}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="rounded p-1 text-muted-foreground/40 transition-colors hover:bg-red-500/10 hover:text-red-400"
+          aria-label="解散组"
+          title="解散组"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
 
-      {/* 内容区（容纳其他节点，由 React Flow 自动渲染子节点） */}
+      {/* 内容区 */}
       <div className="relative h-full p-2">
-        {/* 空状态提示（仅当没有子节点时显示，由 React Flow 自动管理） */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
-          <span className="text-[10px] text-muted-foreground/40">
-            拖拽节点到此处添加到组
-          </span>
-        </div>
+        {childCount === 0 && (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 p-4">
+            <GroupIcon className="h-6 w-6 text-muted-foreground/15" />
+            <span className="text-[10px] text-muted-foreground/30">
+              拖拽节点到此处添加到组
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

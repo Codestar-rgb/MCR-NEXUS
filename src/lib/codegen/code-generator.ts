@@ -119,9 +119,17 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
   // 自定义属性代码（如果设置了 customAttrName）
   const customAttrName = getStr(node, 'customAttrName', '')
   const customAttrValue = getNum(node, 'customAttrValue', 0)
-  const customAttrCode = customAttrName
-    ? `\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName}")), ${customAttrValue}F)`
-    : ''
+  const customAttrName2 = getStr(node, 'customAttrName2', '')
+  const customAttrValue2 = getNum(node, 'customAttrValue2', 0)
+
+  const customAttrParts: string[] = []
+  if (customAttrName) {
+    customAttrParts.push(`\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName}")), ${customAttrValue}F)`)
+  }
+  if (customAttrName2) {
+    customAttrParts.push(`\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName2}")), ${customAttrValue2}F)`)
+  }
+  const customAttrCode = customAttrParts.join('')
 
   // AI 目标生成（基于 aiType）
   const aiGoals = generateAIGoals(aiType, className)
