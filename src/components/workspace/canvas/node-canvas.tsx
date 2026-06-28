@@ -55,11 +55,12 @@ import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
 import { AlignToolbar } from '@/components/workspace/canvas/align-toolbar'
 import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
 import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
-import { RecommendationBubble } from '@/components/workspace/canvas/recommendation-bubble'
+// RecommendationBubble 已移除
+// AlignmentLines, FunctionEncapsulator, FunctionNodeDetail 保留
 import { AlignmentLines } from '@/components/workspace/canvas/alignment-lines'
 import { FunctionEncapsulator } from '@/components/workspace/canvas/function-encapsulator'
 import { FunctionNodeDetail } from '@/components/workspace/canvas/function-node-detail'
-import { DebugPanel } from '@/components/workspace/property-panel/debug-panel'
+// 调试面板已移除
 // 性能压测面板已移除（对用户无意义）
 import {
   useCanvasStore,
@@ -152,10 +153,15 @@ function NodeCanvasInner() {
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
   const { screenToFlowPosition, setCenter, fitView, zoomIn, zoomOut } = useReactFlow()
 
-  /* 节点选中时自动定位到画布中心 */
+  /* 节点选中时 — 仅首次搜索时定位（不跟随拖拽） */
   const selectedNodeId = useCanvasStore((s) => s.selectedNodeIds[0] ?? null)
+  const lastCenteredId = React.useRef<string | null>(null)
   React.useEffect(() => {
     if (!selectedNodeId) return
+    // 仅在节点变化时定位一次，不重复跟随
+    if (lastCenteredId.current === selectedNodeId) return
+    lastCenteredId.current = selectedNodeId
+
     const node = nodes.find((n) => n.id === selectedNodeId)
     if (!node) return
     const x = node.position.x + (node.width ?? 120)
@@ -455,6 +461,27 @@ function NodeCanvasInner() {
         onPaneClick={onPaneClick}
         onNodeContextMenu={onNodeContextMenu}
         onPaneContextMenu={onPaneContextMenu}
+        onEdgeContextMenu={(e, edge) => {
+          e.preventDefault()
+          // 右键连线 → 选中 + 提示删除
+          useCanvasStore.getState().selectNode(null)
+          // 选中边
+          const edgeId = edge.id
+          toast.info(`连线已选中：按 Delete 删除`, {
+            description: `ID: ${edgeId.slice(0, 12)}...`,
+            action: {
+              label: '删除',
+              onClick: () => {
+                useCanvasStore.getState().applyEdgeChanges([{ type: 'remove', id: edgeId }])
+                toast.success('连线已删除')
+              },
+            },
+          })
+        }}
+        onEdgeClick={(_e, edge) => {
+          // 点击连线选中（高亮）
+          useCanvasStore.getState().selectNode(null)
+        }}
         onNodeDragStop={onNodeDragStop as any}
         nodesDraggable={perfConfig.nodesDraggable}
         onlyRenderVisibleElements={perfConfig.onlyRenderVisibleElements || nodes.length > 200}
@@ -464,8 +491,9 @@ function NodeCanvasInner() {
         maxZoom={2.5}
         multiSelectionKeyCode={['Meta', 'Shift']}
         deleteKeyCode={['Backspace', 'Delete']}
-        snapToGrid
-        snapGrid={[20, 20]}
+        // 禁用 snapToGrid — 避免拖拽卡顿
+        // snapToGrid
+        // snapGrid={[20, 20]}
         // 触控优化
         panOnDrag={true}
         zoomOnPinch={true}
@@ -481,9 +509,9 @@ function NodeCanvasInner() {
         {/* 点阵背景：精致低对比度，与深蓝黑背景协调 */}
         <Background
           variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="oklch(0.3 0.015 250 / 40%)"
+          gap={20}
+          size={1.5}
+          color="oklch(0.35 0.015 250 / 30%)"
         />
 
         {/* 缩放控制（右下角） */}
@@ -543,13 +571,7 @@ function NodeCanvasInner() {
       {/* 对齐工具栏（选中 2+ 节点时显示） */}
       <AlignToolbar />
 
-      {/* AI 推荐气泡（右上角，创建节点后弹出） */}
-      <RecommendationBubble
-        lastCreatedNodeId={lastCreated.id}
-        lastCreatedNodeKind={lastCreated.kind}
-        lastCreatedNodeName={lastCreated.name}
-        lastCreatedNodePosition={lastCreated.position}
-      />
+      {/* AI 推荐气泡已移除（减少画布干扰） */}
 
       {/* 性能指示器（右下角，FPS + 模式提示，精致玻璃拟态） */}
       <div className="pointer-events-none absolute bottom-3 right-3 z-20 flex items-center gap-2">
@@ -595,7 +617,7 @@ function NodeCanvasInner() {
       <FunctionEncapsulator />
 
       {/* 调试面板（右下角浮动） */}
-      <DebugPanel />
+      {/* 调试面板已移除 */}
 
       {/* 函数节点详情视图（双击函数节点打开，覆盖整个画布） */}
       {openedFunctionNodeId && (
