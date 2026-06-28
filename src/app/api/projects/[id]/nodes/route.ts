@@ -139,3 +139,4 @@ export async function DELETE(req: NextRequest, { params }: RouteCtx) {
     return NextResponse.json({ error: 'failed_to_delete_nodes' }, { status: 500 })
   }
 }
+

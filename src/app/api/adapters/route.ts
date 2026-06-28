@@ -243,3 +243,4 @@ const ADAPTER_META_FALLBACK: AdapterMeta = {
   supportedApis: [],
   description: '该适配器暂无详细元数据。',
 }
+

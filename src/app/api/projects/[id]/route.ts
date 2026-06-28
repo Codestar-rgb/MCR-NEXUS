@@ -66,3 +66,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'failed_to_delete_project' }, { status: 500 })
   }
 }
+

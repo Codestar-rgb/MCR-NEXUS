@@ -89,3 +89,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'failed_to_delete_node' }, { status: 500 })
   }
 }
+

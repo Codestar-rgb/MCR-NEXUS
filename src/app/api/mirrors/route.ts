@@ -133,3 +133,4 @@ function safeParseJdks(raw: string): JdkMirror[] {
     return []
   }
 }
+

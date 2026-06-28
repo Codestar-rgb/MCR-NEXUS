@@ -72,3 +72,8 @@ server.log
 tool-results/
 screenshot-*.png
 vlm-*.json
+dist-electron/linux-unpacked/
+dist-electron/*.AppImage
+dist-electron/builder-debug.yml
+dist-electron/latest-linux.yml
+db/*.AppImage

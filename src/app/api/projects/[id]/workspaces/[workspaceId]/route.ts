@@ -60,3 +60,4 @@ export async function DELETE(_req: NextRequest, { params }: RouteCtx) {
     return NextResponse.json({ error: 'failed_to_delete_workspace' }, { status: 500 })
   }
 }
+

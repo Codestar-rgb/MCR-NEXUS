@@ -33,3 +33,4 @@ export async function DELETE(
     return NextResponse.json({ error: 'failed_to_delete_connection' }, { status: 500 })
   }
 }
+
