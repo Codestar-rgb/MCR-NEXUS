@@ -3021,3 +3021,35 @@ Stage Summary:
 - 连线显示语义化名称（源类型 → 目标类型）
 - 工程信息卡片有'打开工程文件'入口
 - 已推送 GitHub（f2066e6）
+
+---
+Task ID: R36 (拖拽修复 + 调试面板移除 + 连线编辑 + 工作区清理)
+Agent: main (Z.ai Code)
+Task: 修复拖拽卡顿/视角跟随 + 移除调试面板 + 连线编辑 + 工作区视觉优化
+
+Work Log:
+FIX6: 拖拽卡顿 + 视角跟随修复
+- 禁用 snapToGrid + snapGrid（原 20px 网格导致拖拽卡顿）
+- 自动定位改为仅首次触发（lastCenteredId ref 防重复）
+- 拖拽节点不再触发视角跟随
+
+FIX8: 调试面板移除
+- DebugPanel 从画布卸载
+- 导入移除
+
+FIX9: 连线编辑机制
+- onEdgeContextMenu：右键连线 → toast 提示删除
+- onEdgeClick：点击连线选中（取消节点选中）
+- 连线现在可交互：右键删除 / Delete 键
+
+FIX10: 工作区视觉清理
+- 背景点阵优化（gap 20, size 1.5, opacity 30%）
+- RecommendationBubble 移除（减少画布干扰）
+- 画布现在只有：节点画布 + Controls + MiniMap + 工程信息卡片
+
+Stage Summary:
+- 4 项修复完成 ✅
+- 拖拽流畅无卡顿，视角不跟随
+- 连线可右键删除
+- 画布更干净（无调试面板/推荐气泡/代码预览）
+- 已推送 GitHub（fb7aa84）
