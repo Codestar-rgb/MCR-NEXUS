@@ -18,10 +18,12 @@
  */
 
 import { memo } from 'react'
+import * as React from 'react'
 import { type NodeProps, type Node } from '@xyflow/react'
 import { Hammer, Bomb, Lightbulb, Eye, Box, Package } from 'lucide-react'
 import { BaseNodeCard } from './base-node-card'
 import type { FlowNodeData } from '@/lib/node-system'
+import { getMCIconUrl } from '@/lib/mc-icons'
 import { cn } from '@/lib/utils'
 
 export type BlockNodeData = FlowNodeData & {
@@ -76,6 +78,7 @@ function BlockNodeCardImpl(props: NodeProps<BlockNodeType>) {
 
         return (
           <>
+            <MCNodeIcon registryId={str(p.registryId, '')} />
             <Row icon={<Hammer className="h-3.5 w-3.5 text-amber-400" />} label="硬度">
               <span className="font-mono font-semibold text-amber-300">{hardness}</span>
             </Row>
@@ -193,3 +196,17 @@ function Tag({
 }
 
 export const BlockNodeCard = memo(BlockNodeCardImpl)
+
+/** MC 物品图标（带 fallback） */
+function MCNodeIcon({ registryId }: { registryId: string }) {
+  const [iconUrl, setIconUrl] = React.useState<string | null>(() => getMCIconUrl(registryId))
+  const [failed, setFailed] = React.useState(false)
+  React.useEffect(() => { setIconUrl(getMCIconUrl(registryId)); setFailed(false) }, [registryId])
+  if (!iconUrl || failed) return null
+  return (
+    <div className="mb-1 flex justify-center">
+      <img src={iconUrl} alt={registryId} onError={() => setFailed(true)}
+        className="h-8 w-8" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+    </div>
+  )
+}

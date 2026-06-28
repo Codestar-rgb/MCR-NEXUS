@@ -19,10 +19,12 @@
  */
 
 import { memo } from 'react'
+import * as React from 'react'
 import { type NodeProps, type Node } from '@xyflow/react'
 import { Swords, Heart, Sparkles, Hammer, Zap } from 'lucide-react'
 import { BaseNodeCard } from './base-node-card'
 import type { FlowNodeData } from '@/lib/node-system'
+import { getMCIconUrl } from '@/lib/mc-icons'
 import { cn } from '@/lib/utils'
 
 export type WeaponNodeData = FlowNodeData & {
@@ -71,6 +73,7 @@ function WeaponNodeCardImpl(props: NodeProps<WeaponNodeType>) {
 
         return (
           <>
+            <MCNodeIcon registryId={str(p.registryId, '')} />
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Swords className="h-3.5 w-3.5 text-red-400" />
@@ -149,6 +152,20 @@ function Badge({
     >
       {children}
     </span>
+  )
+}
+
+/** MC 物品图标 */
+function MCNodeIcon({ registryId }: { registryId: string }) {
+  const [iconUrl, setIconUrl] = React.useState<string | null>(() => getMCIconUrl(registryId))
+  const [failed, setFailed] = React.useState(false)
+  React.useEffect(() => { setIconUrl(getMCIconUrl(registryId)); setFailed(false) }, [registryId])
+  if (!iconUrl || failed) return null
+  return (
+    <div className="mb-1 flex justify-center">
+      <img src={iconUrl} alt={registryId} onError={() => setFailed(true)}
+        className="h-8 w-8" style={{ imageRendering: "pixelated", objectFit: "contain" }} />
+    </div>
   )
 }
 
