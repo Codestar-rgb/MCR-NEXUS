@@ -2882,3 +2882,37 @@ Stage Summary:
 - 配方预览模式完成 ✅
 - 3 种配方类型有专用可视化编辑器
 - 已推送 GitHub（cc3f6de）
+
+---
+Task ID: R32 (i18n + Forge 事件 + 动画 + 性能监控)
+Agent: main (Z.ai Code)
+Task: i18n 完善 + 5 种 Forge 事件 + hover/闪烁动画 + 渲染时间监控
+
+Work Log:
+R41: i18n 完善 — 80+ 新翻译键
+- hitbox.*(9) + ai.*(8) + advancementTree.*(9) + version.*(8)
+- recipe.*(9) + batch.*(5) + stats.*(10) + align.*(8)
+- help.*(3) + enchant.*(3)
+- 总计 96 → 176 翻译键
+
+R43: 5 种新 Forge 事件（8→13）
+- onEntityJoinLevel/onItemCrafted/onExplosion/onPlayerRespawn/onRightClickItem
+
+R44: hover + 属性闪烁动画
+- nexcube-node-hover: translateY(-2px) + 辉光
+- nexcube-prop-flash: 0.5s 背景闪烁
+
+R45: 渲染时间监控
+- useRenderTime Hook: 单帧渲染时间
+- 状态栏显示 renderMs（绿<8ms/黄<16ms/红>16ms）
+
+备注：已记录 mcicons.ccleaf.com 作为 MC 美术素材资源站，
+后续可用于贴图/图标集成。
+
+Stage Summary:
+- 4 项改进完成 ✅
+- i18n 从 96 键扩展到 176 键
+- Forge 事件从 8 种扩展到 13 种
+- 节点 hover 有悬浮+辉光动画
+- 状态栏新增渲染时间监控
+- 已推送 GitHub（cca56f8）
