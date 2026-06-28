@@ -2388,3 +2388,36 @@ Stage Summary:
 - ? 键随时查看所有快捷键
 - 右键可复制/粘贴节点属性（跨节点复用配置）
 - 已推送 GitHub（861357c）
+
+---
+Task ID: R17 (节点对齐工具 + 主题切换动画)
+Agent: main (Z.ai Code)
+Task: 8 种对齐模式 + 主题切换动画
+
+Work Log:
+R7: 节点对齐工具
+- canvas store 添加 alignSelected(mode) action + AlignMode 类型
+  * 8 种模式：left/right/top/bottom/h-center/v-center/h-distribute/v-distribute
+  * 对齐：所有节点移动到同一边界
+  * 居中：按平均位置居中
+  * 分布：首尾固定，中间等距分布（需 3+ 节点）
+- AlignToolbar 组件：选中 2+ 节点时浮动显示
+  * 8 个按钮，lucide 对齐图标
+  * 分布按钮在 < 3 节点时禁用
+  * 玻璃拟态 + top-right 定位
+  * 挂载在 NodeCanvas 旁边
+  * toast 确认
+
+R9: 主题切换动画
+- framer-motion AnimatePresence 图标旋转动画
+  * Sun: rotate 90→0 进入, 0→-90 退出
+  * Moon: rotate -90→0 进入, 0→90 退出
+  * scale 0.5→1 过渡
+- 点击光晕效果：扩展圆形（primary 色）
+- 200ms 平滑过渡
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 多选节点可一键对齐/居中/分布
+- 主题切换有旋转+光晕动画
+- 已推送 GitHub（cf9ea30）
