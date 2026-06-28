@@ -3182,3 +3182,38 @@ Stage Summary:
 - i18n 从 176 键扩展到 216 键
 - 性能更早启用虚拟渲染
 - 已推送 GitHub（e69fff5）
+
+---
+Task ID: R41 (动画 + 配色 + 帮助)
+Agent: main (Z.ai Code)
+Task: 7 种新动画 + 配色微调 + 帮助文档 FAQ/故障排除
+
+Work Log:
+R63: 7 种新 CSS 动画
+- nexcube-btn-press：按钮按下缩放反馈（0.15s）
+- nexcube-dropdown：菜单展开 scaleY（0.15s）
+- nexcube-card-glow：卡片 hover 品牌色辉光（1.5s）
+- nexcube-tab-switch：标签页切换淡入（0.15s）
+- nexcube-progress-shimmer：进度条渐变流动（1.5s）
+- nexcube-drag-hint：拖拽提示脉冲（1.5s）
+- 项目总计 20+ 动画
+
+R64: 配色微调
+- 阴影透明度降低：0.3→0.25, 0.4→0.35, 0.5→0.45
+- 辉光阴影：oklch 0.72→0.75（匹配 v3 品牌色）
+- 渐变文字：0.82→0.85（更亮）
+- 渐变背景：0.72→0.75, 0.68→0.70
+
+R65: 帮助文档扩展
+- FAQ 部分：5 个可展开 Q&A
+  * 创建实体/连接节点/导出模组/使用组/编辑配方
+- 故障排除部分：4 个常见问题
+  * 拖拽卡顿/连线失败/导出编译/面板不显示
+- FAQItem 组件：可折叠+箭头旋转
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 7 种新动画（总计 20+）
+- 配色与 v3 品牌色统一
+- 帮助文档有 FAQ + 故障排除
+- 已推送 GitHub（25f7648）
