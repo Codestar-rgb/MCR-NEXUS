@@ -116,6 +116,13 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
   const speed = getNum(node, 'movementSpeed', 0.3)
   const aiType = getStr(node, 'aiType', 'melee')
 
+  // 自定义属性代码（如果设置了 customAttrName）
+  const customAttrName = getStr(node, 'customAttrName', '')
+  const customAttrValue = getNum(node, 'customAttrValue', 0)
+  const customAttrCode = customAttrName
+    ? `\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName}")), ${customAttrValue}F)`
+    : ''
+
   // AI 目标生成（基于 aiType）
   const aiGoals = generateAIGoals(aiType, className)
 
@@ -160,7 +167,7 @@ ${aiGoals}
             .add(Attributes.ATTACK_DAMAGE, ${attack.toFixed(1)}F)
             .add(Attributes.ARMOR, ${armor.toFixed(1)}F)
             .add(Attributes.ARMOR_TOUGHNESS, ${armorToughness.toFixed(1)}F)
-            .add(Attributes.MOVEMENT_SPEED, ${speed.toFixed(2)}F);
+            .add(Attributes.MOVEMENT_SPEED, ${speed.toFixed(2)}F)${customAttrCode};
     }
 
     // ${BLACKBOX_START_MARKER}
@@ -1472,39 +1479,50 @@ function generateEntityLootTable(modId: string, node: FlowNode): GeneratedFile {
   const registryId = getStr(node, 'registryId', node.id)
   const attack = getNum(node, 'attack', 0)
   const health = getNum(node, 'health', 20)
+  const dropItemId = getStr(node, 'dropItemId', '')
+  const dropCount = getNum(node, 'dropCount', 1)
+  const dropChance = getNum(node, 'dropChance', 1)
 
   // 经验值掉落（怪物死亡经验）
   const experienceDrop = attack > 0 ? Math.max(1, Math.floor(health / 5)) : 0
 
+  // 掉落物品 ID：自定义 > 同名物品
+  const lootItemId = dropItemId || `${modId}:${registryId}`
+
   // 构建掉落池
   const pools: unknown[] = []
 
-  // 主掉落池：掉落同名物品（如果存在）
-  pools.push({
+  // 主掉落池
+  const mainPool: Record<string, unknown> = {
     rolls: 1,
     entries: [
       {
         type: 'minecraft:item',
-        name: `${modId}:${registryId}`,
+        name: lootItemId,
+        functions: dropCount !== 1 ? [{ function: 'minecraft:set_count', count: dropCount }] : undefined,
       },
     ],
     conditions: [
       { condition: 'minecraft:killed_by_player' },
     ],
-  })
+  }
+
+  // 掉落概率 < 1 时添加 random_chance 条件
+  if (dropChance < 1) {
+    mainPool.conditions = [
+      { condition: 'minecraft:killed_by_player' },
+      { condition: 'minecraft:random_chance', chance: dropChance },
+    ]
+  }
 
   // 经验值函数
   if (experienceDrop > 0) {
-    pools[0] = {
-      ...(pools[0] as Record<string, unknown>),
-      functions: [
-        {
-          function: 'minecraft:set_experience',
-          experience: experienceDrop,
-        },
-      ],
-    }
+    mainPool.functions = [
+      { function: 'minecraft:set_experience', experience: experienceDrop },
+    ]
   }
+
+  pools.push(mainPool)
 
   const content = JSON.stringify({
     type: 'minecraft:entity',
@@ -1607,6 +1625,7 @@ function generateEventHandlerFile(modId: string, nodes: FlowNode[]): GeneratedFi
   const pkg = 'com.example.mod.event'
 
   const entityNodes = nodes.filter((n) => n.data.kind === 'entity')
+  const blockNodes = nodes.filter((n) => n.data.kind === 'block')
 
   // 实体死亡掉落事件
   const entityDropHandlers = entityNodes.map((n) => {
@@ -1618,11 +1637,22 @@ function generateEventHandlerFile(modId: string, nodes: FlowNode[]): GeneratedFi
         // }`
   }).join('\n')
 
+  // 方块放置事件
+  const blockPlaceHandlers = blockNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    return `        // ${n.data.title} 放置时触发
+        // if (event.getPlacedBlock().getBlock() == ModBlocks.${registryId.toUpperCase()}.get()) {
+        //     // 自定义逻辑
+        // }`
+  }).join('\n')
+
   const content = `package ${pkg};
 
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import com.example.mod.${modClassName};
@@ -1652,11 +1682,57 @@ ${entityDropHandlers || '        // 无实体节点'}
     }
 
     /**
+     * 玩家离开服务器
+     */
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        // 清理玩家数据
+    }
+
+    /**
      * 右键方块交互 — 可用于自定义方块行为
      */
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         // 在此添加自定义右键逻辑
+    }
+
+    /**
+     * 方块放置事件 — 可用于触发特效
+     */
+    @SubscribeEvent
+    public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
+${blockPlaceHandlers || '        // 无方块节点'}
+    }
+
+    /**
+     * 方块破坏事件 — 可用于阻止破坏或触发掉落
+     */
+    @SubscribeEvent
+    public static void onBlockBreak(BlockEvent.BreakEvent event) {
+        // if (event.getState().getBlock() == ModBlocks.XXX.get()) {
+        //     event.setCanceled(true); // 阻止破坏
+        // }
+    }
+
+    /**
+     * 服务器 Tick 事件 — 可用于周期性任务
+     */
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        // if (event.phase == TickEvent.Phase.END) {
+        //     // 每tick执行的逻辑
+        // }
+    }
+
+    /**
+     * 玩家 Tick 事件 — 可用于持续效果
+     */
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        // if (event.phase == TickEvent.Phase.END) {
+        //     // 每tick对玩家执行逻辑
+        // }
     }
 }
 `
