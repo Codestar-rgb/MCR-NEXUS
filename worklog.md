@@ -2421,3 +2421,38 @@ Stage Summary:
 - 多选节点可一键对齐/居中/分布
 - 主题切换有旋转+光晕动画
 - 已推送 GitHub（cf9ea30）
+
+---
+Task ID: R18 (Forge 事件 + 实体 AI + 搜索高亮)
+Agent: main (Z.ai Code)
+Task: Forge 事件处理器生成 + 实体 AI 目标 + 搜索高亮动画
+
+Work Log:
+R8: Forge 事件支持
+- 实体代码生成添加 registerGoals()：
+  * melee: MeleeAttackGoal + NearestAttackableTargetGoal(player)
+  * ranged: MeleeAttackGoal + TODO RangedAttackGoal
+  * passive: 无攻击目标
+  * neutral: MeleeAttackGoal + 注释
+  * 所有实体: FloatGoal + WaterAvoidingRandomStrollGoal + RandomLookAroundGoal
+- 新增 generateEventHandlerFile → ModEventHandlers.java
+  * @Mod.EventBusSubscriber(BUS.FORGE)
+  * onLivingDeath: 实体死亡掉落示例（注释）
+  * onPlayerLoggedIn: 欢迎消息示例（注释）
+  * onRightClickBlock: 自定义右键逻辑（注释）
+
+R10: 搜索高亮动画
+- canvas store: highlightedNodeId 状态 + highlightNode() action
+  * 1.5s 后自动清除
+- BaseNodeCard: 高亮时添加 nexcube-highlight-pulse CSS 类
+  * ring-2 ring-primary + ring-offset
+  * 1.5s 脉冲动画（scale 1→1.03→1 + 辉光）
+- GlobalSearch: 选中节点时调用 highlightNode
+- CSS: @keyframes nexcube-highlight-pulse
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 实体节点生成完整 AI 目标（基于 aiType 属性）
+- 导出 ZIP 包含 ModEventHandlers.java（3 种 Forge 事件示例）
+- 搜索选中节点时画布上有脉冲高亮动画
+- 已推送 GitHub（13e8007）
