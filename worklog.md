@@ -2987,3 +2987,37 @@ Stage Summary:
 - 主页有大号 MC 风格 LOGO 标题
 - 贴图字段可选择 MC 原版贴图
 - 已推送 GitHub（9ee987e）
+
+---
+Task ID: R35 (移除代码预览 + 语义连线 + 工程文件入口)
+Agent: main (Z.ai Code)
+Task: 移除代码预览面板 + 语义化连线标签 + 工程文件入口
+
+Work Log:
+FIX3: 移除代码预览面板
+- CodePreviewPanel 从工作区布局完全移除
+- 节点画布现在占满全宽（无 320px 侧栏）
+- 模式切换（节点视图/代码视图）从以下位置移除：
+  * EdgeToolbar（模式按钮删除）
+  * TopDashboard（ModeSwitcher 移除）
+- 右侧面板现在是纯属性编辑器 — 无代码干扰
+
+FIX4: 工程文件按钮
+- ProjectInfoCard 添加'打开工程文件'按钮
+- 点击打开新浏览器标签页（?view=files 参数）
+- 未来可加载独立的 IDE/文件浏览器页面
+
+FIX5: 语义化连线标签
+- 边数据新增 sourceKind + targetKind
+- TypedEdge 生成语义标签：
+  * '物品 → 实体' 而非仅 '物品堆'
+  * '物品 → 方块' 而非 '物品堆'
+  * 自定义 label 优先
+- onConnect 传递 sourceKind/targetKind
+
+Stage Summary:
+- 3 项核心修复完成 ✅
+- 点击节点右侧直接看到属性编辑面板（无代码干扰）
+- 连线显示语义化名称（源类型 → 目标类型）
+- 工程信息卡片有'打开工程文件'入口
+- 已推送 GitHub（f2066e6）
