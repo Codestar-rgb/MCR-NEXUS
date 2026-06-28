@@ -2916,3 +2916,41 @@ Stage Summary:
 - 节点 hover 有悬浮+辉光动画
 - 状态栏新增渲染时间监控
 - 已推送 GitHub（cca56f8）
+
+---
+Task ID: R33 (MC 美术素材集成)
+Agent: main (Z.ai Code)
+Task: 研究 mcicons.ccleaf.com + 节点卡片真实图标 + 贴图选择器
+
+Work Log:
+R46: mcicons.ccleaf.com 资源结构研究
+- 发现 URL 模式：/thumbnails/10. Items/<category>/<Item_Name>.png
+- 物品名用 PascalCase+下划线（Diamond_Sword, Iron_Ingot）
+- 分类目录：Food/Swords/Axes/Pickaxes/Armor/Materials/Blocks/...
+- 180+ 缩略图可通过直接 URL 访问
+
+R47: 节点卡片使用真实 MC 图标
+- mc-icons.ts 工具库：60+ 分类映射
+  * getMCIconUrl(itemId)：minecraft:diamond_sword → 完整 URL
+  * CATEGORY_MAP：registryId → 分类目录
+- RecipeNodeCard ItemIcon 组件：
+  * 3x3 网格槽 + 产物显示真实 MC 物品图标
+  * 像素化渲染（imageRendering: pixelated）
+  * 图标加载失败时优雅降级为文字
+  * itemId 变化时自动更新
+
+R48: MC 贴图选择器
+- MCTexturePicker 组件：可搜索的 MC 物品图标网格
+  * 8 个分类：矿物/食物/武器/盔甲/方块/工具/红石/其他
+  * 60+ 预映射物品
+  * 搜索按物品 ID 过滤
+  * 点击选择 → 填入物品 ID
+  * 选中项 primary 边框高亮
+  * 图标加载失败 fallback
+
+Stage Summary:
+- 3 项改进完成 ✅
+- mcicons.ccleaf.com 资源结构已完全解析
+- 配方节点卡片显示真实 MC 物品图标（像素化渲染）
+- MC 贴图选择器组件就绪（8 分类 60+ 物品）
+- 已推送 GitHub（0c68c31）
