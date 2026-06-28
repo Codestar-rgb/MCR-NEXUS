@@ -466,6 +466,15 @@ function NodeCanvasInner() {
         deleteKeyCode={['Backspace', 'Delete']}
         snapToGrid
         snapGrid={[20, 20]}
+        // 触控优化
+        panOnDrag={true}
+        zoomOnPinch={true}
+        panOnScroll={false}
+        selectionOnDrag={false}
+        zoomOnScroll={true}
+        // 触控时禁用双指缩放冲突
+        nodesConnectable={true}
+        touchHandlerProps={{ passive: false }}
         proOptions={{ hideAttribution: true }}
         className="bg-background"
       >

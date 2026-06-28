@@ -45,6 +45,7 @@ import { CommandPalette } from '@/components/workspace/command-palette'
 import { OnboardingTour } from '@/components/workspace/onboarding-tour'
 import { ShortcutsHelp } from '@/components/workspace/shortcuts-help'
 import { HelpOverlay } from '@/components/workspace/help-overlay'
+import { VersionHistoryPanel } from '@/components/workspace/version-history-panel'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
 import { useCanvasStore, createFlowNode } from '@/stores/canvas'
 import { useClipboardStore } from '@/stores/clipboard'
@@ -102,6 +103,7 @@ export function WorkspaceShell() {
   /* 命令面板（Ctrl+Shift+P） */
   const [commandOpen, setCommandOpen] = React.useState(false)
   const [helpOpen, setHelpOpen] = React.useState(false)
+  const [versionHistoryOpen, setVersionHistoryOpen] = React.useState(false)
   const openSettings = useWorkspaceStore((s) => s.openSettings)
 
   /* 代码预览面板（仅节点模式显示） */
@@ -131,6 +133,13 @@ export function WorkspaceShell() {
       if (e.key === 'F1') {
         e.preventDefault()
         setHelpOpen((v) => !v)
+        return
+      }
+
+      // Ctrl+H: 版本历史
+      if (ctrl && e.key === 'h' && !e.shiftKey) {
+        e.preventDefault()
+        setVersionHistoryOpen((v) => !v)
         return
       }
 
@@ -478,6 +487,9 @@ export function WorkspaceShell() {
 
       {/* 帮助文档浮层 */}
       <HelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+      {/* 版本历史面板（Ctrl+H） */}
+      <VersionHistoryPanel open={versionHistoryOpen} onClose={() => setVersionHistoryOpen(false)} />
     </TooltipProvider>
   )
 }
