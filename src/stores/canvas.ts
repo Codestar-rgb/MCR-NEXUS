@@ -474,13 +474,18 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
       const dataType: PortDataType = sourcePort.dataType
       const edgeId = makeId('e')
+
+      // 获取目标节点类型（用于语义化标签）
+      const targetNode = s.nodes.find((n) => n.id === connection.target)
+      const targetKind = targetNode?.data.kind
+
       const newEdge: FlowEdge = {
         id: edgeId,
         source: connection.source,
         target: connection.target,
         sourceHandle: connection.sourceHandle ?? sourcePort.id,
         targetHandle: connection.targetHandle ?? null,
-        data: { dataType, isNew: true },
+        data: { dataType, isNew: true, sourceKind: sourceNode.data.kind, targetKind },
       }
 
       // 500ms 后清除 isNew 标志（停止绘制动画，保留流动动画）

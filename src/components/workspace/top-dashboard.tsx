@@ -250,7 +250,7 @@ export function TopDashboard() {
 
         {/* ---------- 中间：模式切换器（弹性居中） ---------- */}
         <div className="mx-auto flex items-center">
-          <ModeSwitcher value={mode} onChange={setMode} />
+          {/* 模式切换已移除：纯节点画布模式 */}
         </div>
 
         {/* ---------- 右侧：工具按钮（构建操作在底部终端区，避免冗余） ---------- */}

@@ -128,19 +128,7 @@ export function EdgeToolbar() {
         role="toolbar"
         aria-label="边缘工具栏"
       >
-        {/* ---------- 模式组 ---------- */}
-        <ToolButton
-          label="节点视图"
-          active={mode === 'node'}
-          onClick={() => setMode('node')}
-          Icon={Boxes}
-        />
-        <ToolButton
-          label="代码视图"
-          active={mode === 'code'}
-          onClick={() => setMode('code')}
-          Icon={Code2}
-        />
+        {/* ---------- 模式组已移除：纯节点画布模式 ---------- */}
 
         <HSpacer />
 

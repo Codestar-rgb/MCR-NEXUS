@@ -337,16 +337,8 @@ export function WorkspaceShell() {
                         transition={{ duration: 0.15 }}
                         className="absolute inset-0"
                       >
-                        {/* 节点画布 + 代码预览侧栏 */}
-                        <div className="flex h-full">
-                          <div className="min-w-0 flex-1">
-                            <NodeCanvasPlaceholder />
-                          </div>
-                          {/* 实时代码预览（仅桌面端） */}
-                          {breakpoint !== 'mobile' && (
-                            <CodePreviewPanel onExpand={() => setMode('code')} />
-                          )}
-                        </div>
+                        {/* 节点画布（全宽，无代码预览侧栏） */}
+                        <NodeCanvasPlaceholder />
                       </motion.div>
                     ) : (
                       <motion.div

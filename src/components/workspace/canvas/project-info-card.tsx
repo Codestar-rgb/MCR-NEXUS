@@ -15,9 +15,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GitBranch, Boxes, Clock, ChevronDown, Hammer, Package } from 'lucide-react'
+import { GitBranch, Boxes, Clock, ChevronDown, Hammer, Package, FolderOpen } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useWorkspaceStore } from '@/stores/workspace'
 
 interface ProjectInfoCardProps {
   /** 项目显示名称 */
@@ -46,6 +47,14 @@ export function ProjectInfoCard({
   lastSaved = '2 分钟前',
 }: ProjectInfoCardProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
+
+  // 打开工程文件窗口（新标签页）
+  const handleOpenProjectFiles = () => {
+    if (currentProjectId) {
+      window.open(`/?projectId=${currentProjectId}&view=files`, '_blank', 'width=1200,height=800')
+    }
+  }
 
   return (
     <motion.div
@@ -137,6 +146,15 @@ export function ProjectInfoCard({
                 </span>
                 <span className="font-mono text-muted-foreground">{lastSaved}</span>
               </div>
+
+              {/* 打开工程文件按钮 */}
+              <button
+                onClick={handleOpenProjectFiles}
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 py-1.5 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <FolderOpen className="h-3.5 w-3.5" />
+                打开工程文件
+              </button>
             </div>
           </motion.div>
         )}

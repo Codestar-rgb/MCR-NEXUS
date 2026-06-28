@@ -15,19 +15,24 @@
  */
 
 import { memo } from 'react'
+import * as React from 'react'
 import {
   BaseEdge,
   EdgeLabelRenderer,
   getBezierPath,
   type EdgeProps,
 } from '@xyflow/react'
-import { PORT_TYPES, type PortDataType } from '@/lib/node-system'
+import { PORT_TYPES, type PortDataType, getNodeTypeDefinition } from '@/lib/node-system'
 
 interface TypedEdgeData {
   dataType: PortDataType | string
   label?: string
   /** 是否为新创建的边（触发绘制动画） */
   isNew?: boolean
+  /** 源节点类型 */
+  sourceKind?: string
+  /** 目标节点类型 */
+  targetKind?: string
 }
 
 type TypedEdgeProps = EdgeProps & {
@@ -52,6 +57,20 @@ function TypedEdgeImpl({
   const color = def.hex ?? '#94a3b8'
   const label = data?.label
   const isNew = data?.isNew ?? false
+  const sourceKind = data?.sourceKind
+  const targetKind = data?.targetKind
+
+  // 生成语义化标签（基于源/目标节点类型）
+  const semanticLabel = React.useMemo(() => {
+    if (label) return label
+    if (!sourceKind || !targetKind) return def.label
+    // 根据节点类型组合生成语义名称
+    const sourceDef = getNodeTypeDefinition(sourceKind)
+    const targetDef = getNodeTypeDefinition(targetKind)
+    const sourceLabel = sourceDef?.label ?? sourceKind
+    const targetLabel = targetDef?.label ?? targetKind
+    return `${sourceLabel} → ${targetLabel}`
+  }, [label, sourceKind, targetKind, def.label])
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -122,7 +141,7 @@ function TypedEdgeImpl({
             className="inline-block h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <span>{def.label}</span>
+          <span>{semanticLabel}</span>
           {label ? (
             <span className="text-muted-foreground">· {label}</span>
           ) : null}
