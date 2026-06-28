@@ -2667,3 +2667,37 @@ Stage Summary:
 - 成就节点生成正确 advancements JSON（6 种触发类型）
 - 快捷键帮助文档更新至最新
 - 已推送 GitHub（7de3d03）
+
+---
+Task ID: R25 (附魔注册中心 + 生怪蛋 + i18n)
+Agent: main (Z.ai Code)
+Task: 附魔注册中心 ModEnchantments + 实体生怪蛋自动注册 + 语言文件完善
+
+Work Log:
+R26: 附魔注册中心
+- generateModEnchantmentsFile：DeferredRegister<Enchantment>
+  * 每个附魔节点生成 RegistryObject
+  * 主类自动注册 ModEnchantments.REGISTER
+  * 条件导入
+
+R27: 实体生怪蛋自动注册
+- ModItems 为每个实体节点生成 ForgeSpawnEggItem
+  * ForgeSpawnEggItem(ModEntities.XXX, bgColor, fgColor, props)
+  * 生怪蛋 ID：<registryId>_spawn_egg
+  * 条件导入（ForgeSpawnEggItem + ModEntities）
+  * 仅实体节点也生成 ModItems
+- 创造物品栏包含生怪蛋
+- hasCreatables 检查包含实体
+
+R28: i18n 语言文件完善
+- 附魔条目：enchantment.<modId>.<id>
+- 生怪蛋条目：item.<modId>.<id>_spawn_egg
+- 成就条目：advancements.<modId>.<id>.title + .description
+- 全部 15 种节点类型都有语言文件条目
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 附魔有独立注册中心（DeferredRegister<Enchantment>）
+- 实体自动生成生怪蛋（创造物品栏可获得）
+- 语言文件覆盖全部节点类型
+- 已推送 GitHub（17e407e）
