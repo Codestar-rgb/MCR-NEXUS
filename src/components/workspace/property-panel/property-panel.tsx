@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { PropertyForm } from './property-form'
 import { BatchEditPanel } from './batch-edit-panel'
+import { AIBehaviorPanel } from './ai-behavior-panel'
 import {
   SubgraphEditor,
   SubgraphEditorEmpty,
@@ -186,6 +187,11 @@ export function PropertyPanel() {
                     {t('property.behavior')}
                   </TabsTrigger>
                 )}
+                {kind === 'entity' && (
+                  <TabsTrigger value="ai" className="text-xs">
+                    AI
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -211,6 +217,16 @@ export function PropertyPanel() {
             {!supportsSubLogic && (
               <TabsContent value="behavior" className="m-0 p-4">
                 <SubgraphEditorEmpty />
+              </TabsContent>
+            )}
+
+            {/* 实体 AI 行为可视化 */}
+            {kind === 'entity' && (
+              <TabsContent value="ai" className="m-0 p-3">
+                <AIBehaviorPanel
+                  aiType={String(selectedNode.data.properties?.aiType ?? 'none')}
+                  onAiTypeChange={(type) => handlePropertyChange('aiType', type)}
+                />
               </TabsContent>
             )}
           </Tabs>

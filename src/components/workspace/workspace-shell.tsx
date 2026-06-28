@@ -44,6 +44,7 @@ import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { CommandPalette } from '@/components/workspace/command-palette'
 import { OnboardingTour } from '@/components/workspace/onboarding-tour'
 import { ShortcutsHelp } from '@/components/workspace/shortcuts-help'
+import { HelpOverlay } from '@/components/workspace/help-overlay'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
 import { useCanvasStore, createFlowNode } from '@/stores/canvas'
 import { useClipboardStore } from '@/stores/clipboard'
@@ -100,6 +101,7 @@ export function WorkspaceShell() {
 
   /* 命令面板（Ctrl+Shift+P） */
   const [commandOpen, setCommandOpen] = React.useState(false)
+  const [helpOpen, setHelpOpen] = React.useState(false)
   const openSettings = useWorkspaceStore((s) => s.openSettings)
 
   /* 代码预览面板（仅节点模式显示） */
@@ -122,6 +124,13 @@ export function WorkspaceShell() {
           e.preventDefault()
           useWorkspaceStore.getState().toggleSearch()
         }
+        return
+      }
+
+      // F1: 帮助文档
+      if (e.key === 'F1') {
+        e.preventDefault()
+        setHelpOpen((v) => !v)
         return
       }
 
@@ -466,6 +475,9 @@ export function WorkspaceShell() {
 
       {/* 快捷键帮助浮层（按 ? 键打开） */}
       <ShortcutsHelp />
+
+      {/* 帮助文档浮层 */}
+      <HelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
     </TooltipProvider>
   )
 }

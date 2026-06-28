@@ -37,6 +37,14 @@ import {
   Group as GroupIcon,
   FunctionSquare,
   ChevronRight,
+  AlignStartVertical,
+  AlignEndVertical,
+  AlignStartHorizontal,
+  AlignEndHorizontal,
+  AlignCenterVertical,
+  AlignCenterHorizontal,
+  AlignHorizontalSpaceAround,
+  AlignVerticalSpaceAround,
 } from 'lucide-react'
 import {
   getNodeTypesByCategory,
@@ -377,6 +385,53 @@ export function CanvasContextMenu() {
               onClick={handleToggleCollapse}
             />
             <MenuSeparator />
+            {/* 对齐快捷操作（仅多选时显示） */}
+            {selectedNodeIds.length > 1 && (
+              <>
+                <div className="px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                  对齐 {selectedNodeIds.length} 个节点
+                </div>
+                <div className="grid grid-cols-4 gap-0.5 px-1 pb-1">
+                  {([
+                    { mode: 'left', label: '左', icon: AlignStartVertical },
+                    { mode: 'h-center', label: '中', icon: AlignCenterVertical },
+                    { mode: 'right', label: '右', icon: AlignEndVertical },
+                    { mode: 'top', label: '顶', icon: AlignStartHorizontal },
+                    { mode: 'v-center', label: '中', icon: AlignCenterHorizontal },
+                    { mode: 'bottom', label: '底', icon: AlignEndHorizontal },
+                    { mode: 'h-distribute', label: '横分', icon: AlignHorizontalSpaceAround, needs3: true },
+                    { mode: 'v-distribute', label: '纵分', icon: AlignVerticalSpaceAround, needs3: true },
+                  ] as const).map((tool) => {
+                    const Icon = tool.icon
+                    const disabled = tool.needs3 && selectedNodeIds.length < 3
+                    return (
+                      <button
+                        key={tool.mode}
+                        onClick={() => {
+                          if (!disabled) {
+                            useCanvasStore.getState().alignSelected(tool.mode)
+                            toast.success(`已对齐 ${selectedNodeIds.length} 个节点`)
+                            closeContextMenu()
+                          }
+                        }}
+                        disabled={disabled}
+                        title={tool.label + (disabled ? '（需 3+ 节点）' : '')}
+                        className={cn(
+                          'flex h-7 items-center justify-center gap-0.5 rounded text-[9px] transition-colors',
+                          disabled
+                            ? 'text-muted-foreground/20 cursor-not-allowed'
+                            : 'text-muted-foreground hover:bg-accent hover:text-primary',
+                        )}
+                      >
+                        <Icon className="h-3 w-3" />
+                        {tool.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <MenuSeparator />
+              </>
+            )}
             <MenuItem
               icon={<GroupIcon className="h-3.5 w-3.5" />}
               label="打包为节点组"
