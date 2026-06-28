@@ -17,10 +17,12 @@
  */
 
 import { memo } from 'react'
+import * as React from 'react'
 import { type NodeProps, type Node } from '@xyflow/react'
 import { Layers, Sparkles, Clock, Apple, Drumstick, Droplet } from 'lucide-react'
 import { BaseNodeCard } from './base-node-card'
 import type { FlowNodeData } from '@/lib/node-system'
+import { getMCIconUrl } from '@/lib/mc-icons'
 import { cn } from '@/lib/utils'
 
 export type ItemNodeData = FlowNodeData & {
@@ -67,6 +69,8 @@ function ItemNodeCardImpl(props: NodeProps<ItemNodeType>) {
 
         return (
           <>
+            {/* MC 物品图标 */}
+            <MCItemIcon registryId={str(p.registryId, '')} />
             <Row icon={<Layers className="h-3.5 w-3.5 text-teal-400" />} label="最大堆叠">
               <span className="font-mono font-semibold text-teal-300">{maxStackSize}</span>
             </Row>
@@ -162,3 +166,28 @@ function Badge({
 }
 
 export const ItemNodeCard = memo(ItemNodeCardImpl)
+
+/** MC 物品图标（带 fallback） */
+function MCItemIcon({ registryId }: { registryId: string }) {
+  const [iconUrl, setIconUrl] = React.useState<string | null>(() => getMCIconUrl(registryId))
+  const [failed, setFailed] = React.useState(false)
+
+  React.useEffect(() => {
+    setIconUrl(getMCIconUrl(registryId))
+    setFailed(false)
+  }, [registryId])
+
+  if (!iconUrl || failed) return null
+
+  return (
+    <div className="mb-1 flex justify-center">
+      <img
+        src={iconUrl}
+        alt={registryId}
+        onError={() => setFailed(true)}
+        className="h-8 w-8"
+        style={{ imageRendering: 'pixelated', objectFit: 'contain' }}
+      />
+    </div>
+  )
+}
