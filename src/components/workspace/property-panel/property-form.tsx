@@ -20,6 +20,8 @@ import { getNodeTypeDefinition, type PropertySchema } from '@/lib/node-system'
 import { PropertyGroup, PropertyGroupList } from './property-group'
 import { renderField } from './fields'
 import { RecipeGridField } from './fields/recipe-grid-field'
+import { SmeltingPreviewField } from './fields/smelting-preview-field'
+import { StonecuttingPreviewField } from './fields/stonecutting-preview-field'
 
 interface PropertyFormProps {
   /** 节点类型 key（对应 NODE_TYPE_REGISTRY key） */
@@ -84,10 +86,12 @@ export function PropertyForm({
 
   // recipe 节点：添加 3x3 网格编辑器（仅 crafting 类型）
   const isCraftingRecipe = nodeKind === 'recipe' && String(properties.recipeType ?? 'crafting') === 'crafting'
+  const isSmeltingRecipe = nodeKind === 'recipe' && ['smelting', 'blasting', 'smoking'].includes(String(properties.recipeType ?? ''))
+  const isStonecuttingRecipe = nodeKind === 'recipe' && String(properties.recipeType ?? '') === 'stonecutting'
 
   return (
     <PropertyGroupList defaultValues={defaultOpen}>
-      {/* recipe 节点的 3x3 网格编辑器（放在最前面） */}
+      {/* recipe 节点的 3x3 网格编辑器（crafting 类型） */}
       {isCraftingRecipe && (
         <PropertyGroup
           key="合成网格"
@@ -106,6 +110,53 @@ export function PropertyForm({
               onChange('resultCount', count)
             }}
             onShapedChange={(shaped) => onChange('shaped', shaped)}
+          />
+        </PropertyGroup>
+      )}
+
+      {/* recipe 节点的烧炼预览（smelting/blasting/smoking） */}
+      {isSmeltingRecipe && (
+        <PropertyGroup
+          key="烧炼预览"
+          groupId="烧炼预览"
+          name="烧炼预览"
+          schemas={[]}
+        >
+          <SmeltingPreviewField
+            recipeType={String(properties.recipeType ?? 'smelting')}
+            inputItem={String(properties.ingredientA ?? 'minecraft:iron_ore')}
+            resultItem={String(properties.resultItem ?? 'minecraft:iron_ingot')}
+            resultCount={Number(properties.resultCount ?? 1)}
+            cookingTime={Number(properties.cookingTime ?? 200)}
+            experience={Number(properties.experience ?? 0.1)}
+            onInputChange={(item) => onChange('ingredientA', item)}
+            onResultChange={(item, count) => {
+              onChange('resultItem', item)
+              onChange('resultCount', count)
+            }}
+            onCookingTimeChange={(t) => onChange('cookingTime', t)}
+            onExperienceChange={(e) => onChange('experience', e)}
+          />
+        </PropertyGroup>
+      )}
+
+      {/* recipe 节点的切石预览（stonecutting） */}
+      {isStonecuttingRecipe && (
+        <PropertyGroup
+          key="切石预览"
+          groupId="切石预览"
+          name="切石预览"
+          schemas={[]}
+        >
+          <StonecuttingPreviewField
+            inputItem={String(properties.ingredientA ?? 'minecraft:stone')}
+            resultItem={String(properties.resultItem ?? 'minecraft:stone_bricks')}
+            resultCount={Number(properties.resultCount ?? 1)}
+            onInputChange={(item) => onChange('ingredientA', item)}
+            onResultChange={(item, count) => {
+              onChange('resultItem', item)
+              onChange('resultCount', count)
+            }}
           />
         </PropertyGroup>
       )}
