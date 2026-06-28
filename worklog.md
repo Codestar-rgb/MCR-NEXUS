@@ -2602,3 +2602,36 @@ Stage Summary:
 - 版本历史：保存/恢复项目快照（最多 20 个）
 - 触控优化：平板可正常拖拽/缩放/选择
 - 已推送 GitHub（d5e1290）
+
+---
+Task ID: R23 (性能优化 + 附魔/成就节点)
+Agent: main (Z.ai Code)
+Task: 大画布性能优化 + 附魔/成就节点类型
+
+Work Log:
+R21: 性能优化
+- 虚拟渲染阈值：100 → 200 节点
+  * 使用 perfConfig.onlyRenderVisibleElements || nodes.length > 200
+- BaseNodeCard memo 比较器：添加 position (x/y) + dragging 检查
+  * 防止拖拽时所有节点重渲染
+- 性能层级：full(<500) / virtual(500-2000) / aggregated(2000+)
+
+R22: 附魔 + 成就节点
+- 附魔节点（violet，Sparkles 图标）：
+  * 稀有度：普通/uncommon/稀有/史诗
+  * 类别：武器/盔甲/工具/弓/鱼竿/三叉戟/弩
+  * 最大等级/最低消耗/每级消耗
+  * 宝藏附魔/诅咒附魔/可交易标志
+- 成就节点（amber，Trophy 图标）：
+  * 图标物品/描述/边框样式（普通/挑战/目标）
+  * 显示提示/聊天公告/隐藏标志
+  * 6 种触发类型（物品栏变化/击杀/放置/使用/进入维度/合成）
+  * 触发物品
+- 注册到 nodeTypes（GenericNodeCard）
+- 属性面板 TYPE_LABEL/TYPE_COLOR 更新
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 大画布性能优化（虚拟渲染 + memo 增强）
+- 新增 2 种节点类型（附魔 + 成就），总计 15 种
+- 已推送 GitHub（ba1dee6）
