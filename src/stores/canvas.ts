@@ -473,14 +473,27 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       if (!sourcePort) return s
 
       const dataType: PortDataType = sourcePort.dataType
+      const edgeId = makeId('e')
       const newEdge: FlowEdge = {
-        id: makeId('e'),
+        id: edgeId,
         source: connection.source,
         target: connection.target,
         sourceHandle: connection.sourceHandle ?? sourcePort.id,
         targetHandle: connection.targetHandle ?? null,
-        data: { dataType },
+        data: { dataType, isNew: true },
       }
+
+      // 500ms 后清除 isNew 标志（停止绘制动画，保留流动动画）
+      setTimeout(() => {
+        set((s2) => ({
+          edges: s2.edges.map((e) =>
+            e.id === edgeId
+              ? { ...e, data: { ...e.data, isNew: false } }
+              : e,
+          ),
+        }))
+      }, 500)
+
       return { edges: [...s.edges, newEdge] }
     }),
 

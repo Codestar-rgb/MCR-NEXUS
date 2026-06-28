@@ -343,6 +343,24 @@
   }
 }
 
+/* 新连线标签弹出动画 */
+@keyframes nexcube-edge-label-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.nexcube-edge-label-pop {
+  animation: nexcube-edge-label-pop 0.4s ease-out;
+}
+
 /* 微妙入场动画 */
 @keyframes nexcube-fade-in {
   from { opacity: 0; transform: translateY(4px); }

@@ -488,10 +488,13 @@ function NodeCanvasInner() {
           <MiniMap
             pannable
             zoomable
-            className="!border !border-border !bg-card/90 !shadow-lg"
+            className="!border !border-border !bg-card/90 !shadow-lg !rounded-lg"
             nodeColor={miniMapNodeColor}
+            nodeStrokeColor="var(--color-foreground, #f4f4f5)"
             nodeStrokeWidth={2}
-            maskColor="rgba(0, 0, 0, 0.5)"
+            nodeBorderRadius={6}
+            maskColor="rgba(0, 0, 0, 0.4)"
+            ariaLabel="画布缩略图 — 点击或拖拽定位"
           />
         ) : null}
 
