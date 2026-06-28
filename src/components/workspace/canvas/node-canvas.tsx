@@ -398,11 +398,56 @@ function NodeCanvasInner() {
     [closeContextMenu, selectNode, setSelectedNode],
   )
 
-  /* 节点拖拽结束 → 触发持久化（Task 2-D 接入 API） */
+  /* 节点拖拽结束 → 检测是否拖入/拖出组 */
   const onNodeDragStop = useCallback(
     (_: React.MouseEvent | MouseEvent, node: RFNode) => {
-      // 持久化由 useCanvasSync 的 interval 自动处理
-      // 持久化由 useCanvasSync 的 interval 自动处理
+      const canvasState = useCanvasStore.getState()
+      const allNodes = canvasState.nodes
+      const draggedNode = allNodes.find((n) => n.id === node.id)
+      if (!draggedNode) return
+
+      // 获取所有组节点
+      const groupNodes = allNodes.filter((n) => n.data.kind === 'group')
+      if (groupNodes.length === 0) return
+
+      // 检测拖拽节点中心是否在某个组的边界内
+      const nodeCenterX = draggedNode.position.x + (draggedNode.width ?? 200) / 2
+      const nodeCenterY = draggedNode.position.y + (draggedNode.height ?? 150) / 2
+
+      let targetGroup: string | null = null
+      for (const group of groupNodes) {
+        const gx = group.position.x
+        const gy = group.position.y
+        const gw = group.width ?? 360
+        const gh = group.height ?? 220
+        if (
+          nodeCenterX >= gx && nodeCenterX <= gx + gw &&
+          nodeCenterY >= gy && nodeCenterY <= gy + gh
+        ) {
+          targetGroup = group.id
+          break
+        }
+      }
+
+      const currentParent = draggedNode.data.parentId ?? null
+
+      if (targetGroup && targetGroup !== currentParent) {
+        // 拖入新组
+        const extras = { ...canvasState.nodeExtras }
+        extras[node.id] = { ...extras[node.id], parentId: targetGroup }
+        canvasState.updateNode(node.id, {
+          data: { ...draggedNode.data, parentId: targetGroup },
+        })
+        toast.success(`节点已加入组`, { description: '拖出组区域可移除' })
+      } else if (!targetGroup && currentParent) {
+        // 拖出组
+        const extras = { ...canvasState.nodeExtras }
+        extras[node.id] = { ...extras[node.id], parentId: undefined }
+        canvasState.updateNode(node.id, {
+          data: { ...draggedNode.data, parentId: null },
+        })
+        toast.info('节点已移出组')
+      }
     },
     [],
   )

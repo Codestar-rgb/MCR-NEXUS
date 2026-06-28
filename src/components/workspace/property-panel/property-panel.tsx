@@ -27,6 +27,7 @@ import { BatchEditPanel } from './batch-edit-panel'
 import { AIBehaviorPanel } from './ai-behavior-panel'
 import { AdvancementTreePanel } from './advancement-tree-panel'
 import { CollisionBoxEditor } from './collision-box-editor'
+import { GroupMemberList } from './group-member-list'
 import { ProjectStats } from '@/components/workspace/project-stats'
 import {
   SubgraphEditor,
@@ -209,6 +210,11 @@ export function PropertyPanel() {
                     成就树
                   </TabsTrigger>
                 )}
+                {kind === 'group' && (
+                  <TabsTrigger value="members" className="text-xs">
+                    组成员
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -275,6 +281,13 @@ export function PropertyPanel() {
                   parentAdvancement={(selectedNode.data.properties?.parentAdvancement as string) ?? null}
                   onParentChange={(parentId) => handlePropertyChange('parentAdvancement', parentId)}
                 />
+              </TabsContent>
+            )}
+
+            {/* 组成员列表 */}
+            {kind === 'group' && selectedNodeId && (
+              <TabsContent value="members" className="m-0 p-3">
+                <GroupMemberList groupId={selectedNodeId} />
               </TabsContent>
             )}
           </Tabs>

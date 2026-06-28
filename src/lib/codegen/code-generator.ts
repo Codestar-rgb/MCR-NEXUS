@@ -1985,6 +1985,20 @@ export function generateProjectCode(
     files.push(generateItemTagsFile(modId, itemNodes))
   }
 
+  // 9b. 方块标签（tags）— 便于其他 mod 引用方块
+  const blockNodesForTags = nodes.filter((n) => n.data.kind === 'block')
+  if (blockNodesForTags.length > 0) {
+    const blockRefs = blockNodesForTags.map((n) => {
+      const regId = getStr(n, 'registryId', n.id)
+      return `${modId}:${regId}`
+    })
+    files.push({
+      filePath: `src/main/resources/data/${modId}/tags/blocks/${modId}_blocks.json`,
+      content: JSON.stringify({ replace: false, values: blockRefs }, null, 2),
+      language: 'json',
+    })
+  }
+
   // 10. Forge 事件处理器（通用事件监听）
   files.push(generateEventHandlerFile(modId, nodes))
 
