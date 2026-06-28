@@ -48,6 +48,7 @@ function RecipeNodeCardImpl(props: NodeProps<RecipeNodeType>) {
   const ingredientC = str(p.ingredientC, '')
   const cookingTime = num(p.cookingTime, 200)
   const experience = num(p.experience, 0.1)
+  const grid = (p.grid as string[]) ?? null
 
   return (
     <BaseNodeCard
@@ -77,9 +78,10 @@ function RecipeNodeCardImpl(props: NodeProps<RecipeNodeType>) {
         }
         return (
           <CraftingPreview
-            a={ingredientA}
-            b={ingredientB}
-            c={ingredientC}
+            grid={grid}
+            fallbackA={ingredientA}
+            fallbackB={ingredientB}
+            fallbackC={ingredientC}
             output={resultItem}
             outputCount={resultCount}
           />
@@ -98,12 +100,17 @@ function RecipeNodeCardImpl(props: NodeProps<RecipeNodeType>) {
 
 /* === 合成台 3x3 网格预览 === */
 function CraftingPreview({
-  a, b, c, output, outputCount,
+  grid, fallbackA, fallbackB, fallbackC, output, outputCount,
 }: {
-  a: string; b: string; c: string
+  grid: string[] | null
+  fallbackA: string; fallbackB: string; fallbackC: string
   output: string; outputCount: number
 }) {
-  const slots = [a, b, c, '', '', '', '', '', '']
+  // 优先使用 grid（3x3 完整网格），否则用 fallback（只有 3 个材料放第一行）
+  const slots = grid && grid.length === 9
+    ? grid
+    : [fallbackA, fallbackB, fallbackC, '', '', '', '', '', '']
+
   return (
     <div className="flex items-center gap-3 py-1">
       {/* 3x3 网格 */}

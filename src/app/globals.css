@@ -318,6 +318,31 @@
   z-index: 20;
 }
 
+/* 节点入场动画（创建时缩放+淡入） */
+@keyframes nexcube-node-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.nexcube-node-enter {
+  animation: nexcube-node-enter 0.25s ease-out;
+}
+
+/* 连线绘制动画 */
+@keyframes nexcube-edge-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* 微妙入场动画 */
 @keyframes nexcube-fade-in {
   from { opacity: 0; transform: translateY(4px); }

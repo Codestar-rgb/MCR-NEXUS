@@ -678,6 +678,8 @@ function generateRecipeFile(node: FlowNode, modId: string): GeneratedFile | null
   const ingredientC = String(p.ingredientC ?? '')
   const cookingTime = Number(p.cookingTime ?? 200)
   const experience = Number(p.experience ?? 0.1)
+  const shaped = Boolean(p.shaped ?? true)
+  const grid = (p.grid as string[]) ?? null
 
   let content: string
 
@@ -697,8 +699,26 @@ function generateRecipeFile(node: FlowNode, modId: string): GeneratedFile | null
       ingredient: { item: ingredientA },
       result: { item: resultItem, count: resultCount },
     }, null, 2)
+  } else if (shaped && grid && grid.length === 9) {
+    // 有序合成（shaped）— 使用 3x3 网格生成 pattern + key
+    const { pattern, key } = buildShapedPattern(grid)
+    if (Object.keys(key).length === 0) {
+      // 空网格降级为 shapeless
+      content = JSON.stringify({
+        type: 'minecraft:crafting_shapeless',
+        ingredients: [{ item: resultItem }],
+        result: { item: resultItem, count: resultCount },
+      }, null, 2)
+    } else {
+      content = JSON.stringify({
+        type: 'minecraft:crafting_shaped',
+        pattern,
+        key: key as Record<string, { item: string }>,
+        result: { item: resultItem, count: resultCount },
+      }, null, 2)
+    }
   } else {
-    // 合成台配方（shapeless 无序合成）
+    // 无序合成（shapeless）
     const ingredients = [ingredientA, ingredientB, ingredientC].filter(Boolean).map((item) => ({ item }))
     content = JSON.stringify({
       type: 'minecraft:crafting_shapeless',
@@ -713,6 +733,53 @@ function generateRecipeFile(node: FlowNode, modId: string): GeneratedFile | null
     linkedNodeId: node.id,
     language: 'json',
   }
+}
+
+/**
+ * 从 3x3 网格构建 shaped 配方的 pattern + key
+ *
+ * 网格索引：
+ *   0 1 2
+ *   3 4 5
+ *   6 7 8
+ *
+ * 每个不同的物品 ID 映射到一个字符（A-Z），空格子用空格。
+ * pattern 是 3 行字符串，key 是字符→物品 ID 的映射。
+ */
+function buildShapedPattern(grid: string[]): {
+  pattern: string[]
+  key: Record<string, string>
+} {
+  // 收集所有非空物品 ID，按首次出现顺序分配字符
+  const itemToChar = new Map<string, string>()
+  let charIndex = 0
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+  for (const item of grid) {
+    if (item && !itemToChar.has(item)) {
+      itemToChar.set(item, chars[charIndex] ?? '?')
+      charIndex++
+    }
+  }
+
+  // 构建 pattern（3 行）
+  const pattern: string[] = []
+  for (let row = 0; row < 3; row++) {
+    let line = ''
+    for (let col = 0; col < 3; col++) {
+      const item = grid[row * 3 + col]
+      line += item ? (itemToChar.get(item) ?? '?') : ' '
+    }
+    pattern.push(line)
+  }
+
+  // 构建 key（字符→物品 ID）
+  const key: Record<string, string> = {}
+  for (const [item, char] of itemToChar) {
+    key[char] = item
+  }
+
+  return { pattern, key }
 }
 
 /**
