@@ -52,6 +52,7 @@ import { nodeTypes } from '@/components/workspace/canvas/nodes'
 import { TypedEdge } from '@/components/workspace/canvas/typed-edge'
 import { CanvasContextMenu } from '@/components/workspace/canvas/canvas-context-menu'
 import { CanvasToolbar } from '@/components/workspace/canvas/canvas-toolbar'
+import { AlignToolbar } from '@/components/workspace/canvas/align-toolbar'
 import { ProjectInfoCard } from '@/components/workspace/canvas/project-info-card'
 import { TaskNotifications } from '@/components/workspace/canvas/task-notifications'
 import { RecommendationBubble } from '@/components/workspace/canvas/recommendation-bubble'
@@ -526,6 +527,9 @@ function NodeCanvasInner() {
 
       {/* 顶部居中工具栏（浮动，玻璃拟态） */}
       <CanvasToolbar />
+
+      {/* 对齐工具栏（选中 2+ 节点时显示） */}
+      <AlignToolbar />
 
       {/* AI 推荐气泡（右上角，创建节点后弹出） */}
       <RecommendationBubble

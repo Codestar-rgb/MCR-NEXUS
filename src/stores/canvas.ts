@@ -65,6 +65,17 @@ export function getNodeColorHex(kind: string): string {
   return TAILWIND_COLOR_HEX[def.color] ?? '#71717a'
 }
 
+/** 节点对齐模式 */
+export type AlignMode =
+  | 'left'        // 左对齐
+  | 'right'       // 右对齐
+  | 'top'         // 顶对齐
+  | 'bottom'      // 底对齐
+  | 'h-center'    // 水平居中
+  | 'v-center'    // 垂直居中
+  | 'h-distribute' // 水平等距分布
+  | 'v-distribute' // 垂直等距分布
+
 /** 生成简易唯一 ID（不依赖 uuid 以减小体积） */
 function makeId(prefix: string): string {
   const rand = Math.random().toString(36).slice(2, 10)
@@ -230,6 +241,9 @@ export interface CanvasState {
   setGroupingSelection: (ids: string[]) => void
   groupSelected: (name: string, color: string) => string | null
   ungroupNode: (groupId: string) => void
+
+  /* ----- Actions: 节点对齐 ----- */
+  alignSelected: (mode: AlignMode) => void
 
   /* ----- Actions: 函数节点封装 ----- */
   encapsulateToFunction: (
@@ -575,6 +589,102 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         nodeExtras,
       }
     }),
+
+  /* ----- Actions: 节点对齐 ----- */
+
+  alignSelected: (mode) => {
+    const { nodes, selectedNodeIds } = get()
+    const selected = nodes.filter((n) => selectedNodeIds.includes(n.id))
+    if (selected.length < 2) return
+
+    // 按位置排序辅助
+    const sortByX = [...selected].sort((a, b) => a.position.x - b.position.x)
+    const sortByY = [...selected].sort((a, b) => a.position.y - b.position.y)
+
+    let updates: Map<string, { x?: number; y?: number }> = new Map()
+
+    switch (mode) {
+      case 'left': {
+        const minX = Math.min(...selected.map((n) => n.position.x))
+        updates = new Map(selected.map((n) => [n.id, { x: minX }]))
+        break
+      }
+      case 'right': {
+        const maxX = Math.max(...selected.map((n) => n.position.x + (n.width ?? 200)))
+        updates = new Map(selected.map((n) => [n.id, { x: maxX - (n.width ?? 200) }]))
+        break
+      }
+      case 'top': {
+        const minY = Math.min(...selected.map((n) => n.position.y))
+        updates = new Map(selected.map((n) => [n.id, { y: minY }]))
+        break
+      }
+      case 'bottom': {
+        const maxY = Math.max(...selected.map((n) => n.position.y + (n.height ?? 150)))
+        updates = new Map(selected.map((n) => [n.id, { y: maxY - (n.height ?? 150) }]))
+        break
+      }
+      case 'h-center': {
+        const avgX = selected.reduce((sum, n) => sum + n.position.x + (n.width ?? 200) / 2, 0) / selected.length
+        updates = new Map(selected.map((n) => [n.id, { x: avgX - (n.width ?? 200) / 2 }]))
+        break
+      }
+      case 'v-center': {
+        const avgY = selected.reduce((sum, n) => sum + n.position.y + (n.height ?? 150) / 2, 0) / selected.length
+        updates = new Map(selected.map((n) => [n.id, { y: avgY - (n.height ?? 150) / 2 }]))
+        break
+      }
+      case 'h-distribute': {
+        if (selected.length < 3) return
+        const sorted = sortByX
+        const first = sorted[0]
+        const last = sorted[sorted.length - 1]
+        const firstRight = first.position.x + (first.width ?? 200)
+        const lastLeft = last.position.x
+        const totalGap = lastLeft - firstRight
+        const gap = totalGap / (sorted.length - 1)
+        updates = new Map()
+        let currentX = firstRight + gap
+        for (let i = 1; i < sorted.length - 1; i++) {
+          updates.set(sorted[i].id, { x: currentX })
+          currentX += (sorted[i].width ?? 200) + gap
+        }
+        break
+      }
+      case 'v-distribute': {
+        if (selected.length < 3) return
+        const sorted = sortByY
+        const first = sorted[0]
+        const last = sorted[sorted.length - 1]
+        const firstBottom = first.position.y + (first.height ?? 150)
+        const lastTop = last.position.y
+        const totalGap = lastTop - firstBottom
+        const gap = totalGap / (sorted.length - 1)
+        updates = new Map()
+        let currentY = firstBottom + gap
+        for (let i = 1; i < sorted.length - 1; i++) {
+          updates.set(sorted[i].id, { y: currentY })
+          currentY += (sorted[i].height ?? 150) + gap
+        }
+        break
+      }
+    }
+
+    // 应用更新
+    set((s) => ({
+      nodes: s.nodes.map((n) => {
+        const upd = updates.get(n.id)
+        if (!upd) return n
+        return {
+          ...n,
+          position: {
+            x: upd.x ?? n.position.x,
+            y: upd.y ?? n.position.y,
+          },
+        }
+      }),
+    }))
+  },
 
   /* ----- Actions: 函数节点封装 ----- */
 
