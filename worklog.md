@@ -2762,3 +2762,28 @@ Stage Summary:
 - 成就节点有可视化树形编辑器（parent/child 关系）
 - 成就 JSON 正确生成 parent 字段
 - 已推送 GitHub（ea66c9d）
+
+---
+Task ID: R28 (附魔适用物品限制 + 冲突检查)
+Agent: main (Z.ai Code)
+Task: 附魔节点支持自定义适用物品 + 冲突附魔检查
+
+Work Log:
+R34: 附魔适用物品限制
+- 附魔节点新增 3 个属性：
+  * isCompatibleWithBooks（附魔书可用，默认 true）
+  * compatibleItems（额外适用物品，逗号分隔 ID）
+  * incompatibleEnchants（冲突附魔，逗号分隔 ID）
+- 附魔代码生成增强：
+  * isAllowedOnBooks() 方法重写
+  * canEnchant() 方法重写（有 compatibleItems 时）
+    通过 BuiltInRegistries 检查物品是否在额外列表中
+  * checkCompatibility() 方法重写（有 incompatibleEnchants 时）
+    阻止指定附魔共存
+  * JavaDoc 更新适用/冲突列表
+
+Stage Summary:
+- 1 项改进完成 ✅
+- 附魔节点支持精确控制适用物品和冲突附魔
+- 生成的 Java 代码包含 canEnchant/checkCompatibility 重写
+- 已推送 GitHub（ea8a35f）
