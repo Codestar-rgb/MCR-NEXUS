@@ -3085,3 +3085,36 @@ Stage Summary:
 - 节点组有全新视觉设计（渐变+计数+解散）
 - 实体支持 2 个自定义属性
 - 已推送 GitHub（64416f2）
+
+---
+Task ID: R38 (拖拽进出组 + 组成员管理 + 数据包优化)
+Agent: main (Z.ai Code)
+Task: 拖拽节点进出组交互 + 组内节点列表管理 + 方块标签导出
+
+Work Log:
+R53: 拖拽节点进出组交互
+- onNodeDragStop 检测节点中心是否在组边界内
+  * 在新组内 → 更新 parentId + toast '已加入组'
+  * 移出所有组 → 清除 parentId + toast '已移出组'
+  * 同时更新 nodeExtras 和 node.data.parentId（持久化）
+
+R54: 组内节点列表管理
+- GroupMemberList 组件：选中组时在'组成员'Tab 显示
+  * 列出所有 parentId === groupId 的节点
+  * 每项：类型图标 + 名称 + 类型标签
+  * 点击名称 → 选中该节点
+  * X 按钮 → 从组中移除（parentId = null）
+  * 空状态：'拖拽节点到组内即可添加'
+  * 入场动画
+
+R56: 数据包导出优化
+- 方块标签 JSON：tags/blocks/<modId>_blocks.json
+  * 所有方块节点包含在 #<modId>:blocks 标签中
+  * 与物品标签格式一致
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 节点可拖拽进出组（自动检测边界）
+- 组成员可在属性面板管理（列表+移除+跳转）
+- 导出 ZIP 包含方块标签
+- 已推送 GitHub（be3ef08）
