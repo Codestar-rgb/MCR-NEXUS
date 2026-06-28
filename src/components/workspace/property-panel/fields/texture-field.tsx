@@ -17,9 +17,10 @@
  */
 
 import { useCallback, useRef, useState } from 'react'
-import { Image as ImageIcon, UploadCloud, X, AlertCircle } from 'lucide-react'
+import { Image as ImageIcon, UploadCloud, X, AlertCircle, Package } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { FieldProps } from './field-types'
+import { MCTexturePicker } from './mc-texture-picker'
 
 const MAX_SIZE_BYTES = 512 * 1024 // 512 KB
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg']
@@ -101,23 +102,41 @@ export function TextureField({ schema, value, onChange }: FieldProps) {
     onChange(null)
   }
 
+  const [showMCPicker, setShowMCPicker] = useState(false)
+
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-medium text-muted-foreground">
           {schema.label}
         </span>
-        {meta && (
-          <button
-            type="button"
-            onClick={handleRemove}
-            className="flex items-center gap-1 rounded text-[10px] text-muted-foreground transition-colors hover:text-rose-400"
-            aria-label="移除贴图"
-          >
-            <X className="h-3 w-3" />
-            移除
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* MC 原版贴图选择按钮 */}
+          {!meta && (
+            <button
+              type="button"
+              onClick={() => setShowMCPicker(!showMCPicker)}
+              className={cn(
+                'flex items-center gap-1 rounded text-[10px] transition-colors',
+                showMCPicker ? 'text-primary' : 'text-muted-foreground hover:text-primary',
+              )}
+            >
+              <Package className="h-3 w-3" />
+              MC贴图
+            </button>
+          )}
+          {meta && (
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="flex items-center gap-1 rounded text-[10px] text-muted-foreground transition-colors hover:text-rose-400"
+              aria-label="移除贴图"
+            >
+              <X className="h-3 w-3" />
+              移除
+            </button>
+          )}
+        </div>
       </div>
 
       {meta ? (
@@ -189,6 +208,21 @@ export function TextureField({ schema, value, onChange }: FieldProps) {
         <div className="flex items-center gap-1.5 rounded border border-rose-500/30 bg-rose-500/10 px-2 py-1 text-[10px] text-rose-400">
           <AlertCircle className="h-3 w-3 shrink-0" />
           {error}
+        </div>
+      )}
+
+      {/* MC 原版贴图选择器 */}
+      {showMCPicker && !meta && (
+        <div className="rounded-lg border border-border/30 bg-card/20 p-2.5">
+          <MCTexturePicker
+            selectedItemId={null}
+            onSelect={(itemId) => {
+              // 将 MC 物品 ID 存为字符串（非 base64）
+              onChange(itemId)
+              setShowMCPicker(false)
+            }}
+            onClose={() => setShowMCPicker(false)}
+          />
         </div>
       )}
 

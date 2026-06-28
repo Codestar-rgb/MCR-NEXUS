@@ -74,37 +74,50 @@ export function HomePageV11({ onCreate, onOpen, onImport }: HomePageV11Props) {
 
   return (
     <div className="relative flex h-screen flex-col overflow-hidden bg-background">
-      {/* 顶部栏 */}
-      <header className="relative z-30 flex shrink-0 items-center justify-between border-b border-border/30 px-4 py-2.5">
-        <div className="flex items-center gap-2.5">
-          <WaterOrb size={24} />
-          <span className="text-[13px] font-semibold tracking-tight text-foreground">NexCube</span>
-          <span className="rounded border border-border/40 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground/60">
-            v0.1.0
-          </span>
+      {/* MC 风格顶部横幅 */}
+      <div className="relative z-20 flex shrink-0 flex-col">
+        {/* 主标题横幅 */}
+        <div className="relative flex items-center justify-between border-b border-border/30 bg-gradient-to-r from-card/40 via-background to-card/40 px-6 py-3">
+          {/* 左：Logo + 标题 */}
+          <div className="flex items-center gap-3">
+            <WaterOrb size={32} />
+            <div>
+              <h1 className="text-2xl font-bold leading-none tracking-tight">
+                <span className="text-gradient-brand">NexCube</span>
+              </h1>
+              <p className="mt-0.5 text-[10px] text-muted-foreground/60">
+                Next-gen Minecraft Mod IDE
+              </p>
+            </div>
+            <span className="ml-1 rounded-full border border-border/40 bg-card/40 px-2 py-0.5 font-mono text-[9px] text-muted-foreground/60">
+              v0.1.0
+            </span>
+          </div>
+
+          {/* 右：工具按钮 */}
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="GitHub"
+              className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground"
+              onClick={() => window.open('https://github.com/Codestar-rgb/MCR-NEXUS', '_blank')}
+            >
+              <Github className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="设置"
+              onClick={openSettings}
+              className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="GitHub"
-            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground"
-            onClick={() => window.open('https://github.com/Codestar-rgb/MCR-NEXUS', '_blank')}
-          >
-            <Github className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="设置"
-            onClick={openSettings}
-            className="h-7 w-7 rounded-md text-muted-foreground hover:text-primary"
-          >
-            <Settings className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </header>
+      </div>
 
       {/* 主内容区 — 左右分栏 */}
       <main className="flex min-h-0 flex-1 overflow-hidden">
@@ -118,9 +131,9 @@ export function HomePageV11({ onCreate, onOpen, onImport }: HomePageV11Props) {
           >
             {/* 欢迎语 */}
             <div className="mb-5">
-              <h1 className="text-[22px] font-bold leading-tight tracking-tight text-foreground">
+              <h2 className="text-[15px] font-semibold leading-tight tracking-tight text-foreground">
                 {t('home.welcome')}
-              </h1>
+              </h2>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 {t('home.subtitle')} · {t('home.desc')}
               </p>

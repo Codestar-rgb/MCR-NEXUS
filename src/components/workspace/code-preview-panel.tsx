@@ -39,7 +39,7 @@ export function CodePreviewPanel({ onExpand }: CodePreviewPanelProps) {
   const nodes = useCanvasStore((s) => s.nodes)
   const currentProjectId = useWorkspaceStore((s) => s.currentProjectId)
   const { t } = useI18n()
-  const [collapsed, setCollapsed] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState(true)
   const [activeFile, setActiveFile] = React.useState<string | null>(null)
   const [files, setFiles] = React.useState<GeneratedFile[]>([])
 
