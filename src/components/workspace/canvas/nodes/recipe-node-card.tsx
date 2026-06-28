@@ -11,11 +11,13 @@
  * 主题色：orange
  */
 
+import * as React from 'react'
 import { memo } from 'react'
 import { type NodeProps, type Node } from '@xyflow/react'
 import { Flame, Scissors, CookingPot } from 'lucide-react'
 import { BaseNodeCard } from './base-node-card'
 import type { FlowNodeData } from '@/lib/node-system'
+import { getMCIconUrl } from '@/lib/mc-icons'
 
 export type RecipeNodeData = FlowNodeData & {
   kind?: 'recipe'
@@ -36,6 +38,30 @@ function shortId(id: string): string {
   if (!id) return '—'
   const parts = id.split(':')
   return parts[parts.length - 1] || id
+}
+
+/** 渲染物品图标（MC 原版图标 or 文字 fallback） */
+function ItemIcon({ itemId, size = 'h-7 w-7', textClass = 'text-[8px]' }: { itemId: string; size?: string; textClass?: string }) {
+  const [iconUrl, setIconUrl] = React.useState<string | null>(() => getMCIconUrl(itemId))
+  const [failed, setFailed] = React.useState(false)
+
+  React.useEffect(() => {
+    setIconUrl(getMCIconUrl(itemId))
+    setFailed(false)
+  }, [itemId])
+
+  if (iconUrl && !failed) {
+    return (
+      <img
+        src={iconUrl}
+        alt={itemId}
+        onError={() => setFailed(true)}
+        className={size}
+        style={{ imageRendering: 'pixelated', objectFit: 'contain' }}
+      />
+    )
+  }
+  return <span className={textClass + ' font-mono'}>{shortId(itemId).slice(0, 4)}</span>
 }
 
 function RecipeNodeCardImpl(props: NodeProps<RecipeNodeType>) {
@@ -124,7 +150,7 @@ function CraftingPreview({
                 : 'border-border/30 bg-muted/20 text-muted-foreground/20'
             }`}
           >
-            {s ? shortId(s).slice(0, 4) : ''}
+            {s ? <ItemIcon itemId={s} size="h-6 w-6" /> : ''}
           </div>
         ))}
       </div>
@@ -134,8 +160,8 @@ function CraftingPreview({
 
       {/* 产物 */}
       <div className="flex flex-col items-center gap-0.5">
-        <div className="flex h-10 w-10 items-center justify-center rounded border border-orange-500/40 bg-orange-500/10 text-[9px] font-mono text-orange-300">
-          {shortId(output).slice(0, 6)}
+        <div className="flex h-10 w-10 items-center justify-center rounded border border-orange-500/40 bg-orange-500/10">
+          <ItemIcon itemId={output} size="h-8 w-8" />
         </div>
         {outputCount > 1 && (
           <span className="text-[9px] font-bold text-orange-400">×{outputCount}</span>
