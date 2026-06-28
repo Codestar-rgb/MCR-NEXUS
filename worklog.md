@@ -2355,3 +2355,36 @@ Stage Summary:
 - 多选节点可批量编辑属性/克隆/分组/删除
 - 用户可将当前画布保存为自定义模板
 - 已推送 GitHub（891905e）
+
+---
+Task ID: R16 (拖拽支持 + 快捷键帮助 + 复制粘贴属性)
+Agent: main (Z.ai Code)
+Task: 配方网格拖拽 + ? 键快捷键帮助 + 右键复制/粘贴属性
+
+Work Log:
+R4: 配方网格拖拽支持
+- GridSlot 添加 onDragOver/onDrop 处理
+- 读取 text/node-id dataTransfer → 从 canvas store 查找节点
+- 提取 registryId 填入格子
+- 拖拽时橙色 ring 视觉反馈
+- 提示文字："💡 可从画布拖拽物品节点到格子"
+
+R5: 右键菜单复制/粘贴属性
+- "复制属性"：存储节点属性到模块级剪贴板（排除 name/registryId）
+- "粘贴属性"：应用属性到目标节点（保留目标的 name/registryId）
+- 无属性时粘贴按钮禁用
+- toast 确认 + 字段数/目标节点名
+
+R6: 快捷键帮助浮层
+- ShortcutsHelp 组件：按 ? 键打开，ESC 关闭
+- 4 个分组：全局 / 节点操作 / 画布 / 构建
+- 20+ 快捷键文档化（kbd 样式）
+- 挂载在 WorkspaceShell
+- 输入框/Monaco 编辑器内不触发
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 配方网格可从画布拖拽物品节点
+- ? 键随时查看所有快捷键
+- 右键可复制/粘贴节点属性（跨节点复用配置）
+- 已推送 GitHub（861357c）
