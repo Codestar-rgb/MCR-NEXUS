@@ -555,6 +555,87 @@
   animation: nexcube-drag-hint 1.5s ease-in-out infinite;
 }
 
+/* 开关切换弹性 */
+@keyframes nexcube-switch-toggle {
+  0% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(50%) scale(1.1); }
+  100% { transform: translateX(100%) scale(1); }
+}
+
+/* 滚动渐显 */
+@keyframes nexcube-scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.nexcube-scroll-reveal {
+  animation: nexcube-scroll-reveal 0.2s ease-out;
+}
+
+/* 徽章脉冲 */
+@keyframes nexcube-badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.75 0.16 180 / 40%);
+  }
+  50% {
+    box-shadow: 0 0 0 3px oklch(0.75 0.16 180 / 0%);
+  }
+}
+.nexcube-badge-pulse {
+  animation: nexcube-badge-pulse 1.5s ease-out infinite;
+}
+
+/* 拖拽占位符闪烁 */
+@keyframes nexcube-drop-placeholder {
+  0%, 100% {
+    border-color: oklch(0.75 0.16 180 / 30%);
+    background-color: oklch(0.75 0.16 180 / 5%);
+  }
+  50% {
+    border-color: oklch(0.75 0.16 180 / 60%);
+    background-color: oklch(0.75 0.16 180 / 12%);
+  }
+}
+.nexcube-drop-placeholder {
+  animation: nexcube-drop-placeholder 1s ease-in-out infinite;
+}
+
+/* 文字打字机光标 */
+@keyframes nexcube-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.nexcube-cursor-blink {
+  animation: nexcube-cursor-blink 1s step-end infinite;
+}
+
+/* 面板展开/折叠平滑 */
+@keyframes nexcube-collapse {
+  from {
+    max-height: 500px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
+@keyframes nexcube-expand {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
 /* 连线绘制动画 */
 @keyframes nexcube-edge-draw {
   from {

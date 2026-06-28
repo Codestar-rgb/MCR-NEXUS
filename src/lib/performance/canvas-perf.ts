@@ -68,12 +68,12 @@ export function getPerformanceConfig(nodeCount: number): PerformanceConfig {
   switch (tier) {
     case 'full': return base
     case 'virtual':
-      return { ...base, onlyRenderVisibleElements: true, hint: '已启用虚拟渲染（仅渲染视口内节点）' }
+      return { ...base, onlyRenderVisibleElements: true, hint: '虚拟渲染已启用（仅渲染视口内节点）' }
     case 'aggregated':
       return {
         ...base, onlyRenderVisibleElements: true, nodesDraggable: false,
         showNodeDetails: false, miniMapEnabled: false, aggregated: true,
-        hint: '已切换聚合显示模式（同类型节点合并显示）',
+        hint: '聚合显示模式（节点数过多，已禁用拖拽和详情）',
       }
     case 'webgl':
       return {

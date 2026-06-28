@@ -269,6 +269,43 @@ const translations: Record<string, { zh: string; en: string }> = {
   'status.memory': { zh: '内存', en: 'Memory' },
   'status.renderTime': { zh: '渲染', en: 'Render' },
   'status.ready': { zh: '就绪', en: 'Ready' },
+
+  // === FAQ ===
+  'faq.title': { zh: '常见问题', en: 'FAQ' },
+  'faq.createEntity': { zh: '如何创建自定义实体？', en: 'How to create a custom entity?' },
+  'faq.connectNodes': { zh: '如何连接两个节点？', en: 'How to connect two nodes?' },
+  'faq.exportMod': { zh: '如何导出模组？', en: 'How to export a mod?' },
+  'faq.useGroup': { zh: '如何使用节点组？', en: 'How to use node groups?' },
+  'faq.editRecipe': { zh: '如何编辑配方？', en: 'How to edit a recipe?' },
+
+  // === 故障排除 ===
+  'troubleshoot.title': { zh: '故障排除', en: 'Troubleshooting' },
+  'troubleshoot.dragLag': { zh: '节点拖拽卡顿？', en: 'Node drag lag?' },
+  'troubleshoot.connectFail': { zh: '连线无法创建？', en: 'Cannot create connection?' },
+  'troubleshoot.exportFail': { zh: '导出 ZIP 编译失败？', en: 'Export ZIP compile failed?' },
+  'troubleshoot.panelHidden': { zh: '属性面板不显示？', en: 'Property panel not visible?' },
+
+  // === MC 图标 ===
+  'mcIcon.title': { zh: 'MC 原版贴图', en: 'MC Vanilla Textures' },
+  'mcIcon.search': { zh: '搜索物品...', en: 'Search items...' },
+  'mcIcon.source': { zh: '图标来源 mcicons.ccleaf.com', en: 'Icons from mcicons.ccleaf.com' },
+  'mcIcon.select': { zh: 'MC贴图', en: 'MC Textures' },
+
+  // === 自定义属性 ===
+  'customAttr.title': { zh: '自定义属性', en: 'Custom Attributes' },
+  'customAttr.name': { zh: '属性名', en: 'Attribute Name' },
+  'customAttr.value': { zh: '属性值', en: 'Attribute Value' },
+  'customAttr.desc': { zh: '属性描述', en: 'Description' },
+
+  // === 掉落 ===
+  'drop.title': { zh: '掉落配置', en: 'Drop Configuration' },
+  'drop.itemId': { zh: '掉落物品 ID', en: 'Drop Item ID' },
+  'drop.count': { zh: '掉落数量', en: 'Drop Count' },
+  'drop.chance': { zh: '掉落概率', en: 'Drop Chance' },
+
+  // === BlockState ===
+  'blockState.title': { zh: 'BlockState 属性', en: 'BlockState Properties' },
+  'blockState.hint': { zh: '格式：facing=north,active=false', en: 'Format: facing=north,active=false' },
 }
 
 export function t(key: string, locale: Locale): string {
