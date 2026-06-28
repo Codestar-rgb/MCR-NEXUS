@@ -105,7 +105,7 @@ function BaseNodeCardImpl({
         e.dataTransfer.effectAllowed = 'move'
       }}
       className={cn(
-        'group relative rounded-xl border bg-card/95 shadow-lg backdrop-blur transition-all nexcube-node-enter nexcube-node-hover',
+        'group relative rounded-xl border bg-card/95 shadow-lg backdrop-blur transition-all nexcube-node-enter nexcube-node-hover nexcube-node-bounce-in',
         c.border,
         selected
           ? cn(c.borderStrong, 'ring-2', c.ring)

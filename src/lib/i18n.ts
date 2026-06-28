@@ -226,6 +226,49 @@ const translations: Record<string, { zh: string; en: string }> = {
   'enchant.compatItems': { zh: '额外适用物品', en: 'Compatible Items' },
   'enchant.incompatible': { zh: '冲突附魔', en: 'Incompatible Enchantments' },
   'enchant.bookCompatible': { zh: '附魔书可用', en: 'Allowed on Books' },
+
+  // === 节点组 ===
+  'group.title': { zh: '节点组', en: 'Node Group' },
+  'group.members': { zh: '组成员', en: 'Members' },
+  'group.ungroup': { zh: '解散组', en: 'Ungroup' },
+  'group.empty': { zh: '暂无子节点', en: 'No child nodes' },
+  'group.dragHint': { zh: '拖拽节点到组内即可添加', en: 'Drag nodes into group to add' },
+  'group.joined': { zh: '节点已加入组', en: 'Node joined group' },
+  'group.removed': { zh: '节点已移出组', en: 'Node removed from group' },
+  'group.ungrouped': { zh: '组已解散，节点已释放', en: 'Group dissolved, nodes released' },
+
+  // === 碰撞箱预设 ===
+  'hitbox.presetSmallDesc': { zh: '小型生物（蝙蝠）', en: 'Small creature (bat)' },
+  'hitbox.presetStandardDesc': { zh: '标准生物（僵尸）', en: 'Standard creature (zombie)' },
+  'hitbox.presetLargeDesc': { zh: '大型生物（末影龙）', en: 'Large creature (ender dragon)' },
+  'hitbox.presetBossDesc': { zh: 'Boss 级（凋灵）', en: 'Boss level (wither)' },
+
+  // === 连线 ===
+  'edge.selected': { zh: '连线已选中', en: 'Edge selected' },
+  'edge.deleteHint': { zh: '按 Delete 删除', en: 'Press Delete to remove' },
+  'edge.deleted': { zh: '连线已删除', en: 'Edge deleted' },
+  'edge.incompatible': { zh: '无法连接', en: 'Cannot connect' },
+
+  // === 工程文件 ===
+  'project.openFiles': { zh: '打开工程文件', en: 'Open Project Files' },
+  'project.saved': { zh: '已保存', en: 'Saved' },
+  'project.autoSync': { zh: '自动同步', en: 'Auto Sync' },
+
+  // === 配方 ===
+  'recipe.crafting': { zh: '合成台', en: 'Crafting Table' },
+  'recipe.smelting': { zh: '熔炉', en: 'Furnace' },
+  'recipe.blasting': { zh: '高炉', en: 'Blast Furnace' },
+  'recipe.smoking': { zh: '烟熏炉', en: 'Smoker' },
+  'recipe.stonecutting': { zh: '切石机', en: 'Stonecutter' },
+  'recipe.input': { zh: '输入', en: 'Input' },
+  'recipe.output': { zh: '产物', en: 'Output' },
+  'recipe.count': { zh: '数量', en: 'Count' },
+
+  // === 状态栏 ===
+  'status.fps': { zh: '帧率', en: 'FPS' },
+  'status.memory': { zh: '内存', en: 'Memory' },
+  'status.renderTime': { zh: '渲染', en: 'Render' },
+  'status.ready': { zh: '就绪', en: 'Ready' },
 }
 
 export function t(key: string, locale: Locale): string {

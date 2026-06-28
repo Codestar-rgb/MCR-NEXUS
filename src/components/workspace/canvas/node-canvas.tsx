@@ -529,7 +529,7 @@ function NodeCanvasInner() {
         }}
         onNodeDragStop={onNodeDragStop as any}
         nodesDraggable={perfConfig.nodesDraggable}
-        onlyRenderVisibleElements={perfConfig.onlyRenderVisibleElements || nodes.length > 200}
+        onlyRenderVisibleElements={perfConfig.onlyRenderVisibleElements || nodes.length > 150}
         fitView
         fitViewOptions={{ padding: 0.25 }}
         minZoom={0.05}

@@ -46,9 +46,9 @@ export interface PerformanceConfig {
 }
 
 const TIERS: { threshold: number; tier: PerformanceTier }[] = [
-  { threshold: 500, tier: 'full' },
-  { threshold: 2000, tier: 'virtual' },
-  { threshold: 10000, tier: 'aggregated' },
+  { threshold: 300, tier: 'full' },
+  { threshold: 1000, tier: 'virtual' },
+  { threshold: 5000, tier: 'aggregated' },
   { threshold: Infinity, tier: 'webgl' },
 ]
 

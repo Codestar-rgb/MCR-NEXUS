@@ -400,6 +400,81 @@
   to { stroke-dashoffset: 0; }
 }
 
+/* 创建节点弹跳入场 */
+@keyframes nexcube-node-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(12px);
+  }
+  60% {
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.nexcube-node-bounce-in {
+  animation: nexcube-node-bounce-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 终端输出逐行淡入 */
+@keyframes nexcube-terminal-line {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.nexcube-terminal-line {
+  animation: nexcube-terminal-line 0.15s ease-out;
+}
+
+/* 按钮按下波纹 */
+@keyframes nexcube-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.nexcube-ripple {
+  animation: nexcube-ripple 0.5s ease-out;
+}
+
+/* Toast 滑入增强 */
+@keyframes nexcube-toast-slide {
+  from {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* 搜索结果逐条入场 */
+@keyframes nexcube-search-item {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.nexcube-search-item {
+  animation: nexcube-search-item 0.15s ease-out;
+}
+
 /* 连线绘制动画 */
 @keyframes nexcube-edge-draw {
   from {
