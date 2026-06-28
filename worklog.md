@@ -2487,3 +2487,43 @@ Stage Summary:
 - 有序合成配方生成正确的 crafting_shaped JSON（pattern + key）
 - 节点创建时有缩放+淡入动画
 - 已推送 GitHub（e613c53）
+
+---
+Task ID: R20 (连线动画 + 缩略图增强 + 导出进度)
+Agent: main (Z.ai Code)
+Task: 连线绘制动画 + MiniMap 增强 + 导出进度阶段指示
+
+Work Log:
+R13: 连线绘制动画
+- TypedEdge 添加 isNew 标志触发绘制动画
+  * nexcube-edge-draw: stroke-dashoffset 100→0（0.4s）
+  * 新连线脉冲：blur(3px) + strokeWidth 8
+  * 流动动画在绘制完成后启动
+- canvas store onConnect：新边设置 isNew=true
+  * 500ms 后自动清除（停止绘制，保留流动）
+- 边标签弹出动画：scale 0.5→1.15→1（0.4s）
+- CSS: @keyframes nexcube-edge-draw + nexcube-edge-label-pop
+
+R14: MiniMap 导航增强
+- nodeStrokeColor: 前景色边框
+- nodeBorderRadius: 6px 圆角缩略图节点
+- maskColor: 0.4 透明度（更轻）
+- ariaLabel: 无障碍标签
+- rounded-lg 圆角样式
+
+R15: 导出进度阶段指示
+- 4 阶段进度标签：
+  * <20%: 正在生成 Java 源码…
+  * <50%: 正在生成资源文件…
+  * <80%: 正在打包 ZIP…
+  * >80%: 即将完成…
+- 4 阶段指示器（源码/资源/打包/完成）
+  * 每个阶段到达时变为主品牌色
+- 进度条 transition-all duration-300 平滑填充
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 连线创建时有绘制动画 + 标签弹出
+- 缩略图更精致（圆角 + 边框 + 无障碍标签）
+- 导出进度有阶段反馈（用户知道当前在做什么）
+- 已推送 GitHub（eb40475）
