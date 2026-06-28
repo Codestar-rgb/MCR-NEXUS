@@ -3053,3 +3053,35 @@ Stage Summary:
 - 连线可右键删除
 - 画布更干净（无调试面板/推荐气泡/代码预览）
 - 已推送 GitHub（fb7aa84）
+
+---
+Task ID: R37 (节点组重构 + 实体属性增强)
+Agent: main (Z.ai Code)
+Task: GroupNodeCard v2 重新设计 + 双自定义属性
+
+Work Log:
+R52: GroupNodeCard v2 重新设计
+- 圆角 2xl 边框 + 颜色调色背景
+- 顶部渐变条（颜色→透明）
+- 标题栏改进：
+  * 颜色图标（ring-inset）
+  * 子节点计数徽章（Layers 图标 + 数字）
+  * 7 色选择器（hover scale-150）
+  * 解散按钮（Trash2 图标，红色 hover）
+- 双击标题重命名（持久化到 canvas store）
+- 颜色变更持久化到节点属性
+- 解散调用 store.ungroupNode() + toast
+- 空状态：Group 图标 + '拖拽节点到此处添加到组'
+- 选中态：shadow-floating + ring-2 primary
+
+R55: 实体双自定义属性
+- 新增 customAttrName2 + customAttrValue2
+- 代码生成：createAttributes() 支持两个自定义属性
+  * 各自生成 ForgeRegistries.ATTRIBUTES.getValue() 调用
+  * 条件生成（仅当名称设置时）
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 节点组有全新视觉设计（渐变+计数+解散）
+- 实体支持 2 个自定义属性
+- 已推送 GitHub（64416f2）
