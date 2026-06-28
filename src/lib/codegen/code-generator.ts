@@ -783,6 +783,158 @@ function buildShapedPattern(grid: string[]): {
 }
 
 /**
+ * 生成附魔类 — Forge 1.20.1 Enchantment
+ *
+ * 继承 Enchantment，设置 rarity/category/maxLevel/cost。
+ */
+function generateEnchantmentFile(node: FlowNode, modId: string): GeneratedFile | null {
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
+  const registryId = String(p.registryId ?? 'new_enchant')
+  const className = toClassName(registryId)
+  const rarity = String(p.rarity ?? 'common').toUpperCase()
+  const category = String(p.category ?? 'weapon').toUpperCase()
+  const maxLevel = Number(p.maxLevel ?? 5)
+  const minCost = Number(p.minCost ?? 1)
+  const costPerLevel = Number(p.costPerLevel ?? 10)
+  const isTreasure = Boolean(p.isTreasure ?? false)
+  const isCurse = Boolean(p.isCurse ?? false)
+  const isTradeable = Boolean(p.isTradeable ?? true)
+
+  const content = `package com.example.mod.enchantment;
+
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentCategory;
+
+/**
+ * ${p.name ?? 'Custom Enchantment'} - 由 NexCube 自动生成
+ * 注册 ID：${registryId}
+ * 稀有度：${rarity}
+ * 类别：${category}
+ * 最大等级：${maxLevel}
+ */
+public class ${className} extends Enchantment {
+
+    public ${className}() {
+        super(Rarity.${rarity}, EnchantmentCategory.${category},
+            new EquipmentSlot[]{EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND});
+    }
+
+    @Override
+    public int getMinLevel() {
+        return 1;
+    }
+
+    @Override
+    public int getMaxLevel() {
+        return ${maxLevel};
+    }
+
+    @Override
+    public int getMinCost(int level) {
+        return ${minCost} + (level - 1) * ${costPerLevel};
+    }
+
+    @Override
+    public int getMaxCost(int level) {
+        return this.getMinCost(level) + ${costPerLevel};
+    }
+
+    @Override
+    public boolean isTreasureOnly() {
+        return ${isTreasure};
+    }
+
+    @Override
+    public boolean isCurse() {
+        return ${isCurse};
+    }
+
+    @Override
+    public boolean isTradeable() {
+        return ${isTradeable};
+    }
+
+    @Override
+    public boolean isDiscoverable() {
+        return true;
+    }
+}
+`
+
+  return {
+    filePath: `src/main/java/com/example/mod/enchantment/${className}.java`,
+    content,
+    language: 'java',
+    linkedNodeId: node.id,
+  }
+}
+
+/**
+ * 生成成就 JSON — Forge 1.20.1 advancements 格式
+ *
+ * 生成 data/<modId>/advancements/<id>.json
+ */
+function generateAdvancementFile(node: FlowNode, modId: string): GeneratedFile | null {
+  const p = (node.data.properties ?? {}) as Record<string, unknown>
+  const registryId = String(p.registryId ?? 'new_advancement')
+  const icon = String(p.icon ?? 'minecraft:diamond')
+  const title = node.data.title
+  const description = String(p.description ?? '完成此成就')
+  const frame = String(p.frame ?? 'task')
+  const showToast = Boolean(p.showToast ?? true)
+  const announceToChat = Boolean(p.announceToChat ?? false)
+  const hidden = Boolean(p.hidden ?? false)
+  const triggerType = String(p.triggerType ?? 'inventory_changed')
+  const triggerItem = String(p.triggerItem ?? 'minecraft:diamond')
+
+  // 构建触发条件
+  let triggerConditions: Record<string, unknown> = {}
+  if (triggerType === 'inventory_changed') {
+    triggerConditions = {
+      items: [{ items: [triggerItem] }],
+    }
+  } else if (triggerType === 'player_killed_entity') {
+    triggerConditions = { entity: { type: triggerItem } }
+  } else if (triggerType === 'placed_block') {
+    triggerConditions = { block: triggerItem }
+  } else if (triggerType === 'used_item') {
+    triggerConditions = { item: triggerItem }
+  } else if (triggerType === 'changed_dimension') {
+    triggerConditions = {}
+  } else if (triggerType === 'recipe_crafted') {
+    triggerConditions = { recipe: triggerItem }
+  }
+
+  const content = JSON.stringify({
+    display: {
+      icon: { item: icon },
+      title: { translate: `advancements.${modId}.${registryId}.title`, fallback: title },
+      description: { translate: `advancements.${modId}.${registryId}.description`, fallback: description },
+      frame,
+      show_toast: showToast,
+      announce_to_chat: announceToChat,
+      hidden,
+    },
+    parent: 'minecraft:recipes/root',
+    criteria: {
+      trigger: {
+        trigger: `minecraft:${triggerType}`,
+        conditions: triggerConditions,
+      },
+    },
+    requirements: [['trigger']],
+  }, null, 2)
+
+  return {
+    filePath: `src/main/resources/data/${modId}/advancements/${registryId}.json`,
+    content,
+    language: 'json',
+    linkedNodeId: node.id,
+  }
+}
+
+/**
  * 生成主 Mod 类（@Mod 注解，注册入口）
  *
  * 使用 DeferredRegister 模式（Forge 1.20.1 推荐）：
@@ -1406,6 +1558,12 @@ export function generateProjectCode(
         break
       case 'recipe':
         file = generateRecipeFile(node, modId)
+        break
+      case 'enchantment':
+        file = generateEnchantmentFile(node, modId)
+        break
+      case 'advancement':
+        file = generateAdvancementFile(node, modId)
         break
       case 'blackbox':
         file = generateBlackboxFile(node)

@@ -25,7 +25,9 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: 'Ctrl+Shift+P', label: '命令面板' },
       { keys: 'Ctrl+/', label: '切换节点/代码模式' },
       { keys: 'Ctrl+S', label: '保存（自动同步）' },
-      { keys: '?', label: '显示此帮助' },
+      { keys: 'F1', label: '帮助文档' },
+      { keys: '?', label: '快捷键帮助' },
+      { keys: 'Ctrl+H', label: '版本历史' },
     ],
   },
   {
@@ -38,6 +40,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: 'Ctrl+Shift+Z', label: '重做' },
       { keys: 'Delete', label: '删除选中节点' },
       { keys: 'Shift+点击', label: '多选节点' },
+      { keys: '右键节点', label: '复制/粘贴属性、对齐' },
     ],
   },
   {
@@ -48,6 +51,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: 'Ctrl+-', label: '缩小' },
       { keys: '右键画布', label: '添加节点 / 全选 / 清空' },
       { keys: '双击节点', label: '打开子图（函数节点）' },
+      { keys: '选中 2+ 节点', label: '显示对齐工具栏' },
     ],
   },
   {
