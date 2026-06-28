@@ -19,6 +19,7 @@ import { useMemo } from 'react'
 import { getNodeTypeDefinition, type PropertySchema } from '@/lib/node-system'
 import { PropertyGroup, PropertyGroupList } from './property-group'
 import { renderField } from './fields'
+import { RecipeGridField } from './fields/recipe-grid-field'
 
 interface PropertyFormProps {
   /** 节点类型 key（对应 NODE_TYPE_REGISTRY key） */
@@ -81,8 +82,34 @@ export function PropertyForm({
     )
   }
 
+  // recipe 节点：添加 3x3 网格编辑器（仅 crafting 类型）
+  const isCraftingRecipe = nodeKind === 'recipe' && String(properties.recipeType ?? 'crafting') === 'crafting'
+
   return (
     <PropertyGroupList defaultValues={defaultOpen}>
+      {/* recipe 节点的 3x3 网格编辑器（放在最前面） */}
+      {isCraftingRecipe && (
+        <PropertyGroup
+          key="合成网格"
+          groupId="合成网格"
+          name="合成网格"
+          schemas={[]}
+        >
+          <RecipeGridField
+            grid={(properties.grid as string[]) ?? Array(9).fill('')}
+            resultItem={String(properties.resultItem ?? 'minecraft:diamond')}
+            resultCount={Number(properties.resultCount ?? 1)}
+            shaped={Boolean(properties.shaped ?? true)}
+            onGridChange={(grid) => onChange('grid', grid)}
+            onResultChange={(item, count) => {
+              onChange('resultItem', item)
+              onChange('resultCount', count)
+            }}
+            onShapedChange={(shaped) => onChange('shaped', shaped)}
+          />
+        </PropertyGroup>
+      )}
+
       {groups.map((g) => (
         <PropertyGroup
           key={g.name}
@@ -90,13 +117,21 @@ export function PropertyForm({
           name={g.name}
           schemas={g.schemas}
         >
-          {g.schemas.map((schema) =>
-            renderField(
-              schema,
-              properties[schema.key] ?? schema.defaultValue,
-              (v) => onChange(schema.key, v),
-            ),
-          )}
+          {/* recipe 节点：跳过 resultItem/resultCount（已在网格中编辑） */}
+          {g.schemas
+            .filter((schema) => {
+              if (nodeKind === 'recipe' && (schema.key === 'resultItem' || schema.key === 'resultCount')) {
+                return !isCraftingRecipe
+              }
+              return true
+            })
+            .map((schema) =>
+              renderField(
+                schema,
+                properties[schema.key] ?? schema.defaultValue,
+                (v) => onChange(schema.key, v),
+              ),
+            )}
         </PropertyGroup>
       ))}
     </PropertyGroupList>
