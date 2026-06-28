@@ -3217,3 +3217,32 @@ Stage Summary:
 - 配色与 v3 品牌色统一
 - 帮助文档有 FAQ + 故障排除
 - 已推送 GitHub（25f7648）
+
+---
+Task ID: R42 (动画 + i18n + 性能)
+Agent: main (Z.ai Code)
+Task: 6 种新动画 + i18n v3 + 性能提示优化
+
+Work Log:
+R66: 6 种新 CSS 动画（总计 26+）
+- nexcube-switch-toggle：开关切换弹性
+- nexcube-scroll-reveal：滚动渐显（0.2s）
+- nexcube-badge-pulse：徽章脉冲（1.5s）
+- nexcube-drop-placeholder：拖拽占位符闪烁（1s）
+- nexcube-cursor-blink：打字机光标（1s）
+- nexcube-collapse/expand：面板高度动画
+
+R67: i18n v3 — 37 新翻译键
+- faq.*(6) + troubleshoot.*(5) + mcIcon.*(4)
+- customAttr.*(4) + drop.*(4) + blockState.*(2)
+- 总计 216 → 253 翻译键
+
+R68: 性能提示优化
+- 虚拟渲染提示更新
+- 聚合模式提示更新
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 总计 26+ CSS 动画
+- i18n 从 216 键扩展到 253 键
+- 已推送 GitHub（5395518）
