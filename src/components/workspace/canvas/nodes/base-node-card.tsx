@@ -245,12 +245,16 @@ function BaseNodeCardImpl({
 
 export const BaseNodeCard = memo(BaseNodeCardImpl, (prev, next) => {
   // 自定义比较：只在关键 props 变化时重新渲染
-  // 注意：必须检测 data 引用变化（toggleNodeCollapsed 会创建新 data 对象）
+  // 注意：必须检测 data 引用变化（toggleNodeCollapsed/属性编辑会创建新 data 对象）
+  // position 检查避免拖拽时所有节点重渲染
   return (
     prev.id === next.id &&
     prev.selected === next.selected &&
     prev.data === next.data &&
     prev.width === next.width &&
-    prev.height === next.height
+    prev.height === next.height &&
+    prev.x === next.x &&
+    prev.y === next.y &&
+    prev.dragging === next.dragging
   )
 })

@@ -924,6 +924,116 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
       { key: 'experience', label: '经验值', type: 'number', defaultValue: 0.1, min: 0, max: 100, step: 0.1, group: '熔炉' },
     ],
   },
+
+  // === 附魔节点 ===
+  enchantment: {
+    kind: 'enchantment',
+    label: '附魔',
+    category: 'advanced',
+    color: 'violet',
+    icon: 'Sparkles',
+    description: '自定义附魔效果',
+    supportsSubLogic: false,
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean' },
+    ],
+    outputPorts: [
+      { id: 'enchant_out', label: '附魔', dataType: 'any' },
+    ],
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Enchantment', group: '基础', placeholder: '显示名称' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_enchant', group: '基础', placeholder: '小写下划线' },
+      {
+        key: 'rarity',
+        label: '稀有度',
+        type: 'select',
+        defaultValue: 'common',
+        group: '属性',
+        options: [
+          { label: '普通', value: 'common' },
+          { label: ' uncommon', value: 'uncommon' },
+          { label: '稀有', value: 'rare' },
+          { label: '史诗', value: 'very_rare' },
+        ],
+      },
+      {
+        key: 'category',
+        label: '附魔类别',
+        type: 'select',
+        defaultValue: 'weapon',
+        group: '属性',
+        options: [
+          { label: '武器', value: 'weapon' },
+          { label: '盔甲', value: 'armor' },
+          { label: '工具', value: 'digger' },
+          { label: '弓', value: 'bow' },
+          { label: '鱼竿', value: 'fishing_rod' },
+          { label: '三叉戟', value: 'trident' },
+          { label: '弩', value: 'crossbow' },
+        ],
+      },
+      { key: 'maxLevel', label: '最大等级', type: 'number', defaultValue: 5, min: 1, max: 255, step: 1, group: '属性' },
+      { key: 'minCost', label: '最低消耗', type: 'number', defaultValue: 1, min: 1, max: 100, step: 1, group: '属性' },
+      { key: 'costPerLevel', label: '每级消耗', type: 'number', defaultValue: 10, min: 1, max: 100, step: 1, group: '属性' },
+      { key: 'isTreasure', label: '宝藏附魔', type: 'boolean', defaultValue: false, group: '特殊' },
+      { key: 'isCurse', label: '诅咒附魔', type: 'boolean', defaultValue: false, group: '特殊' },
+      { key: 'isTradeable', label: '可交易', type: 'boolean', defaultValue: true, group: '特殊' },
+    ],
+  },
+
+  // === 成就节点 ===
+  advancement: {
+    kind: 'advancement',
+    label: '成就',
+    category: 'advanced',
+    color: 'amber',
+    icon: 'Trophy',
+    description: '自定义成就/进度',
+    supportsSubLogic: false,
+    inputPorts: [
+      { id: 'trigger', label: '触发', dataType: 'boolean' },
+    ],
+    outputPorts: [
+      { id: 'advancement_out', label: '成就', dataType: 'any' },
+    ],
+    propertiesSchema: [
+      { key: 'name', label: '名称', type: 'string', defaultValue: 'New Advancement', group: '基础', placeholder: '显示名称' },
+      { key: 'registryId', label: '注册 ID', type: 'string', defaultValue: 'new_advancement', group: '基础', placeholder: '小写下划线' },
+      { key: 'icon', label: '图标物品', type: 'string', defaultValue: 'minecraft:diamond', group: '显示', placeholder: 'minecraft:diamond' },
+      { key: 'description', label: '描述', type: 'string', defaultValue: '完成此成就', group: '显示', placeholder: '成就描述' },
+      {
+        key: 'frame',
+        label: '边框样式',
+        type: 'select',
+        defaultValue: 'task',
+        group: '显示',
+        options: [
+          { label: '普通', value: 'task' },
+          { label: '挑战', value: 'challenge' },
+          { label: '目标', value: 'goal' },
+        ],
+      },
+      { key: 'showToast', label: '显示提示', type: 'boolean', defaultValue: true, group: '显示' },
+      { key: 'announceToChat', label: '聊天公告', type: 'boolean', defaultValue: false, group: '显示' },
+      { key: 'hidden', label: '隐藏直到完成', type: 'boolean', defaultValue: false, group: '显示' },
+      {
+        key: 'triggerType',
+        label: '触发类型',
+        type: 'select',
+        defaultValue: 'inventory_changed',
+        group: '触发',
+        options: [
+          { label: '物品栏变化', value: 'inventory_changed' },
+          { label: '击杀实体', value: 'player_killed_entity' },
+          { label: '放置方块', value: 'placed_block' },
+          { label: '使用物品', value: 'used_item' },
+          { label: '进入维度', value: 'changed_dimension' },
+          { label: '合成物品', value: 'recipe_crafted' },
+        ],
+      },
+      { key: 'triggerItem', label: '触发物品', type: 'string', defaultValue: 'minecraft:diamond', group: '触发', placeholder: '物品 ID' },
+    ],
+  },
 }
 
 /** 获取节点类型定义（合并插件贡献的自定义类型） */

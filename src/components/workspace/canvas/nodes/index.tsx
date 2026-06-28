@@ -51,6 +51,9 @@ export const nodeTypes = {
   function: GenericNodeCard,
   // 插件贡献的节点类型（用 GenericNodeCard 渲染）
   spell: GenericNodeCard,
+  // 附魔/成就节点
+  enchantment: GenericNodeCard,
+  advancement: GenericNodeCard,
   // 配方节点（专用卡片，3x3 网格 / 熔炉预览）
   recipe: RecipeNodeCard,
   // 逻辑子节点（专用紧凑卡片）
