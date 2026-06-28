@@ -216,7 +216,32 @@
 
   /* 微妙边框高亮 */
   .border-highlight {
-    border-color: oklch(0.72 0.15 180 / 30%);
+    border-color: oklch(0.75 0.16 180 / 30%);
+  }
+
+  /* 输入框聚焦边框 */
+  .input-focus-ring:focus {
+    border-color: oklch(0.75 0.16 180 / 50%);
+    box-shadow: 0 0 0 2px oklch(0.75 0.16 180 / 10%);
+    outline: none;
+  }
+
+  /* 禁用态 */
+  .disabled-overlay {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* 链接色 */
+  .link-primary {
+    color: oklch(0.75 0.16 180);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .link-primary:hover {
+    color: oklch(0.85 0.13 180);
+    text-decoration: underline;
   }
 }
 
@@ -634,6 +659,95 @@
     max-height: 500px;
     opacity: 1;
   }
+}
+
+/* 数字滚动计数 */
+@keyframes nexcube-count-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.nexcube-count-up {
+  animation: nexcube-count-up 0.3s ease-out;
+}
+
+/* 骨架屏闪烁 */
+@keyframes nexcube-skeleton {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.nexcube-skeleton {
+  background: linear-gradient(
+    90deg,
+    oklch(0.20 0.012 255 / 50%) 25%,
+    oklch(0.25 0.015 255 / 70%) 50%,
+    oklch(0.20 0.012 255 / 50%) 75%
+  );
+  background-size: 200% 100%;
+  animation: nexcube-skeleton 1.2s ease-in-out infinite;
+}
+
+/* 空状态浮动 */
+@keyframes nexcube-empty-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.nexcube-empty-float {
+  animation: nexcube-empty-float 2.5s ease-in-out infinite;
+}
+
+/* 连接线脉冲 */
+@keyframes nexcube-connection-pulse {
+  0%, 100% {
+    stroke-width: 2;
+    opacity: 0.85;
+  }
+  50% {
+    stroke-width: 3;
+    opacity: 1;
+  }
+}
+
+/* 节点标题渐变扫光 */
+@keyframes nexcube-title-sweep {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+.nexcube-title-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.75 0.16 180 / 15%) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: nexcube-title-sweep 3s ease-in-out infinite;
+}
+
+/* 输入框聚焦发光 */
+@keyframes nexcube-input-focus {
+  from {
+    box-shadow: 0 0 0 0 oklch(0.75 0.16 180 / 0%);
+  }
+  to {
+    box-shadow: 0 0 0 3px oklch(0.75 0.16 180 / 12%);
+  }
+}
+.nexcube-input-focus:focus {
+  animation: nexcube-input-focus 0.2s ease-out forwards;
 }
 
 /* 连线绘制动画 */

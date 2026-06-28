@@ -202,28 +202,74 @@ export function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => v
                 </div>
               </div>
 
-              {/* 故障排除 */}
+              {/* 节点类型详解 */}
+              <div className="mb-5">
+                <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  <Boxes className="h-3 w-3 text-primary" />
+                  节点类型详解
+                </h3>
+                <div className="space-y-1.5">
+                  <NodeTypeDesc name="实体" desc="自定义生物，支持 AI 目标/碰撞箱/属性/掉落/生怪蛋" color="text-rose-300" />
+                  <NodeTypeDesc name="方块" desc="自定义方块，支持硬度/发光/BlockState 属性/掉落" color="text-amber-300" />
+                  <NodeTypeDesc name="物品/装备/武器/食物" desc="自定义物品，Tier/ArmorMaterial/FoodProperties" color="text-teal-300" />
+                  <NodeTypeDesc name="群系/结构/维度" desc="世界生成元素，数据包 JSON 格式" color="text-emerald-300" />
+                  <NodeTypeDesc name="附魔" desc="自定义附魔，适用物品限制/冲突检查" color="text-violet-300" />
+                  <NodeTypeDesc name="成就" desc="自定义进度，6 种触发/成就树" color="text-amber-300" />
+                  <NodeTypeDesc name="配方" desc="合成/熔炉/切石，3x3 网格编辑器" color="text-orange-300" />
+                </div>
+              </div>
+
+              {/* 导出结构 */}
+              <div className="mb-5">
+                <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  <Download className="h-3 w-3 text-primary" />
+                  导出结构说明
+                </h3>
+                <div className="rounded-lg border border-border/20 bg-card/10 p-3 font-mono text-[9px] leading-relaxed text-muted-foreground">
+                  <div>mod.zip/</div>
+                  <div className="pl-3">├── build.gradle <span className="text-muted-foreground/40">{'// Gradle 构建'}</span></div>
+                  <div className="pl-3">├── gradle.properties</div>
+                  <div className="pl-3">├── src/main/java/</div>
+                  <div className="pl-6">├── ExampleMod.java <span className="text-muted-foreground/40">{'// 主类'}</span></div>
+                  <div className="pl-6">├── item/ModItems.java <span className="text-muted-foreground/40">{'// 物品注册'}</span></div>
+                  <div className="pl-6">├── block/ModBlocks.java <span className="text-muted-foreground/40">{'// 方块注册'}</span></div>
+                  <div className="pl-6">├── entity/ModEntities.java <span className="text-muted-foreground/40">{'// 实体注册'}</span></div>
+                  <div className="pl-6">├── enchantment/ <span className="text-muted-foreground/40">{'// 附魔'}</span></div>
+                  <div className="pl-6">├── event/ModEventHandlers.java</div>
+                  <div className="pl-3">├── src/main/resources/</div>
+                  <div className="pl-6">├── data/ <span className="text-muted-foreground/40">{'// 数据包'}</span></div>
+                  <div className="pl-9">├── recipes/ <span className="text-muted-foreground/40">{'// 配方'}</span></div>
+                  <div className="pl-9">├── loot_tables/ <span className="text-muted-foreground/40">{'// 掉落'}</span></div>
+                  <div className="pl-9">├── advancements/ <span className="text-muted-foreground/40">{'// 成就'}</span></div>
+                  <div className="pl-9">├── tags/ <span className="text-muted-foreground/40">{'// 标签'}</span></div>
+                  <div className="pl-6">├── assets/ <span className="text-muted-foreground/40">{'// 资源'}</span></div>
+                  <div className="pl-9">├── lang/ <span className="text-muted-foreground/40">{'// 语言'}</span></div>
+                  <div className="pl-9">├── textures/ <span className="text-muted-foreground/40">{'// 贴图'}</span></div>
+                </div>
+              </div>
+
+              {/* 进阶技巧 */}
               <div>
                 <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                  <AlertTriangle className="h-3 w-3 text-amber-400" />
-                  故障排除
+                  <Lightbulb className="h-3 w-3 text-amber-400" />
+                  进阶技巧
                 </h3>
                 <div className="space-y-1.5">
                   <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
-                    <span className="font-medium text-foreground">节点拖拽卡顿？</span>
-                    <span className="text-muted-foreground"> → 已禁用网格对齐，确保浏览器硬件加速开启</span>
+                    <span className="font-medium text-primary">版本历史</span>
+                    <span className="text-muted-foreground"> → Ctrl+H 保存快照，可回滚到任意版本</span>
                   </div>
                   <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
-                    <span className="font-medium text-foreground">连线无法创建？</span>
-                    <span className="text-muted-foreground"> → 检查端口数据类型是否兼容（hover 端口查看详情）</span>
+                    <span className="font-medium text-primary">复制/粘贴属性</span>
+                    <span className="text-muted-foreground"> → 右键节点 → 复制属性 → 右键另一节点 → 粘贴</span>
                   </div>
                   <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
-                    <span className="font-medium text-foreground">导出 ZIP 编译失败？</span>
-                    <span className="text-muted-foreground"> → 确保安装 JDK 17，首次构建需下载 Gradle（5-15 分钟）</span>
+                    <span className="font-medium text-primary">MC 原版贴图</span>
+                    <span className="text-muted-foreground"> → 贴图字段点击 'MC贴图' 选择原版物品图标</span>
                   </div>
                   <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
-                    <span className="font-medium text-foreground">属性面板不显示？</span>
-                    <span className="text-muted-foreground"> → 点击节点选中，右侧面板自动显示（若无显示按 Ctrl+P 搜索节点）</span>
+                    <span className="font-medium text-primary">插件系统</span>
+                    <span className="text-muted-foreground"> → 设置 → 插件 Tab 查看已加载插件</span>
                   </div>
                 </div>
               </div>
@@ -260,6 +306,16 @@ function FAQItem({ q, a }: { q: string; a: string }) {
           <p className="text-[10px] leading-relaxed text-muted-foreground">{a}</p>
         </div>
       )}
+    </div>
+  )
+}
+
+/** 节点类型描述行 */
+function NodeTypeDesc({ name, desc, color }: { name: string; desc: string; color: string }) {
+  return (
+    <div className="flex items-start gap-2 rounded border border-border/20 bg-card/10 px-2.5 py-1.5">
+      <span className={`shrink-0 text-[10px] font-bold ${color}`}>{name}</span>
+      <span className="text-[10px] leading-relaxed text-muted-foreground">{desc}</span>
     </div>
   )
 }
