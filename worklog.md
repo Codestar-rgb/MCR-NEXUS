@@ -2954,3 +2954,36 @@ Stage Summary:
 - 配方节点卡片显示真实 MC 物品图标（像素化渲染）
 - MC 贴图选择器组件就绪（8 分类 60+ 物品）
 - 已推送 GitHub（0c68c31）
+
+---
+Task ID: R34 (属性面板修复 + MC LOGO + 贴图选择器集成)
+Agent: main (Z.ai Code)
+Task: 修复属性面板可见性 + MC 风格主页 LOGO + TextureField 集成 MC 贴图选择器
+
+Work Log:
+FIX1: 属性面板可见性修复
+- CodePreviewPanel 默认折叠（collapsed=true）
+  * 原来默认展开占 320px，把 PropertyPanel 推到右边不显眼
+  * 现在默认只显示 40px 折叠条，PropertyPanel 完整可见
+  * 用户点击节点后右侧直接看到属性编辑表单
+
+FIX2: MC 风格主页 LOGO
+- 主页顶部栏重新设计：
+  * 大号 NexCube 标题（text-2xl + 品牌色渐变）
+  * WaterOrb 尺寸 32（原 24）
+  * 副标题 'Next-gen Minecraft Mod IDE'
+  * 渐变背景（card/40 → background → card/40）
+  * 欢迎语降级为 h2（原 h1，现 header 有 h1）
+
+R49: TextureField 集成 MC 贴图选择器
+- 贴图字段新增'MC贴图'按钮（Package 图标）
+- 点击切换 MCTexturePicker 内联显示
+- 选择 MC 物品 → 填入 itemId 到 texture 属性
+- 仅在无贴图时显示（有贴图时显示'移除'）
+
+Stage Summary:
+- 3 项修复/改进完成 ✅
+- 核心修复：点击节点右侧显示属性编辑面板（代码预览默认折叠）
+- 主页有大号 MC 风格 LOGO 标题
+- 贴图字段可选择 MC 原版贴图
+- 已推送 GitHub（9ee987e）
