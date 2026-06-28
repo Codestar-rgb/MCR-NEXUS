@@ -2294,3 +2294,26 @@ Stage Summary:
   - 7/13 节点类型有专用卡片（entity/block/item/equipment/weapon/food/recipe）
 - 导出 ZIP 现包含物品标签文件
 - 已推送 GitHub（22af810）
+
+---
+Task ID: R14 (配方网格编辑器 + 恢复确认)
+Agent: main (Z.ai Code)
+Task: 3x3 合成网格编辑器
+
+Work Log:
+- 发现本地仓库曾因 git rebase 冲突回退到旧状态
+- 通过 git reset --hard origin/main 恢复了 R1-R13 全部工作
+- 重新应用配方网格编辑器：
+  * RecipeGridField 组件：9 个可编辑格子 + 产物 + shaped/shapeless 切换
+  * 清空/示例按钮（钻石剑配方）
+  * 有序/无序视觉区分（虚线边框）
+  * 点击格子内联编辑物品 ID
+  * PropertyForm 集成：crafting 类型配方显示网格编辑器
+  * 网格数据存储在 properties.grid（string[9]）
+  * shaped 标志存储在 properties.shaped
+  * 隐藏重复的 resultItem/resultCount 字段
+
+Stage Summary:
+- 配方网格编辑器完成 ✅
+- 全部 R1-R13 工作已恢复 ✅
+- 已推送 GitHub（d9d1c7b）
