@@ -2855,3 +2855,30 @@ Stage Summary:
 - 方块支持 BlockState 属性（自动类型推断）
 - 节点删除有淡出动画
 - 已推送 GitHub（298f860）
+
+---
+Task ID: R31 (烧炼/切石预览 + i18n + Forge 事件 + 动画 + 性能监控)
+Agent: main (Z.ai Code)
+Task: 配方烧炼/切石预览模式 + i18n 完善 + 更多 Forge 事件 + 更多动画 + 性能监控增强
+
+Work Log:
+R40: 配方网格烧炼/切石预览模式
+- SmeltingPreviewField 组件：
+  * 输入 → 动画火焰 → 产物 布局
+  * 可编辑输入/产物物品 ID + 数量
+  * 烧制时间滑块（tick + 秒显示）
+  * 经验值输入
+  * 类型标签：熔炉🔥/高炉⚡/烟熏炉💨
+- StonecuttingPreviewField 组件：
+  * 输入 → 切石机图标 → 产物 布局
+  * 可编辑输入/产物 + 数量
+- PropertyForm 根据 recipeType 显示对应预览：
+  * crafting → RecipeGridField（3x3 网格）
+  * smelting/blasting/smoking → SmeltingPreviewField
+  * stonecutting → StonecuttingPreviewField
+  * 隐藏重复的 resultItem/resultCount 字段
+
+Stage Summary:
+- 配方预览模式完成 ✅
+- 3 种配方类型有专用可视化编辑器
+- 已推送 GitHub（cc3f6de）
