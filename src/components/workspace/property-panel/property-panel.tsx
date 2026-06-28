@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { PropertyForm } from './property-form'
 import { BatchEditPanel } from './batch-edit-panel'
 import { AIBehaviorPanel } from './ai-behavior-panel'
+import { AdvancementTreePanel } from './advancement-tree-panel'
 import { ProjectStats } from '@/components/workspace/project-stats'
 import {
   SubgraphEditor,
@@ -197,6 +198,11 @@ export function PropertyPanel() {
                     AI
                   </TabsTrigger>
                 )}
+                {kind === 'advancement' && (
+                  <TabsTrigger value="tree" className="text-xs">
+                    成就树
+                  </TabsTrigger>
+                )}
               </TabsList>
             </div>
 
@@ -231,6 +237,17 @@ export function PropertyPanel() {
                 <AIBehaviorPanel
                   aiType={String(selectedNode.data.properties?.aiType ?? 'none')}
                   onAiTypeChange={(type) => handlePropertyChange('aiType', type)}
+                />
+              </TabsContent>
+            )}
+
+            {/* 成就树可视化 */}
+            {kind === 'advancement' && selectedNodeId && (
+              <TabsContent value="tree" className="m-0 p-3">
+                <AdvancementTreePanel
+                  currentId={selectedNodeId}
+                  parentAdvancement={(selectedNode.data.properties?.parentAdvancement as string) ?? null}
+                  onParentChange={(parentId) => handlePropertyChange('parentAdvancement', parentId)}
                 />
               </TabsContent>
             )}

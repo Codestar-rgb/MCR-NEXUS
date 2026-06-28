@@ -906,6 +906,10 @@ function generateAdvancementFile(node: FlowNode, modId: string): GeneratedFile |
     triggerConditions = { recipe: triggerItem }
   }
 
+  // parent 成就（如果有设置）
+  const parentAdvancement = String(p.parentAdvancement ?? '')
+  const parentId = parentAdvancement ? `${modId}:${parentAdvancement}` : 'minecraft:recipes/root'
+
   const content = JSON.stringify({
     display: {
       icon: { item: icon },
@@ -916,7 +920,7 @@ function generateAdvancementFile(node: FlowNode, modId: string): GeneratedFile |
       announce_to_chat: announceToChat,
       hidden,
     },
-    parent: 'minecraft:recipes/root',
+    parent: parentId,
     criteria: {
       trigger: {
         trigger: `minecraft:${triggerType}`,
