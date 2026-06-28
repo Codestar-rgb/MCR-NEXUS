@@ -371,11 +371,21 @@ export function ExportDialog({
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  正在打包 ZIP…
+                  {progress < 20 ? '正在生成 Java 源码…'
+                    : progress < 50 ? '正在生成资源文件…'
+                    : progress < 80 ? '正在打包 ZIP…'
+                    : '即将完成…'}
                 </span>
                 <span className="font-mono">{Math.min(100, Math.round(progress))}%</span>
               </div>
-              <Progress value={progress} className="h-1.5" />
+              <Progress value={progress} className="h-1.5 transition-all duration-300" />
+              {/* 阶段指示器 */}
+              <div className="flex items-center justify-between px-0.5 text-[9px] text-muted-foreground/40">
+                <span className={progress >= 8 ? 'text-primary' : ''}>源码</span>
+                <span className={progress >= 35 ? 'text-primary' : ''}>资源</span>
+                <span className={progress >= 65 ? 'text-primary' : ''}>打包</span>
+                <span className={progress >= 95 ? 'text-primary' : ''}>完成</span>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
