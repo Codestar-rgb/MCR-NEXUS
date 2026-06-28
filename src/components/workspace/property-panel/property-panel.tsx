@@ -26,6 +26,7 @@ import { PropertyForm } from './property-form'
 import { BatchEditPanel } from './batch-edit-panel'
 import { AIBehaviorPanel } from './ai-behavior-panel'
 import { AdvancementTreePanel } from './advancement-tree-panel'
+import { CollisionBoxEditor } from './collision-box-editor'
 import { ProjectStats } from '@/components/workspace/project-stats'
 import {
   SubgraphEditor,
@@ -198,6 +199,11 @@ export function PropertyPanel() {
                     AI
                   </TabsTrigger>
                 )}
+                {kind === 'entity' && (
+                  <TabsTrigger value="hitbox" className="text-xs">
+                    碰撞箱
+                  </TabsTrigger>
+                )}
                 {kind === 'advancement' && (
                   <TabsTrigger value="tree" className="text-xs">
                     成就树
@@ -238,6 +244,26 @@ export function PropertyPanel() {
                   aiType={String(selectedNode.data.properties?.aiType ?? 'none')}
                   onAiTypeChange={(type) => handlePropertyChange('aiType', type)}
                 />
+              </TabsContent>
+            )}
+
+            {/* 实体碰撞箱可视化 */}
+            {kind === 'entity' && (
+              <TabsContent value="hitbox" className="m-0 p-3">
+                {(() => {
+                  const box = (selectedNode.data.properties?.collisionBox ?? { x: 0.6, y: 1.8, z: 0.6 }) as { x: number; y: number; z: number }
+                  return (
+                    <CollisionBoxEditor
+                      width={Number(box.x) || 0.6}
+                      height={Number(box.y) || 1.8}
+                      depth={Number(box.z) || 0.6}
+                      onChange={(dim, value) => {
+                        const newBox = { ...box, [dim]: value }
+                        handlePropertyChange('collisionBox', newBox)
+                      }}
+                    />
+                  )
+                })()}
               </TabsContent>
             )}
 

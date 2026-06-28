@@ -217,18 +217,54 @@ function generateBlockFile(node: FlowNode): GeneratedFile | null {
   const resistance = getNum(node, 'resistance', 6)
   const lightLevel = getNum(node, 'lightLevel', 0)
 
+  // 解析 BlockState 属性
+  const statePropsRaw = getStr(node, 'blockStateProps', '')
+  const stateProps = statePropsRaw
+    ? statePropsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+  const hasStateProps = stateProps.length > 0
+
+  // 生成属性定义代码
+  const propDefs = stateProps.map((prop) => {
+    const [name, defaultVal] = prop.split('=').map((s) => s.trim())
+    if (!name) return null
+    // 简单推断类型：true/false → boolean, 数字 → integer, 其他 → enum
+    if (defaultVal === 'true' || defaultVal === 'false') {
+      return `    public static final BooleanProperty ${name.toUpperCase()} = BooleanProperty.create("${name}");`
+    }
+    if (/^\d+$/.test(defaultVal)) {
+      return `    public static final IntegerProperty ${name.toUpperCase()} = IntegerProperty.create("${name}", 0, 15);`
+    }
+    return null
+  }).filter(Boolean).join('\n')
+
+  // 生成 createBlockStateDefinition
+  const stateBuilder = hasStateProps
+    ? `
+    @Override
+    protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block, net.minecraft.world.level.block.state.BlockState> builder) {
+        builder.add(${stateProps.map((p) => p.split('=')[0].trim().toUpperCase()).join(', ')});
+    }
+`
+    : ''
+
+  // 导入
+  const imports = hasStateProps
+    ? `import net.minecraft.world.level.block.state.properties.BooleanProperty;\nimport net.minecraft.world.level.block.state.properties.IntegerProperty;\n`
+    : ''
+
   const content = `package com.example.mod.block;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-
+${imports}
 /**
  * NexCube 自动生成的方块类
  * 节点名称：${node.data.title}
  * 注册 ID：${registryId}
- */
+${hasStateProps ? ` * BlockState 属性：${statePropsRaw}\n` : ''} */
 public class ${className} extends Block {
-
+${hasStateProps ? propDefs + '\n' : ''}
     public ${className}() {
         super(BlockBehaviour.Properties.of()
             .strength(${hardness.toFixed(1)}F, ${resistance.toFixed(1)}F)
@@ -236,7 +272,7 @@ public class ${className} extends Block {
             .requiresCorrectToolForDrops()
         );
     }
-
+${stateBuilder}
     // ${BLACKBOX_START_MARKER}
     // 在此添加自定义逻辑（NexCube 不会解析此区域）
     // ${BLACKBOX_END_MARKER}
@@ -1190,7 +1226,10 @@ function generateModEntitiesFile(modId: string, nodes: FlowNode[]): GeneratedFil
   const entries = entityNodes.map((n) => {
     const registryId = getStr(n, 'registryId', n.id)
     const className = toClassName(registryId) + 'Entity'
-    return `    public static final RegistryObject<EntityType<${className}>> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> EntityType.Builder\n            .of(${className}::new, MobCategory.CREATURE)\n            .sized(0.6f, 1.8f)\n            .build());`
+    const box = (n.data.properties?.collisionBox ?? { x: 0.6, y: 1.8, z: 0.6 }) as { x: number; y: number; z: number }
+    const w = Number(box.x) || 0.6
+    const h = Number(box.y) || 1.8
+    return `    public static final RegistryObject<EntityType<${className}>> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> EntityType.Builder\n            .of(${className}::new, MobCategory.CREATURE)\n            .sized(${w.toFixed(1)}f, ${h.toFixed(1)}f)\n            .build());`
   })
 
   const attrLines = entityNodes.map((n) => {

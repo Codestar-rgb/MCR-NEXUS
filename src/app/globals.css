@@ -333,6 +333,21 @@
   animation: nexcube-node-enter 0.25s ease-out;
 }
 
+/* 节点删除淡出动画 */
+@keyframes nexcube-node-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-4px);
+  }
+}
+.nexcube-node-exit {
+  animation: nexcube-node-exit 0.2s ease-in forwards;
+}
+
 /* 连线绘制动画 */
 @keyframes nexcube-edge-draw {
   from {

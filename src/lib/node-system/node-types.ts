@@ -210,6 +210,8 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
       },
       { key: 'dropCount', label: '掉落数量', type: 'number', defaultValue: 1, min: 0, max: 64, step: 1, group: '掉落' },
       { key: 'texture', label: '贴图', type: 'texture', defaultValue: null, group: '基础' },
+      // BlockState 属性
+      { key: 'blockStateProps', label: '状态属性', type: 'string', defaultValue: '', group: 'BlockState', placeholder: 'facing=north,active=false' },
     ],
   },
 
