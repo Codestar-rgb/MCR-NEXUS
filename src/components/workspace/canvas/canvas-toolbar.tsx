@@ -15,7 +15,7 @@
 
 import { useEffect, useState } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { Maximize2, Trash2, Circle, GitBranch } from 'lucide-react'
+import { Maximize2, Trash2, Circle, GitBranch, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCanvasStore } from '@/stores/canvas'
 import { cn } from '@/lib/utils'
@@ -25,8 +25,57 @@ export function CanvasToolbar() {
   const nodes = useCanvasStore((s) => s.nodes)
   const edges = useCanvasStore((s) => s.edges)
   const clearCanvas = useCanvasStore((s) => s.clearCanvas)
+  const activeWorkspaceId = useCanvasStore((s) => s.activeWorkspaceId)
 
   const [zoom, setZoom] = useState(1)
+
+  // 保存当前画布为模板
+  const handleSaveAsTemplate = async () => {
+    const wsNodes = nodes.filter((n) => n.data.subGraphId === activeWorkspaceId)
+    if (wsNodes.length === 0) {
+      toast.warning('当前画布没有节点，无法保存为模板')
+      return
+    }
+    const name = window.prompt('模板名称：', `自定义模板 ${wsNodes.length} 节点`)
+    if (!name) return
+
+    const wsNodeIds = new Set(wsNodes.map((n) => n.id))
+    const wsEdges = edges.filter((e) => wsNodeIds.has(e.source) && wsNodeIds.has(e.target))
+
+    const templateData = {
+      id: `user_${Date.now()}`,
+      name,
+      icon: 'Boxes',
+      color: 'teal',
+      nodes: wsNodes.map((n) => ({
+        type: n.data.kind,
+        title: n.data.title,
+        positionX: n.position.x,
+        positionY: n.position.y,
+        properties: n.data.properties ?? {},
+      })),
+      edges: wsEdges.map((e) => ({
+        sourceIndex: wsNodes.findIndex((n) => n.id === e.source),
+        targetIndex: wsNodes.findIndex((n) => n.id === e.target),
+        sourcePort: e.sourceHandle ?? '',
+        targetPort: e.targetHandle ?? '',
+        dataType: e.data?.dataType ?? 'any',
+      })),
+    }
+
+    try {
+      const res = await fetch('/api/settings/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(templateData),
+      })
+      if (!res.ok) throw new Error('保存失败')
+      toast.success(`模板「${name}」已保存（${wsNodes.length} 节点 / ${wsEdges.length} 连线）`)
+    } catch (err) {
+      toast.error('保存模板失败')
+      console.error(err)
+    }
+  }
 
   /* 跟踪当前缩放比例（300ms 轮询，避免过度更新） */
   useEffect(() => {
@@ -85,6 +134,16 @@ export function CanvasToolbar() {
         className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-emerald-300"
       >
         <Maximize2 className="h-3.5 w-3.5" />
+      </button>
+      {/* 保存为模板 */}
+      <button
+        type="button"
+        onClick={handleSaveAsTemplate}
+        title="保存为模板"
+        aria-label="保存为模板"
+        className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-primary"
+      >
+        <Save className="h-3.5 w-3.5" />
       </button>
       {/* 清空 */}
       <button

@@ -23,6 +23,7 @@ import { getNodeTypeDefinition } from '@/lib/node-system'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 import { PropertyForm } from './property-form'
+import { BatchEditPanel } from './batch-edit-panel'
 import {
   SubgraphEditor,
   SubgraphEditorEmpty,
@@ -83,8 +84,12 @@ export function PropertyPanel() {
   const setSelectedNode = useWorkspaceStore((s) => s.setSelectedNode)
 
   const nodes = useCanvasStore((s) => s.nodes)
+  const selectedNodeIds = useCanvasStore((s) => s.selectedNodeIds)
   const updateNode = useCanvasStore((s) => s.updateNode)
   const { t } = useI18n()
+
+  // 多选时显示批量编辑面板
+  const isMultiSelect = selectedNodeIds.length > 1
 
   const selectedNode = useMemo(
     () => (selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) ?? null : null),
@@ -166,7 +171,10 @@ export function PropertyPanel() {
       </header>
 
       <div className="flex-1 overflow-y-auto nexcube-scroll">
-        {hasSelection ? (
+        {isMultiSelect ? (
+          /* 多选模式：显示批量编辑面板 */
+          <BatchEditPanel selectedIds={selectedNodeIds} />
+        ) : hasSelection ? (
           <Tabs defaultValue={defaultTab} className="flex flex-col gap-0">
             <div className="border-b border-border px-3 pt-3">
               <TabsList className="bg-muted/50">
