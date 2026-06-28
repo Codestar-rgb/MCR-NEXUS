@@ -133,6 +133,99 @@ const translations: Record<string, { zh: string; en: string }> = {
   'common.save': { zh: '保存', en: 'Save' },
   'common.loading': { zh: '加载中...', en: 'Loading...' },
   'common.search': { zh: '搜索', en: 'Search' },
+
+  // === 碰撞箱 ===
+  'hitbox.title': { zh: '碰撞箱预览', en: 'Collision Box Preview' },
+  'hitbox.width': { zh: '宽度 (X)', en: 'Width (X)' },
+  'hitbox.height': { zh: '高度 (Y)', en: 'Height (Y)' },
+  'hitbox.depth': { zh: '深度 (Z)', en: 'Depth (Z)' },
+  'hitbox.presetSmall': { zh: '小型', en: 'Small' },
+  'hitbox.presetStandard': { zh: '标准', en: 'Standard' },
+  'hitbox.presetLarge': { zh: '大型', en: 'Large' },
+  'hitbox.presetBoss': { zh: 'Boss', en: 'Boss' },
+  'hitbox.hint': { zh: '碰撞箱决定实体的物理碰撞体积。', en: 'Collision box determines entity physical volume.' },
+
+  // === AI 行为 ===
+  'ai.title': { zh: 'AI 行为模板', en: 'AI Behavior Template' },
+  'ai.goals': { zh: 'AI 目标（按优先级排序）', en: 'AI Goals (by priority)' },
+  'ai.hint': { zh: '优先级数字越小越高（0 最高）。', en: 'Lower priority number = higher priority.' },
+  'ai.templateNone': { zh: '无 AI', en: 'No AI' },
+  'ai.templateMelee': { zh: '近战攻击', en: 'Melee Attack' },
+  'ai.templateRanged': { zh: '远程攻击', en: 'Ranged Attack' },
+  'ai.templatePanic': { zh: '逃窜', en: 'Panic' },
+  'ai.templateLook': { zh: '看玩家', en: 'Look at Player' },
+  'ai.templateWander': { zh: '游走', en: 'Wander' },
+
+  // === 成就树 ===
+  'advancementTree.title': { zh: '成就树', en: 'Advancement Tree' },
+  'advancementTree.setParent': { zh: '设为前置', en: 'Set as Prerequisite' },
+  'advancementTree.parentSet': { zh: '已设为前置', en: 'Set as Prerequisite' },
+  'advancementTree.removeParent': { zh: '移除', en: 'Remove' },
+  'advancementTree.current': { zh: '当前', en: 'Current' },
+  'advancementTree.empty': { zh: '尚无成就节点', en: 'No advancement nodes yet' },
+  'advancementTree.frameTask': { zh: '普通', en: 'Task' },
+  'advancementTree.frameChallenge': { zh: '挑战', en: 'Challenge' },
+  'advancementTree.frameGoal': { zh: '目标', en: 'Goal' },
+
+  // === 版本历史 ===
+  'version.title': { zh: '版本历史', en: 'Version History' },
+  'version.save': { zh: '保存版本快照', en: 'Save Version Snapshot' },
+  'version.restore': { zh: '恢复', en: 'Restore' },
+  'version.confirmRestore': { zh: '确认恢复？当前未保存的更改将丢失。', en: 'Confirm restore? Unsaved changes will be lost.' },
+  'version.latest': { zh: '最新', en: 'Latest' },
+  'version.empty': { zh: '暂无版本', en: 'No versions yet' },
+  'version.namePlaceholder': { zh: '版本名称', en: 'Version name' },
+  'version.maxRetained': { zh: '最多保留 20 个版本', en: 'Max 20 versions retained' },
+
+  // === 配方预览 ===
+  'recipe.craftingGrid': { zh: '合成网格', en: 'Crafting Grid' },
+  'recipe.smeltingPreview': { zh: '烧炼预览', en: 'Smelting Preview' },
+  'recipe.stonecuttingPreview': { zh: '切石预览', en: 'Stonecutting Preview' },
+  'recipe.shaped': { zh: '有序', en: 'Shaped' },
+  'recipe.shapeless': { zh: '无序', en: 'Shapeless' },
+  'recipe.clear': { zh: '清空', en: 'Clear' },
+  'recipe.example': { zh: '示例', en: 'Example' },
+  'recipe.cookingTime': { zh: '烧制时间', en: 'Cooking Time' },
+  'recipe.experience': { zh: '经验值', en: 'Experience' },
+
+  // === 批量编辑 ===
+  'batch.title': { zh: '批量编辑', en: 'Batch Edit' },
+  'batch.typeDistribution': { zh: '类型分布', en: 'Type Distribution' },
+  'batch.sharedProperties': { zh: '共享属性', en: 'Shared Properties' },
+  'batch.clone': { zh: '克隆', en: 'Clone' },
+  'batch.group': { zh: '分组', en: 'Group' },
+
+  // === 项目统计 ===
+  'stats.title': { zh: '项目统计', en: 'Project Stats' },
+  'stats.nodes': { zh: '节点', en: 'Nodes' },
+  'stats.edges': { zh: '连线', en: 'Edges' },
+  'stats.types': { zh: '类型', en: 'Types' },
+  'stats.typeDistribution': { zh: '类型分布', en: 'Type Distribution' },
+  'stats.exportEstimate': { zh: '导出预估', en: 'Export Estimate' },
+  'stats.javaFiles': { zh: 'Java 文件', en: 'Java Files' },
+  'stats.jsonFiles': { zh: 'JSON 文件', en: 'JSON Files' },
+  'stats.codeLines': { zh: '代码行数', en: 'Code Lines' },
+  'stats.zipSize': { zh: 'ZIP 大小', en: 'ZIP Size' },
+
+  // === 对齐工具栏 ===
+  'align.left': { zh: '左对齐', en: 'Align Left' },
+  'align.right': { zh: '右对齐', en: 'Align Right' },
+  'align.top': { zh: '顶对齐', en: 'Align Top' },
+  'align.bottom': { zh: '底对齐', en: 'Align Bottom' },
+  'align.hCenter': { zh: '水平居中', en: 'Horizontal Center' },
+  'align.vCenter': { zh: '垂直居中', en: 'Vertical Center' },
+  'align.hDistribute': { zh: '水平等距', en: 'Horizontal Distribute' },
+  'align.vDistribute': { zh: '垂直等距', en: 'Vertical Distribute' },
+
+  // === 帮助 ===
+  'help.title': { zh: '快速上手', en: 'Quick Start' },
+  'help.coreFlow': { zh: '核心流程', en: 'Core Workflow' },
+  'help.tips': { zh: '使用技巧', en: 'Tips' },
+
+  // === 附魔兼容 ===
+  'enchant.compatItems': { zh: '额外适用物品', en: 'Compatible Items' },
+  'enchant.incompatible': { zh: '冲突附魔', en: 'Incompatible Enchantments' },
+  'enchant.bookCompatible': { zh: '附魔书可用', en: 'Allowed on Books' },
 }
 
 export function t(key: string, locale: Locale): string {

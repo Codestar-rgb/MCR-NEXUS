@@ -348,6 +348,24 @@
   animation: nexcube-node-exit 0.2s ease-in forwards;
 }
 
+/* 节点 hover 悬浮效果 */
+.nexcube-node-hover {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+.nexcube-node-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px oklch(0 0 0 / 0.4), 0 0 0 1px oklch(0.72 0.15 180 / 15%);
+}
+
+/* 属性变化闪烁 */
+@keyframes nexcube-prop-flash {
+  0% { background-color: oklch(0.72 0.15 180 / 0.2); }
+  100% { background-color: transparent; }
+}
+.nexcube-prop-flash {
+  animation: nexcube-prop-flash 0.5s ease-out;
+}
+
 /* 连线绘制动画 */
 @keyframes nexcube-edge-draw {
   from {

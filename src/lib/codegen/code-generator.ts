@@ -1773,6 +1773,50 @@ ${blockPlaceHandlers || '        // 无方块节点'}
         //     // 每tick对玩家执行逻辑
         // }
     }
+
+    /**
+     * 实体加入世界 — 可用于生成时特效
+     */
+    @SubscribeEvent
+    public static void onEntityJoinLevel(net.minecraftforge.event.entity.EntityJoinLevelEvent event) {
+        // if (event.getEntity() instanceof ${entityNodes.length > 0 ? toClassName(getStr(entityNodes[0], 'registryId', '')) + 'Entity' : 'YourEntity'}) {
+        //     // 实体生成时触发
+        // }
+    }
+
+    /**
+     * 物品合成事件 — 可用于合成后效果
+     */
+    @SubscribeEvent
+    public static void onItemCrafted(net.minecraftforge.event.entity.player.PlayerEvent.ItemCraftedEvent event) {
+        // if (event.getCrafting().getItem() == ModItems.XXX.get()) {
+        //     // 合成成功时触发
+        // }
+    }
+
+    /**
+     * 爆炸事件 — 可用于修改爆炸行为
+     */
+    @SubscribeEvent
+    public static void onExplosion(net.minecraftforge.event.level.ExplosionEvent.Start event) {
+        // event.getExplosion();
+    }
+
+    /**
+     * 玩家复活事件
+     */
+    @SubscribeEvent
+    public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        // event.getEntity().sendSystemMessage(Component.literal("你复活了！"));
+    }
+
+    /**
+     * 方块右键 — 可用于打开 GUI
+     */
+    @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        // 右键使用物品时触发
+    }
 }
 `
 

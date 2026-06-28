@@ -53,6 +53,24 @@ function useMemory() {
   return memMB
 }
 
+/** 渲染时间监测 Hook */
+function useRenderTime() {
+  const [renderMs, setRenderMs] = React.useState(0)
+  React.useEffect(() => {
+    let rafId: number
+    const measure = () => {
+      const start = performance.now()
+      rafId = requestAnimationFrame(() => {
+        const duration = performance.now() - start
+        setRenderMs(Math.round(duration * 10) / 10)
+      })
+    }
+    const id = setInterval(measure, 1000)
+    return () => { clearInterval(id); cancelAnimationFrame(rafId) }
+  }, [])
+  return renderMs
+}
+
 export function StatusBar() {
   const mode = useWorkspaceStore((s) => s.mode)
   const nodes = useCanvasStore((s) => s.nodes)
@@ -60,6 +78,7 @@ export function StatusBar() {
   const { t } = useI18n()
   const fps = useFPS()
   const mem = useMemory()
+  const renderMs = useRenderTime()
 
   const fpsColor = fps >= 50 ? 'text-emerald-400' : fps >= 30 ? 'text-amber-400' : 'text-red-400'
 
@@ -92,6 +111,13 @@ export function StatusBar() {
             {mem} MB
           </span>
         )}
+        {/* 渲染时间 */}
+        <span className={cn(
+          'flex items-center gap-0.5 font-mono',
+          renderMs < 8 ? 'text-emerald-400/60' : renderMs < 16 ? 'text-amber-400/60' : 'text-red-400/60',
+        )} title="单帧渲染时间">
+          {renderMs}ms
+        </span>
       </div>
 
       {/* 右侧：快捷键提示 */}
