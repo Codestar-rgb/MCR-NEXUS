@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils'
 import { PropertyForm } from './property-form'
 import { BatchEditPanel } from './batch-edit-panel'
 import { AIBehaviorPanel } from './ai-behavior-panel'
+import { ProjectStats } from '@/components/workspace/project-stats'
 import {
   SubgraphEditor,
   SubgraphEditorEmpty,
@@ -235,20 +236,24 @@ export function PropertyPanel() {
             )}
           </Tabs>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="flex h-16 w-16 items-center justify-center rounded-2xl border border-dashed border-border bg-muted/30"
-            >
-              <MousePointerClick className="h-7 w-7 text-muted-foreground/60" />
-            </motion.div>
-            <div>
-              <p className="text-xs font-medium text-foreground">{t('property.selectNode')}</p>
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {t('property.clickHint')}
-              </p>
+          <div className="flex h-full flex-col overflow-y-auto nexcube-scroll">
+            {/* 无选中时显示项目统计 */}
+            <ProjectStats />
+            <div className="flex flex-col items-center justify-center gap-3 px-6 py-8 text-center">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="flex h-12 w-12 items-center justify-center rounded-xl border border-dashed border-border bg-muted/30"
+              >
+                <MousePointerClick className="h-5 w-5 text-muted-foreground/60" />
+              </motion.div>
+              <div>
+                <p className="text-xs font-medium text-foreground">{t('property.selectNode')}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t('property.clickHint')}
+                </p>
+              </div>
             </div>
           </div>
         )}

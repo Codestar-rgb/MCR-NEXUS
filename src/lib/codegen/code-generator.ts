@@ -1417,6 +1417,65 @@ function generateBlockLootTable(modId: string, node: FlowNode): GeneratedFile {
 }
 
 /**
+ * 生成实体掉落表 — Forge 1.20.1 loot_tables/entities/<id>.json
+ *
+ * 实体死亡时掉落物品。基于实体节点的属性生成：
+ *  - 有 attack > 0 的怪物掉落经验值
+ *  - 默认掉落自身关联物品（如果有同名 item 节点）
+ *  - 10% 概率掉落（rare 属性可调整）
+ */
+function generateEntityLootTable(modId: string, node: FlowNode): GeneratedFile {
+  const registryId = getStr(node, 'registryId', node.id)
+  const attack = getNum(node, 'attack', 0)
+  const health = getNum(node, 'health', 20)
+
+  // 经验值掉落（怪物死亡经验）
+  const experienceDrop = attack > 0 ? Math.max(1, Math.floor(health / 5)) : 0
+
+  // 构建掉落池
+  const pools: unknown[] = []
+
+  // 主掉落池：掉落同名物品（如果存在）
+  pools.push({
+    rolls: 1,
+    entries: [
+      {
+        type: 'minecraft:item',
+        name: `${modId}:${registryId}`,
+      },
+    ],
+    conditions: [
+      { condition: 'minecraft:killed_by_player' },
+    ],
+  })
+
+  // 经验值函数
+  if (experienceDrop > 0) {
+    pools[0] = {
+      ...(pools[0] as Record<string, unknown>),
+      functions: [
+        {
+          function: 'minecraft:set_experience',
+          experience: experienceDrop,
+        },
+      ],
+    }
+  }
+
+  const content = JSON.stringify({
+    type: 'minecraft:entity',
+    pools,
+  }, null, 2)
+
+  return {
+    filePath: `src/main/resources/data/${modId}/loot_tables/entities/${registryId}.json`,
+    content,
+    linkedNodeId: node.id,
+    language: 'json',
+  }
+}
+
+/**
  * 生成物品进度（advancements/<id>.json）
  *
  * 获取该物品时触发进度（toast 通知 + 解锁配方）。
@@ -1694,6 +1753,12 @@ export function generateProjectCode(
   const blockNodes = nodes.filter((n) => n.data.kind === 'block')
   for (const block of blockNodes) {
     files.push(generateBlockLootTable(modId, block))
+  }
+
+  // 7b. 实体掉落表（实体死亡掉落）
+  const entityNodesForLoot = nodes.filter((n) => n.data.kind === 'entity')
+  for (const entity of entityNodesForLoot) {
+    files.push(generateEntityLootTable(modId, entity))
   }
 
   // 8. 进度（advancements）— 获取物品触发
