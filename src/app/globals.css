@@ -180,29 +180,29 @@
 
   /* 品牌辉光阴影 */
   .shadow-glow {
-    box-shadow: 0 0 20px oklch(0.72 0.15 180 / 15%);
+    box-shadow: 0 0 20px oklch(0.75 0.16 180 / 15%);
   }
   .shadow-glow-strong {
-    box-shadow: 0 0 30px oklch(0.72 0.15 180 / 25%), 0 0 60px oklch(0.72 0.15 180 / 10%);
+    box-shadow: 0 0 30px oklch(0.75 0.16 180 / 25%), 0 0 60px oklch(0.75 0.16 180 / 10%);
   }
 
   /* 精致阴影层级 */
   .shadow-elevated {
     box-shadow:
-      0 1px 2px oklch(0 0 0 / 0.3),
-      0 4px 12px oklch(0 0 0 / 0.4),
-      0 0 0 1px oklch(1 0 0 / 0.05);
+      0 1px 2px oklch(0 0 0 / 0.25),
+      0 4px 12px oklch(0 0 0 / 0.35),
+      0 0 0 1px oklch(1 0 0 / 0.04);
   }
   .shadow-floating {
     box-shadow:
-      0 4px 12px oklch(0 0 0 / 0.4),
-      0 8px 24px oklch(0 0 0 / 0.5),
-      0 0 0 1px oklch(1 0 0 / 0.06);
+      0 4px 12px oklch(0 0 0 / 0.35),
+      0 8px 24px oklch(0 0 0 / 0.45),
+      0 0 0 1px oklch(1 0 0 / 0.05);
   }
 
   /* 品牌色渐变文字 */
   .text-gradient-brand {
-    background: linear-gradient(135deg, oklch(0.82 0.12 180), oklch(0.72 0.15 180));
+    background: linear-gradient(135deg, oklch(0.85 0.13 180), oklch(0.75 0.16 180));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -211,7 +211,7 @@
 
   /* 品牌色渐变背景 */
   .bg-gradient-brand {
-    background: linear-gradient(135deg, oklch(0.72 0.15 180), oklch(0.68 0.16 200));
+    background: linear-gradient(135deg, oklch(0.75 0.16 180), oklch(0.70 0.16 200));
   }
 
   /* 微妙边框高亮 */
@@ -473,6 +473,86 @@
 }
 .nexcube-search-item {
   animation: nexcube-search-item 0.15s ease-out;
+}
+
+/* 工具栏按钮按下反馈 */
+@keyframes nexcube-btn-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+.nexcube-btn-press {
+  animation: nexcube-btn-press 0.15s ease-out;
+}
+
+/* 下拉菜单展开 */
+@keyframes nexcube-dropdown {
+  from {
+    opacity: 0;
+    transform: scaleY(0.9) translateY(-4px);
+    transform-origin: top;
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+.nexcube-dropdown {
+  animation: nexcube-dropdown 0.15s ease-out;
+  transform-origin: top;
+}
+
+/* 卡片 hover 发光 */
+@keyframes nexcube-card-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.75 0.16 180 / 0%);
+  }
+  50% {
+    box-shadow: 0 0 16px 2px oklch(0.75 0.16 180 / 12%);
+  }
+}
+.nexcube-card-glow:hover {
+  animation: nexcube-card-glow 1.5s ease-in-out;
+}
+
+/* 标签页切换淡入 */
+@keyframes nexcube-tab-switch {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.nexcube-tab-switch {
+  animation: nexcube-tab-switch 0.15s ease-out;
+}
+
+/* 进度条渐变流动 */
+@keyframes nexcube-progress-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.nexcube-progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.75 0.16 180 / 30%) 0%,
+    oklch(0.75 0.16 180 / 60%) 50%,
+    oklch(0.75 0.16 180 / 30%) 100%
+  );
+  background-size: 200% 100%;
+  animation: nexcube-progress-shimmer 1.5s linear infinite;
+}
+
+/* 拖拽提示脉冲 */
+@keyframes nexcube-drag-hint {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.nexcube-drag-hint {
+  animation: nexcube-drag-hint 1.5s ease-in-out infinite;
 }
 
 /* 连线绘制动画 */

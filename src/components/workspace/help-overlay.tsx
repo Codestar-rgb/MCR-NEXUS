@@ -11,7 +11,7 @@ import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, BookOpen, Boxes, Workflow, Code2, Download,
-  Lightbulb, ArrowRight, ChevronRight,
+  Lightbulb, ArrowRight, ChevronRight, AlertTriangle,
 } from 'lucide-react'
 
 interface HelpContent {
@@ -154,7 +154,7 @@ export function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => v
               </div>
 
               {/* 使用技巧 */}
-              <div>
+              <div className="mb-5">
                 <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
                   <Lightbulb className="h-3 w-3 text-amber-400" />
                   使用技巧
@@ -171,6 +171,62 @@ export function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => v
                   ))}
                 </div>
               </div>
+
+              {/* FAQ */}
+              <div className="mb-5">
+                <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  <BookOpen className="h-3 w-3 text-primary" />
+                  常见问题
+                </h3>
+                <div className="space-y-2">
+                  <FAQItem
+                    q="如何创建自定义实体？"
+                    a="添加实体节点 → 右侧属性面板编辑生命值/攻击力/AI 类型/碰撞箱 → 切换到 AI Tab 选择行为模板 → 切换到碰撞箱 Tab 调整大小"
+                  />
+                  <FAQItem
+                    q="如何连接两个节点？"
+                    a="从节点右侧输出端口拖拽到另一节点左侧输入端口。端口颜色需兼容（hover 端口查看兼容类型）。不兼容的连接会被拒绝并提示原因。"
+                  />
+                  <FAQItem
+                    q="如何导出模组？"
+                    a="点击导出按钮 → 生成 ZIP（含 build.gradle + Java + 资源文件）→ 解压 → 运行 ./gradlew build 构建 JAR → 复制到 mods/ 目录"
+                  />
+                  <FAQItem
+                    q="如何使用节点组？"
+                    a="选中多个节点 → 右键'打包为节点组' → 拖拽节点进出组区域自动添加/移除 → 选中组后在'组成员'Tab 管理成员"
+                  />
+                  <FAQItem
+                    q="如何编辑配方？"
+                    a="添加配方节点 → 选择配方类型（合成/熔炉/切石）→ 合成类型显示 3x3 网格编辑器 → 熔炉类型显示输入→火焰→产物预览 → 可从画布拖物品节点到网格"
+                  />
+                </div>
+              </div>
+
+              {/* 故障排除 */}
+              <div>
+                <h3 className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  <AlertTriangle className="h-3 w-3 text-amber-400" />
+                  故障排除
+                </h3>
+                <div className="space-y-1.5">
+                  <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
+                    <span className="font-medium text-foreground">节点拖拽卡顿？</span>
+                    <span className="text-muted-foreground"> → 已禁用网格对齐，确保浏览器硬件加速开启</span>
+                  </div>
+                  <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
+                    <span className="font-medium text-foreground">连线无法创建？</span>
+                    <span className="text-muted-foreground"> → 检查端口数据类型是否兼容（hover 端口查看详情）</span>
+                  </div>
+                  <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
+                    <span className="font-medium text-foreground">导出 ZIP 编译失败？</span>
+                    <span className="text-muted-foreground"> → 确保安装 JDK 17，首次构建需下载 Gradle（5-15 分钟）</span>
+                  </div>
+                  <div className="rounded border border-border/20 bg-card/10 px-2.5 py-1.5 text-[10px]">
+                    <span className="font-medium text-foreground">属性面板不显示？</span>
+                    <span className="text-muted-foreground"> → 点击节点选中，右侧面板自动显示（若无显示按 Ctrl+P 搜索节点）</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* 底部 */}
@@ -184,5 +240,26 @@ export function HelpOverlay({ open, onClose }: { open: boolean; onClose: () => v
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+/** FAQ 条目（可展开/折叠） */
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <div className="rounded-lg border border-border/20 bg-card/10 overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left transition-colors hover:bg-card/20"
+      >
+        <ChevronRight className={`h-3 w-3 shrink-0 text-primary/50 transition-transform ${open ? 'rotate-90' : ''}`} />
+        <span className="text-[11px] font-medium text-foreground">{q}</span>
+      </button>
+      {open && (
+        <div className="px-2.5 pb-2 pl-7">
+          <p className="text-[10px] leading-relaxed text-muted-foreground">{a}</p>
+        </div>
+      )}
+    </div>
   )
 }
