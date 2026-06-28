@@ -951,11 +951,13 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   const blocks = nodes.filter((n) => n.data.kind === 'block')
   const items = nodes.filter((n) => ['item', 'equipment', 'weapon', 'food'].includes(n.data.kind))
   const potions = nodes.filter((n) => n.data.kind === 'potion')
+  const enchantments = nodes.filter((n) => n.data.kind === 'enchantment')
 
   const hasEntities = entities.length > 0
   const hasBlocks = blocks.length > 0
   const hasItems = items.length > 0
   const hasPotions = potions.length > 0
+  const hasEnchantments = enchantments.length > 0
 
   const imports: string[] = [
     'import net.minecraftforge.eventbus.api.IEventBus;',
@@ -966,8 +968,9 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   if (hasBlocks) imports.push(`import ${pkg}.block.ModBlocks;`)
   if (hasEntities) imports.push(`import ${pkg}.entity.ModEntities;`)
   if (hasPotions) imports.push(`import ${pkg}.effect.ModEffects;`)
+  if (hasEnchantments) imports.push(`import ${pkg}.enchantment.ModEnchantments;`)
 
-  const hasCreatables = hasItems || hasBlocks
+  const hasCreatables = hasItems || hasBlocks || hasEntities
   if (hasCreatables) imports.push(`import ${pkg}.ModCreativeTabs;`)
 
   const registerCalls: string[] = []
@@ -975,6 +978,7 @@ function generateMainModFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   if (hasBlocks) registerCalls.push('        ModBlocks.REGISTER.register(bus);')
   if (hasEntities) registerCalls.push('        ModEntities.REGISTER.register(bus);')
   if (hasPotions) registerCalls.push('        ModEffects.REGISTER.register(bus);')
+  if (hasEnchantments) registerCalls.push('        ModEnchantments.REGISTER.register(bus);')
   if (hasCreatables) registerCalls.push('        ModCreativeTabs.REGISTER.register(bus);')
 
   const content = `package ${pkg};
@@ -1010,10 +1014,13 @@ ${registerCalls.join('\n') || '        // (无节点)'}
 /** 生成 ModItems 注册中心（物品/装备/武器/食物） */
 function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile | null {
   const itemNodes = nodes.filter((n) => ['item', 'equipment', 'weapon', 'food'].includes(n.data.kind))
-  if (itemNodes.length === 0) return null
+  const entityNodes = nodes.filter((n) => n.data.kind === 'entity')
+  if (itemNodes.length === 0 && entityNodes.length === 0) return null
 
   const pkg = 'com.example.mod.item'
   const hasFood = itemNodes.some((n) => n.data.kind === 'food')
+  const hasEntities = entityNodes.length > 0
+
   const entries = itemNodes.map((n) => {
     const registryId = getStr(n, 'registryId', n.id)
     const className = toClassName(registryId)
@@ -1030,25 +1037,35 @@ function generateModItemsFile(modId: string, nodes: FlowNode[]): GeneratedFile |
     return `    public static final RegistryObject<Item> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", () -> new Item(new Item.Properties()));`
   })
 
+  // 实体生成蛋（SpawnEggItem）
+  const spawnEggEntries = entityNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const entityUpper = registryId.toUpperCase()
+    return `    // ${n.data.title} 生怪蛋
+    public static final RegistryObject<Item> ${entityUpper}_SPAWN_EGG =\n        REGISTER.register("${registryId}_spawn_egg", () -> new ForgeSpawnEggItem(ModEntities.${entityUpper}, 0x4D4D4D, 0xFFFFFF, new Item.Properties()));`
+  })
+
+  const allEntries = [...entries, ...spawnEggEntries]
+
   const content = `package ${pkg};
 
 import net.minecraft.world.item.Item;
-${hasFood ? 'import net.minecraft.world.food.FoodProperties;\n' : ''}import net.minecraftforge.eventbus.api.IEventBus;
+${hasFood ? 'import net.minecraft.world.food.FoodProperties;\n' : ''}${hasEntities ? 'import net.minecraftforge.common.ForgeSpawnEggItem;\n' : ''}import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import com.example.mod.${toModClassName(modId)};
+${hasEntities ? 'import com.example.mod.entity.ModEntities;\n' : ''}import com.example.mod.${toModClassName(modId)};
 
 /**
  * 物品注册中心（NexCube 自动生成）
- * 包含 ${itemNodes.length} 个物品节点
+ * 包含 ${itemNodes.length} 个物品节点${hasEntities ? ` + ${entityNodes.length} 个生怪蛋` : ''}
  */
 public class ModItems {
 
     public static final DeferredRegister<Item> REGISTER =
         DeferredRegister.create(ForgeRegistries.ITEMS, ${toModClassName(modId)}.MOD_ID);
 
-${entries.join('\n\n')}
+${allEntries.join('\n\n')}
 }
 `
   return {
@@ -1169,6 +1186,45 @@ ${attrLines.join('\n\n')}
   }
 }
 
+/** 生成附魔注册中心（DeferredRegister<Enchantment>） */
+function generateModEnchantmentsFile(modId: string, nodes: FlowNode[]): GeneratedFile | null {
+  const enchantNodes = nodes.filter((n) => n.data.kind === 'enchantment')
+  if (enchantNodes.length === 0) return null
+
+  const pkg = 'com.example.mod.enchantment'
+  const entries = enchantNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId)
+    return `    public static final RegistryObject<Enchantment> ${registryId.toUpperCase()} =\n        REGISTER.register("${registryId}", ${className}::new);`
+  })
+
+  const content = `package ${pkg};
+
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+import com.example.mod.${toModClassName(modId)};
+
+/**
+ * 附魔注册中心（NexCube 自动生成）
+ * 包含 ${enchantNodes.length} 个附魔节点
+ */
+public class ModEnchantments {
+
+    public static final DeferredRegister<Enchantment> REGISTER =
+        DeferredRegister.create(ForgeRegistries.ENCHANTMENTS, ${toModClassName(modId)}.MOD_ID);
+
+${entries.join('\n\n')}
+}
+`
+  return {
+    filePath: `src/main/java/com/example/mod/enchantment/ModEnchantments.java`,
+    content,
+    language: 'java',
+  }
+}
+
 /**
  * 生成 mods.toml（Forge 模组声明 + 依赖）
  */
@@ -1226,8 +1282,16 @@ function generateLangFile(modId: string, nodes: FlowNode[], lang: 'en_us' | 'zh_
       entries.push(`  "block.${modId}.${registryId}": "${title}"`)
     } else if (kind === 'entity') {
       entries.push(`  "entity.${modId}.${registryId}": "${title}"`)
+      // 生怪蛋语言键
+      entries.push(`  "item.${modId}.${registryId}_spawn_egg": "${title} 生怪蛋"`)
     } else if (kind === 'potion') {
       entries.push(`  "effect.${modId}.${registryId}": "${title}"`)
+    } else if (kind === 'enchantment') {
+      entries.push(`  "enchantment.${modId}.${registryId}": "${title}"`)
+    } else if (kind === 'advancement') {
+      const desc = String(node.data.properties?.description ?? '完成此成就')
+      entries.push(`  "advancements.${modId}.${registryId}.title": "${title}"`)
+      entries.push(`  "advancements.${modId}.${registryId}.description": "${desc}"`)
     }
   }
 
@@ -1263,6 +1327,9 @@ function generateCreativeTabFile(modId: string, nodes: FlowNode[]): GeneratedFil
       itemRefs.push(`            output.accept(ModItems.${upper}.get());`)
     } else if (kind === 'block') {
       itemRefs.push(`            output.accept(ModBlocks.${upper}_ITEM.get());`)
+    } else if (kind === 'entity') {
+      // 实体生怪蛋也加入创造物品栏
+      itemRefs.push(`            output.accept(ModItems.${upper}_SPAWN_EGG.get());`)
     }
   }
 
@@ -1605,6 +1672,8 @@ export function generateProjectCode(
   if (modBlocks) files.push(modBlocks)
   const modEntities = generateModEntitiesFile(modId, nodes)
   if (modEntities) files.push(modEntities)
+  const modEnchantments = generateModEnchantmentsFile(modId, nodes)
+  if (modEnchantments) files.push(modEnchantments)
 
   // 4. 资源文件
   files.push(generateModsToml(modId))
@@ -1613,9 +1682,9 @@ export function generateProjectCode(
   files.push(generateLangFile(modId, nodes, 'en_us'))
   files.push(generateLangFile(modId, nodes, 'zh_cn'))
 
-  // 6. 创造模式物品栏分组（有物品/方块时生成）
+  // 6. 创造模式物品栏分组（有物品/方块/实体时生成）
   const hasCreatables = nodes.some((n) =>
-    ['item', 'equipment', 'weapon', 'food', 'block'].includes(n.data.kind),
+    ['item', 'equipment', 'weapon', 'food', 'block', 'entity'].includes(n.data.kind),
   )
   if (hasCreatables) {
     files.push(generateCreativeTabFile(modId, nodes))
