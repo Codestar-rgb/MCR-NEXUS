@@ -3316,3 +3316,26 @@ Stage Summary:
 - MC 图标映射从 60+ 扩展到 200+
 - 物品节点卡片显示真实 MC 物品图标
 - 已推送 GitHub（a5734de）
+
+---
+Task ID: R45 (4种节点卡片 MC 图标)
+Agent: main (Z.ai Code)
+Task: 方块/武器/装备/食物节点卡片使用 MC 图标
+
+Work Log:
+R74: 4 种节点卡片添加 MC 图标
+- BlockNodeCard：MCNodeIcon（amber 主题）
+- WeaponNodeCard：MCNodeIcon（red 主题）
+- EquipmentNodeCard：MCNodeIcon（orange 主题）
+- FoodNodeCard：MCNodeIcon（lime 主题）
+- 每个卡片有 MCNodeIcon 组件：
+  * 像素化渲染
+  * 加载失败时隐藏
+  * registryId 变化时自动更新
+  * 32x32 居中在属性行上方
+- 总计 5 种节点卡片有 MC 图标
+
+Stage Summary:
+- 1 项改进完成 ✅
+- 5/15 节点类型有 MC 图标（item/block/weapon/equipment/food）
+- 已推送 GitHub（b7459ca）
