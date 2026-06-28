@@ -179,7 +179,7 @@ export function PropertyPanel() {
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto nexcube-scroll">
+      <div className="flex-1 overflow-y-auto nexcube-scroll nexcube-panel-slide-in">
         {isMultiSelect ? (
           /* 多选模式：显示批量编辑面板 */
           <BatchEditPanel selectedIds={selectedNodeIds} />

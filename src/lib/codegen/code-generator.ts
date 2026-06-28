@@ -121,6 +121,8 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
   const customAttrValue = getNum(node, 'customAttrValue', 0)
   const customAttrName2 = getStr(node, 'customAttrName2', '')
   const customAttrValue2 = getNum(node, 'customAttrValue2', 0)
+  const customAttrName3 = getStr(node, 'customAttrName3', '')
+  const customAttrValue3 = getNum(node, 'customAttrValue3', 0)
 
   const customAttrParts: string[] = []
   if (customAttrName) {
@@ -128,6 +130,9 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
   }
   if (customAttrName2) {
     customAttrParts.push(`\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName2}")), ${customAttrValue2}F)`)
+  }
+  if (customAttrName3) {
+    customAttrParts.push(`\n            .add(ForgeRegistries.ATTRIBUTES.getValue(new net.minecraft.resources.ResourceLocation("${modId}", "${customAttrName3}")), ${customAttrValue3}F)`)
   }
   const customAttrCode = customAttrParts.join('')
 
