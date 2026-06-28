@@ -219,6 +219,24 @@
     border-color: oklch(0.75 0.16 180 / 30%);
   }
 
+  /* 卡片背景层 */
+  .bg-card-layer {
+    background-color: oklch(0.17 0.014 255 / 60%);
+  }
+
+  /* 边框 hover 增强 */
+  .border-hover-transition {
+    transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+  .border-hover-transition:hover {
+    border-color: oklch(0.75 0.16 180 / 40%);
+  }
+
+  /* 占位符颜色 */
+  .placeholder-muted::placeholder {
+    color: oklch(0.45 0.01 255 / 40%);
+  }
+
   /* 输入框聚焦边框 */
   .input-focus-ring:focus {
     border-color: oklch(0.75 0.16 180 / 50%);
@@ -748,6 +766,61 @@
 }
 .nexcube-input-focus:focus {
   animation: nexcube-input-focus 0.2s ease-out forwards;
+}
+
+/* 进度环旋转 */
+@keyframes nexcube-spin {
+  to { transform: rotate(360deg); }
+}
+.nexcube-spin {
+  animation: nexcube-spin 1s linear infinite;
+}
+
+/* 悬浮提示淡入 */
+@keyframes nexcube-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.nexcube-tooltip-in {
+  animation: nexcube-tooltip-in 0.15s ease-out;
+}
+
+/* 折叠箭头旋转 */
+.nexcube-chevron-rotate {
+  transition: transform 0.2s ease-out;
+}
+.nexcube-chevron-rotate.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* 数据加载条 */
+@keyframes nexcube-loading-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+.nexcube-loading-bar {
+  animation: nexcube-loading-bar 1.5s ease-in-out infinite;
+}
+
+/* 节点端口呼吸 */
+@keyframes nexcube-port-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 4px 1px currentColor;
+    opacity: 0.8;
+  }
+}
+.nexcube-port-breathe {
+  animation: nexcube-port-breathe 2s ease-in-out infinite;
 }
 
 /* 连线绘制动画 */

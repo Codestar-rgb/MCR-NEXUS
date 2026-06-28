@@ -306,6 +306,44 @@ const translations: Record<string, { zh: string; en: string }> = {
   // === BlockState ===
   'blockState.title': { zh: 'BlockState 属性', en: 'BlockState Properties' },
   'blockState.hint': { zh: '格式：facing=north,active=false', en: 'Format: facing=north,active=false' },
+
+  // === 节点类型标签 ===
+  'nodeType.entity': { zh: '实体', en: 'Entity' },
+  'nodeType.block': { zh: '方块', en: 'Block' },
+  'nodeType.item': { zh: '物品', en: 'Item' },
+  'nodeType.equipment': { zh: '装备', en: 'Equipment' },
+  'nodeType.weapon': { zh: '武器', en: 'Weapon' },
+  'nodeType.food': { zh: '食物', en: 'Food' },
+  'nodeType.biome': { zh: '群系', en: 'Biome' },
+  'nodeType.structure': { zh: '结构', en: 'Structure' },
+  'nodeType.dimension': { zh: '维度', en: 'Dimension' },
+  'nodeType.potion': { zh: '药水', en: 'Potion' },
+  'nodeType.enchantment': { zh: '附魔', en: 'Enchantment' },
+  'nodeType.advancement': { zh: '成就', en: 'Advancement' },
+  'nodeType.recipe': { zh: '配方', en: 'Recipe' },
+  'nodeType.group': { zh: '节点组', en: 'Group' },
+  'nodeType.blackbox': { zh: '黑盒代码', en: 'Blackbox' },
+  'nodeType.function': { zh: '函数', en: 'Function' },
+  'nodeType.spell': { zh: '法术', en: 'Spell' },
+
+  // === AI 目标名称 ===
+  'aiGoal.float': { zh: '防溺水', en: 'Float' },
+  'aiGoal.melee': { zh: '近战攻击', en: 'Melee Attack' },
+  'aiGoal.ranged': { zh: '远程攻击', en: 'Ranged Attack' },
+  'aiGoal.chase': { zh: '追踪玩家', en: 'Chase Player' },
+  'aiGoal.panic': { zh: '逃窜', en: 'Panic' },
+  'aiGoal.stroll': { zh: '随机游走', en: 'Wander' },
+  'aiGoal.lookPlayer': { zh: '看玩家', en: 'Look at Player' },
+  'aiGoal.lookAround': { zh: '随机看', en: 'Look Around' },
+
+  // === 端口数据类型 ===
+  'portType.entity': { zh: '实体', en: 'Entity' },
+  'portType.boolean': { zh: '布尔', en: 'Boolean' },
+  'portType.number': { zh: '数值', en: 'Number' },
+  'portType.string': { zh: '字符串', en: 'String' },
+  'portType.itemstack': { zh: '物品堆', en: 'Item Stack' },
+  'portType.any': { zh: '通用', en: 'Any' },
+  'portType.block': { zh: '方块', en: 'Block' },
 }
 
 export function t(key: string, locale: Locale): string {

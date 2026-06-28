@@ -73,13 +73,13 @@ export function getPerformanceConfig(nodeCount: number): PerformanceConfig {
       return {
         ...base, onlyRenderVisibleElements: true, nodesDraggable: false,
         showNodeDetails: false, miniMapEnabled: false, aggregated: true,
-        hint: '聚合显示模式（节点数过多，已禁用拖拽和详情）',
+        hint: '聚合模式（节点数过多，已禁用拖拽/详情/小地图）',
       }
     case 'webgl':
       return {
         ...base, onlyRenderVisibleElements: true, nodesDraggable: false,
         showNodeDetails: false, miniMapEnabled: false, aggregated: true,
-        hint: '已切换 WebGL 渲染模式（实验性）',
+        hint: 'WebGL 模式（实验性，仅渲染可见元素）',
       }
   }
 }
