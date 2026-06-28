@@ -2787,3 +2787,37 @@ Stage Summary:
 - 附魔节点支持精确控制适用物品和冲突附魔
 - 生成的 Java 代码包含 canEnchant/checkCompatibility 重写
 - 已推送 GitHub（ea8a35f）
+
+---
+Task ID: R29 (实体属性自定义 + 掉落配置 + Forge 事件)
+Agent: main (Z.ai Code)
+Task: 实体自定义属性 + 掉落物配置 + 7 种 Forge 事件处理器
+
+Work Log:
+R35: 实体自定义属性 + 掉落配置
+- 实体节点新增 3 组属性：
+  * 自定义属性：customAttrName/customAttrValue/customAttrDesc
+  * 掉落：dropItemId/dropCount/dropChance
+- 实体代码生成：createAttributes() 添加自定义属性
+  * ForgeRegistries.ATTRIBUTES.getValue(ResourceLocation)
+- 实体掉落表：使用 dropItemId/dropCount/dropChance
+  * 自定义掉落物品（覆盖默认 modId:item）
+  * dropCount > 1 时添加 set_count 函数
+  * dropChance < 1 时添加 random_chance 条件
+
+R36: 数据包结构验证
+- pack.mcmeta 已在 project-files.ts 生成（pack_format 15）
+- 目录结构正确
+
+R37: 7 种 Forge 事件处理器（原 3 种）
+- 新增：onPlayerLoggedOut/onBlockPlace/onBlockBreak/onServerTick/onPlayerTick
+- onBlockPlace：为每个方块节点生成注释检查代码
+- onBlockBreak：setCanceled 阻止破坏示例
+- onServerTick/onPlayerTick：TickEvent.Phase.END 模式
+- 总计 8 个 @SubscribeEvent 方法（原 3 个）
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 实体支持自定义属性注册 + 精确掉落配置
+- Forge 事件从 3 种扩展到 8 种（含方块/Tick 事件）
+- 已推送 GitHub（178566a）
