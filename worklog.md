@@ -2729,3 +2729,36 @@ Stage Summary:
 - 实体死亡掉落物品 + 经验值（数据包 JSON）
 - 无选中时显示项目统计（节点/连线/类型/导出预估）
 - 已推送 GitHub（da38c3c）
+
+---
+Task ID: R27 (状态栏 FPS + 成就树可视化)
+Agent: main (Z.ai Code)
+Task: 实时 FPS 状态栏 + 成就树可视化编辑
+
+Work Log:
+R32: 状态栏增强 — 实时 FPS + 内存
+- useFPS Hook：requestAnimationFrame 帧率计数器
+  * 绿 ≥50 FPS / 黄 ≥30 / 红 <30
+- useMemory Hook：performance.memory（仅 Chrome）
+  * usedJSHeapSize 显示为 MB，2s 更新
+- 状态栏显示 FPS + 内存（Activity + Cpu 图标）
+
+R33: 成就树可视化
+- AdvancementTreePanel 组件：成就节点父子关系树
+  * 递归树形渲染（缩进 + 竖线）
+  * 边框样式徽章（普通/挑战/目标，颜色区分）
+  * "设为前置"按钮（hover 显示）
+  * 当前节点高亮（primary ring）
+  * 前置节点高亮（amber ring）
+  * 移除前置按钮
+- 属性面板新增"成就树"Tab（仅成就节点）
+- 代码生成：advancement JSON 使用 parentAdvancement 属性
+  * 无前置 → minecraft:recipes/root
+  * 有前置 → <modId>:<parentId>
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 状态栏实时 FPS/内存监测（颜色指示性能状态）
+- 成就节点有可视化树形编辑器（parent/child 关系）
+- 成就 JSON 正确生成 parent 字段
+- 已推送 GitHub（ea66c9d）
