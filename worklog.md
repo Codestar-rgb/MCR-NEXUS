@@ -2821,3 +2821,37 @@ Stage Summary:
 - 实体支持自定义属性注册 + 精确掉落配置
 - Forge 事件从 3 种扩展到 8 种（含方块/Tick 事件）
 - 已推送 GitHub（178566a）
+
+---
+Task ID: R30 (碰撞箱可视化 + BlockState + 删除动画)
+Agent: main (Z.ai Code)
+Task: 实体碰撞箱 3D 可视化编辑 + 方块状态属性 + 节点删除动画
+
+Work Log:
+R38: 实体碰撞箱可视化编辑
+- CollisionBoxEditor 组件：SVG 等距 3D 预览
+  * 6 个面（半透明 rose 色）+ 12 条边 + 8 个顶点
+  * 尺寸标注（W/H/D）
+  * 3 个滑块（宽/高/深 0.1-4）
+  * 4 个预设：小型(0.5³)/标准(0.6×1.8×0.6)/大型(1.5×2.5×1.5)/Boss(3³)
+- 属性面板新增"碰撞箱"Tab（仅实体节点）
+- ModEntities 代码生成：.sized() 使用 collisionBox 宽高
+
+R39: 方块状态属性（BlockState）
+- 方块节点新增 blockStateProps 属性
+  * 格式：facing=north,active=false（逗号分隔 key=value）
+- 方块代码生成：
+  * 自动检测类型：true/false → BooleanProperty，数字 → IntegerProperty
+  * 生成属性定义 + createBlockStateDefinition() 重写
+  * 条件导入
+
+R42: 节点删除动画
+- CSS @keyframes nexcube-node-exit：scale 1→0.8 + opacity 1→0
+- 0.2s ease-in forwards
+
+Stage Summary:
+- 3 项改进完成 ✅
+- 实体碰撞箱有等距 3D 可视化编辑器（拖拽+预设）
+- 方块支持 BlockState 属性（自动类型推断）
+- 节点删除有淡出动画
+- 已推送 GitHub（298f860）
