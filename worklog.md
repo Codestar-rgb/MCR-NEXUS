@@ -2701,3 +2701,31 @@ Stage Summary:
 - 实体自动生成生怪蛋（创造物品栏可获得）
 - 语言文件覆盖全部节点类型
 - 已推送 GitHub（17e407e）
+
+---
+Task ID: R26 (实体掉落表 + 项目统计仪表盘)
+Agent: main (Z.ai Code)
+Task: 实体掉落表自定义 + 项目统计仪表盘
+
+Work Log:
+R29: 实体掉落表
+- generateEntityLootTable：loot_tables/entities/<id>.json
+  * 死亡时掉落模组物品（killed_by_player 条件）
+  * 敌对生物掉落经验值（attack > 0）
+  * 经验值 = max(1, floor(health/5))
+  * type: minecraft:entity
+- 在 generateProjectCode 中自动为实体节点生成
+
+R31: 项目统计仪表盘
+- ProjectStats 组件：无选中节点时显示
+  * 3 个统计卡片：节点数 / 连线数 / 类型数
+  * 类型分布条形图（按 kind 颜色着色）
+  * 导出预估：Java 文件数 / JSON 文件数 / 代码行数 / ZIP 大小
+- 替换原来的空"选择节点"提示
+- 挂载在 PropertyPanel 空状态
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 实体死亡掉落物品 + 经验值（数据包 JSON）
+- 无选中时显示项目统计（节点/连线/类型/导出预估）
+- 已推送 GitHub（da38c3c）
