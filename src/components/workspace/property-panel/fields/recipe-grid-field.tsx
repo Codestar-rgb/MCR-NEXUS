@@ -141,6 +141,9 @@ export function RecipeGridField({
             无序合成：格子位置不影响结果
           </span>
         )}
+        <span className="text-[9px] text-muted-foreground/40">
+          💡 可从画布拖拽物品节点到格子
+        </span>
       </div>
     </div>
   )
@@ -156,6 +159,33 @@ function GridSlot({
   shaped: boolean
 }) {
   const [editing, setEditing] = React.useState(false)
+  const [dragOver, setDragOver] = React.useState(false)
+
+  // 处理从画布节点拖拽到格子
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const nodeId = e.dataTransfer.getData('text/node-id')
+    if (!nodeId) return
+
+    // 从 canvas store 读取节点的 registryId
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { useCanvasStore } = require('@/stores/canvas')
+      const node = useCanvasStore.getState().nodes.find((n: { id: string }) => n.id === nodeId)
+      if (node) {
+        const registryId = String(node.data.properties?.registryId ?? '')
+        if (registryId) {
+          // 构建 minecraft: 风格的物品 ID
+          // 模组物品用 <modId>:<registryId>，但这里简化为直接用 registryId
+          // 因为导出时 modId 会自动拼接
+          onChange(registryId)
+        }
+      }
+    } catch {
+      // store 不可用时忽略
+    }
+  }
 
   return (
     <div
@@ -165,8 +195,16 @@ function GridSlot({
           ? 'border-orange-500/30 bg-orange-500/5 text-orange-300'
           : 'border-border/30 bg-muted/20 text-muted-foreground/20',
         !shaped && 'border-dashed',
+        dragOver && 'border-orange-500/60 bg-orange-500/15 ring-2 ring-orange-500/20',
       )}
       onClick={() => setEditing(true)}
+      onDragOver={(e) => {
+        e.preventDefault()
+        e.dataTransfer.dropEffect = 'copy'
+        setDragOver(true)
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
     >
       {editing ? (
         <input

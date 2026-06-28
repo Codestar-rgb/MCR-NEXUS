@@ -31,6 +31,7 @@ import {
   Trash2,
   Copy,
   CopyPlus,
+  ClipboardPaste,
   Pencil,
   ChevronsUpDown,
   Group as GroupIcon,
@@ -79,6 +80,9 @@ interface CategoryGroup {
   label: string
   items: NodeTypeDefinition[]
 }
+
+/** 模块级属性剪贴板（复制/粘贴属性用） */
+let copiedProperties: Record<string, unknown> | null = null
 
 export function CanvasContextMenu() {
   const contextMenu = useCanvasStore((s) => s.contextMenu)
@@ -178,6 +182,40 @@ export function CanvasContextMenu() {
     }
     closeContextMenu()
     toast.success(`已克隆 ${clonedIds.length} 个节点`)
+  }
+
+  /* 复制属性（存储到模块级剪贴板） */
+  const handleCopyProperties = () => {
+    if (!contextMenu.nodeId) return
+    const node = nodes.find((n) => n.id === contextMenu.nodeId)
+    if (!node) return
+    copiedProperties = { ...(node.data.properties ?? {}) }
+    // 不复制 name 和 registryId（唯一属性）
+    delete copiedProperties.name
+    delete copiedProperties.registryId
+    closeContextMenu()
+    toast.success(`已复制属性（${Object.keys(copiedProperties).length} 个字段）`)
+  }
+
+  /* 粘贴属性（应用到当前节点，跳过不兼容的 key） */
+  const handlePasteProperties = () => {
+    if (!contextMenu.nodeId || !copiedProperties) return
+    const node = nodes.find((n) => n.id === contextMenu.nodeId)
+    if (!node) return
+
+    // 合并属性：保留 name/registryId，粘贴其他
+    const newProperties = {
+      ...(node.data.properties ?? {}),
+      ...copiedProperties,
+      name: node.data.properties?.name, // 保留原 name
+      registryId: node.data.properties?.registryId, // 保留原 registryId
+    }
+
+    useCanvasStore.getState().updateNode(node.id, {
+      data: { ...node.data, properties: newProperties },
+    })
+    closeContextMenu()
+    toast.success(`已粘贴属性到「${node.data.title}」`)
   }
 
   /* 删除节点（含多选） */
@@ -320,6 +358,19 @@ export function CanvasContextMenu() {
               label="重命名"
               onClick={handleRename}
             />
+            <MenuSeparator />
+            <MenuItem
+              icon={<Copy className="h-3.5 w-3.5" />}
+              label="复制属性"
+              onClick={handleCopyProperties}
+            />
+            <MenuItem
+              icon={<ClipboardPaste className="h-3.5 w-3.5" />}
+              label="粘贴属性"
+              onClick={handlePasteProperties}
+              disabled={!copiedProperties}
+            />
+            <MenuSeparator />
             <MenuItem
               icon={<ChevronsUpDown className="h-3.5 w-3.5" />}
               label={targetNode.data.isCollapsed ? '展开节点' : '折叠节点'}

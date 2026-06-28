@@ -43,6 +43,7 @@ import { StatusBar } from '@/components/workspace/status-bar'
 import { CodePreviewPanel } from '@/components/workspace/code-preview-panel'
 import { CommandPalette } from '@/components/workspace/command-palette'
 import { OnboardingTour } from '@/components/workspace/onboarding-tour'
+import { ShortcutsHelp } from '@/components/workspace/shortcuts-help'
 import { autoLayout, type LayoutType } from '@/lib/auto-layout'
 import { useCanvasStore, createFlowNode } from '@/stores/canvas'
 import { useClipboardStore } from '@/stores/clipboard'
@@ -462,6 +463,9 @@ export function WorkspaceShell() {
 
       {/* 首次使用引导（localStorage 标记，不重复显示） */}
       <OnboardingTour />
+
+      {/* 快捷键帮助浮层（按 ? 键打开） */}
+      <ShortcutsHelp />
     </TooltipProvider>
   )
 }
