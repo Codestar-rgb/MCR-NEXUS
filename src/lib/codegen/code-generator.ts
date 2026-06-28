@@ -114,6 +114,10 @@ function generateEntityFile(node: FlowNode, modId: string): GeneratedFile | null
   const armor = getNum(node, 'armor', 0)
   const armorToughness = getNum(node, 'armorToughness', 0)
   const speed = getNum(node, 'movementSpeed', 0.3)
+  const aiType = getStr(node, 'aiType', 'melee')
+
+  // AI 目标生成（基于 aiType）
+  const aiGoals = generateAIGoals(aiType, className)
 
   const content = `package com.example.mod.entity;
 
@@ -122,17 +126,32 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
  * NexCube 自动生成的实体类
  * 节点名称：${node.data.title}
  * 注册 ID：${registryId}
+ * AI 类型：${aiType}
  */
 public class ${className} extends PathfinderMob {
 
     public ${className}(EntityType<? extends Mob> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+${aiGoals}
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, ${speed.toFixed(2)}));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -155,6 +174,26 @@ public class ${className} extends PathfinderMob {
     content,
     language: 'java',
     linkedNodeId: node.id,
+  }
+}
+
+/** 根据 AI 类型生成目标 */
+function generateAIGoals(aiType: string, className: string): string {
+  switch (aiType) {
+    case 'melee':
+      return `        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2, true));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));`
+    case 'ranged':
+      return `        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, true));
+        // TODO: 远程攻击需自定义 RangedAttackGoal
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));`
+    case 'passive':
+      return `        // 被动生物：不主动攻击`
+    case 'neutral':
+      return `        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2, true));
+        // 中立生物：仅在被攻击后反击`
+    default:
+      return `        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2, true));`
   }
 }
 
@@ -1164,6 +1203,82 @@ function generateItemTagsFile(modId: string, nodes: FlowNode[]): GeneratedFile {
   }
 }
 
+/**
+ * 生成 Forge 事件处理器类
+ *
+ * 包含常用的 @SubscribeEvent 事件监听：
+ *  - 实体死亡掉落（LivingDeathEvent）
+ *  - 玩家加入服务器（PlayerEvent.PlayerLoggedInEvent）
+ *  - 右键方块交互（PlayerInteractEvent.RightClickBlock）
+ *
+ * 用户可在 blackbox 区域添加自定义事件。
+ */
+function generateEventHandlerFile(modId: string, nodes: FlowNode[]): GeneratedFile {
+  const modClassName = toModClassName(modId)
+  const pkg = 'com.example.mod.event'
+
+  const entityNodes = nodes.filter((n) => n.data.kind === 'entity')
+
+  // 实体死亡掉落事件
+  const entityDropHandlers = entityNodes.map((n) => {
+    const registryId = getStr(n, 'registryId', n.id)
+    const className = toClassName(registryId) + 'Entity'
+    return `        // ${n.data.title} 死亡掉落
+        // if (event.getEntity() instanceof ${className}) {
+        //     event.getEntity().spawnAtLocation(new ItemStack(ModItems.${registryId.toUpperCase()}.get()));
+        // }`
+  }).join('\n')
+
+  const content = `package ${pkg};
+
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import com.example.mod.${modClassName};
+
+/**
+ * Forge 事件处理器（NexCube 自动生成）
+ *
+ * 包含常用事件监听示例。取消注释或修改以启用。
+ */
+@Mod.EventBusSubscriber(modid = ${modClassName}.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+public class ModEventHandlers {
+
+    /**
+     * 实体死亡事件 — 可用于自定义掉落
+     */
+    @SubscribeEvent
+    public static void onLivingDeath(LivingDeathEvent event) {
+${entityDropHandlers || '        // 无实体节点'}
+    }
+
+    /**
+     * 玩家加入服务器 — 可用于欢迎消息
+     */
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        // event.getEntity().sendSystemMessage(Component.literal("欢迎来到 NexCube 模组世界！"));
+    }
+
+    /**
+     * 右键方块交互 — 可用于自定义方块行为
+     */
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        // 在此添加自定义右键逻辑
+    }
+}
+`
+
+  return {
+    filePath: `src/main/java/com/example/mod/event/ModEventHandlers.java`,
+    content,
+    language: 'java',
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /* 主入口                                                              */
 /* ------------------------------------------------------------------ */
@@ -1299,6 +1414,9 @@ export function generateProjectCode(
   if (itemNodes.length > 0) {
     files.push(generateItemTagsFile(modId, itemNodes))
   }
+
+  // 10. Forge 事件处理器（通用事件监听）
+  files.push(generateEventHandlerFile(modId, nodes))
 
   return {
     files,

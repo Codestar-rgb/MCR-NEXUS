@@ -191,6 +191,8 @@ export interface CanvasState {
 
   /* 选中 */
   selectedNodeIds: string[]
+  /** 高亮节点 ID（搜索时短暂高亮） */
+  highlightedNodeId: string | null
   /** 当前激活的工作区 ID（用于过滤画布节点） */
   activeWorkspaceId: string | null
   selectedEdgeIds: string[]
@@ -223,6 +225,8 @@ export interface CanvasState {
 
   /* ----- Actions: 选中 ----- */
   selectNode: (id: string | null) => void
+  /** 高亮节点（搜索时短暂高亮，1.5s 后自动清除） */
+  highlightNode: (id: string | null) => void
   /** 切换当前工作区（影响画布节点过滤） */
   setActiveWorkspace: (id: string | null) => void
   toggleNodeSelection: (id: string) => void
@@ -275,6 +279,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   edgeExtras: {},
   isInitialized: false,
   selectedNodeIds: [],
+  highlightedNodeId: null,
   activeWorkspaceId: null,
   selectedEdgeIds: [],
   contextMenu: null,
@@ -483,6 +488,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   selectNode: (id) =>
     set({ selectedNodeIds: id ? [id] : [], selectedEdgeIds: [] }),
+
+  highlightNode: (id) => {
+    set({ highlightedNodeId: id })
+    if (id) {
+      // 1.5s 后自动清除高亮
+      setTimeout(() => {
+        // 仅当仍高亮同一节点时清除
+        if (get().highlightedNodeId === id) {
+          set({ highlightedNodeId: null })
+        }
+      }, 1500)
+    }
+  },
 
   setActiveWorkspace: (id) =>
     set({ activeWorkspaceId: id, selectedNodeIds: [], selectedEdgeIds: [] }),

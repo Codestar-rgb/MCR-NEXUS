@@ -298,6 +298,26 @@
   animation: nexcube-brand-pulse 2s ease-in-out infinite;
 }
 
+/* 搜索高亮脉冲（1.5s，从中心放大+渐隐） */
+@keyframes nexcube-highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.15 180 / 60%), 0 0 20px 4px oklch(0.72 0.15 180 / 30%);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px oklch(0.72 0.15 180 / 0%), 0 0 30px 8px oklch(0.72 0.15 180 / 50%);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.15 180 / 0%), 0 0 20px 4px oklch(0.72 0.15 180 / 30%);
+    transform: scale(1);
+  }
+}
+.nexcube-highlight-pulse {
+  animation: nexcube-highlight-pulse 1.5s ease-in-out;
+  z-index: 20;
+}
+
 /* 微妙入场动画 */
 @keyframes nexcube-fade-in {
   from { opacity: 0; transform: translateY(4px); }

@@ -77,6 +77,8 @@ export function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   const handleSelect = (nodeId: string, kind: string, title: string) => {
     selectNode(nodeId)
     setSelectedNode(nodeId, kind as 'entity' | 'block' | 'item' | null, title)
+    // 触发高亮动画
+    useCanvasStore.getState().highlightNode(nodeId)
     onClose()
   }
 

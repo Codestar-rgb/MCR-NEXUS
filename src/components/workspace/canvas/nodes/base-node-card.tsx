@@ -76,6 +76,8 @@ function BaseNodeCardImpl({
   // 折叠切换
   const toggleNodeCollapsed = useCanvasStore((s) => s.toggleNodeCollapsed)
   const isDebugNode = useBuildStatusStore((s) => s.debugPath[s.debugIndex] === id)
+  const highlightedNodeId = useCanvasStore((s) => s.highlightedNodeId)
+  const isHighlighted = highlightedNodeId === id
 
   const def = getNodeTypeDefinition(data.kind)
   if (!def) return null
@@ -111,6 +113,7 @@ function BaseNodeCardImpl({
         buildRingClass,
         debugRingClass,
         isExecuting && 'nexcube-debug-executing',
+        isHighlighted && 'nexcube-highlight-pulse ring-2 ring-primary ring-offset-2 ring-offset-background',
         className,
       )}
       style={{ minWidth: def.defaultSize.width }}
