@@ -978,6 +978,9 @@ export const NODE_TYPE_REGISTRY: Record<string, NodeTypeDefinition> = {
       { key: 'isTreasure', label: '宝藏附魔', type: 'boolean', defaultValue: false, group: '特殊' },
       { key: 'isCurse', label: '诅咒附魔', type: 'boolean', defaultValue: false, group: '特殊' },
       { key: 'isTradeable', label: '可交易', type: 'boolean', defaultValue: true, group: '特殊' },
+      { key: 'isCompatibleWithBooks', label: '附魔书可用', type: 'boolean', defaultValue: true, group: '特殊' },
+      { key: 'compatibleItems', label: '额外适用物品', type: 'string', defaultValue: '', group: '兼容', placeholder: 'minecraft:netherite_sword,minecraft:stick' },
+      { key: 'incompatibleEnchants', label: '冲突附魔', type: 'string', defaultValue: '', group: '兼容', placeholder: 'minecraft:sharpness,minecraft:smite' },
     ],
   },
 

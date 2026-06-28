@@ -799,6 +799,41 @@ function generateEnchantmentFile(node: FlowNode, modId: string): GeneratedFile |
   const isTreasure = Boolean(p.isTreasure ?? false)
   const isCurse = Boolean(p.isCurse ?? false)
   const isTradeable = Boolean(p.isTradeable ?? true)
+  const isCompatibleWithBooks = Boolean(p.isCompatibleWithBooks ?? true)
+  const compatibleItemsRaw = String(p.compatibleItems ?? '').trim()
+  const incompatibleEnchantsRaw = String(p.incompatibleEnchants ?? '').trim()
+
+  // 额外适用物品代码
+  const compatibleItems = compatibleItemsRaw
+    ? compatibleItemsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+  // 冲突附魔代码
+  const incompatibleEnchants = incompatibleEnchantsRaw
+    ? incompatibleEnchantsRaw.split(',').map((s) => s.trim()).filter(Boolean)
+    : []
+
+  // 检查兼容性方法的代码
+  const compatOverride = compatibleItems.length > 0
+    ? `
+    @Override
+    public boolean canEnchant(net.minecraft.world.item.ItemStack stack) {
+        // 额外适用物品
+        ${compatibleItems.map((item) => `if (stack.is(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation("${item}")))) return true;`).join('\n        ')}
+        return super.canEnchant(stack);
+    }
+`
+    : ''
+
+  const incompatOverride = incompatibleEnchants.length > 0
+    ? `
+    @Override
+    public boolean checkCompatibility(Enchantment other) {
+        // 冲突附魔检查
+        ${incompatibleEnchants.map((ench) => `if (other.getDescriptionId().equals("${ench}")) return false;`).join('\n        ')}
+        return super.checkCompatibility(other);
+    }
+`
+    : ''
 
   const content = `package com.example.mod.enchantment;
 
@@ -812,7 +847,7 @@ import net.minecraft.world.item.enchantment.EnchantmentCategory;
  * 稀有度：${rarity}
  * 类别：${category}
  * 最大等级：${maxLevel}
- */
+${compatibleItems.length > 0 ? ` * 额外适用：${compatibleItems.join(', ')}\n` : ''}${incompatibleEnchants.length > 0 ? ` * 冲突附魔：${incompatibleEnchants.join(', ')}\n` : ''} */
 public class ${className} extends Enchantment {
 
     public ${className}() {
@@ -859,7 +894,12 @@ public class ${className} extends Enchantment {
     public boolean isDiscoverable() {
         return true;
     }
-}
+
+    @Override
+    public boolean isAllowedOnBooks() {
+        return ${isCompatibleWithBooks};
+    }
+${compatOverride}${incompatOverride}}
 `
 
   return {
