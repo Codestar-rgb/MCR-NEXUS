@@ -2456,3 +2456,34 @@ Stage Summary:
 - 导出 ZIP 包含 ModEventHandlers.java（3 种 Forge 事件示例）
 - 搜索选中节点时画布上有脉冲高亮动画
 - 已推送 GitHub（13e8007）
+
+---
+Task ID: R19 (Shaped 配方图案 + 节点入场动画)
+Agent: main (Z.ai Code)
+Task: 配方 shaped pattern 支持 + 节点创建动画
+
+Work Log:
+R11: 配方 shaped 图案支持
+- generateRecipeFile 添加 crafting_shaped JSON 生成：
+  * buildShapedPattern(): 3x3 网格 → pattern[] + key{} 映射
+  * 每个不同物品 ID 分配一个字符（A-Z）
+  * 空格子用空格
+  * 空网格降级为 shapeless
+  * 仅在 shaped=true 且 grid 有 9 元素时激活
+- RecipeNodeCard CraftingPreview 使用 grid 属性
+  * 无 grid 时降级到 ingredientA/B/C
+  * 有 grid 时显示完整 3x3 网格
+
+R12: 节点入场动画
+- CSS @keyframes nexcube-node-enter:
+  * scale(0.85) translateY(8px) → scale(1) translateY(0)
+  * 0.25s ease-out
+- BaseNodeCard 添加 nexcube-node-enter 类
+  * 所有节点在创建/重载时动画入场
+- CSS @keyframes nexcube-edge-draw（为未来连线动画预留）
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 有序合成配方生成正确的 crafting_shaped JSON（pattern + key）
+- 节点创建时有缩放+淡入动画
+- 已推送 GitHub（e613c53）
