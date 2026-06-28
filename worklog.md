@@ -2568,3 +2568,37 @@ Stage Summary:
 - F1 键打开帮助文档（4 节指南 + 8 条技巧）
 - 右键菜单快速对齐（8 种模式一键操作）
 - 已推送 GitHub（da9d1c2）
+
+---
+Task ID: R22 (版本历史 + 触控优化)
+Agent: main (Z.ai Code)
+Task: 模组版本更新管理 + 移动端触控优化
+
+Work Log:
+R19: 模组版本更新管理
+- API：GET/POST /api/projects/[id]/versions
+  * 存储在 AppSetting 表（key = versions_<projectId>）
+  * POST 捕获当前节点+连线为快照
+  * 最多保留 20 个版本
+- VersionHistoryPanel 组件：
+  * 保存当前状态为命名版本
+  * 时间线视图（节点/连线数 + 相对时间）
+  * 最新版本徽章（primary 色）
+  * 恢复按钮（带确认对话框）
+  * 通过 loadFromProject() 恢复
+- Ctrl+H 键盘快捷键切换
+- 挂载在 WorkspaceShell
+
+R20: 移动端触控优化
+- ReactFlow 触控属性显式设置：
+  * panOnDrag: true（拖拽平移）
+  * zoomOnPinch: true（双指缩放）
+  * zoomOnScroll: true
+  * touchHandlerProps: { passive: false }
+- 平板设备触控手势支持
+
+Stage Summary:
+- 2 项改进完成 ✅
+- 版本历史：保存/恢复项目快照（最多 20 个）
+- 触控优化：平板可正常拖拽/缩放/选择
+- 已推送 GitHub（d5e1290）
